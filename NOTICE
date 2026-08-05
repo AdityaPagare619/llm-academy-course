@@ -1,0 +1,26 @@
+NOTICE
+
+LEGO® is a trademark of the LEGO Group, which does not sponsor, authorize or
+endorse this project.
+
+This project is an independent educational work created for teaching the
+architecture of large language models. It uses a brick-themed visual language
+(bricks, studs, plates, and building metaphors) as an educational device to
+communicate modularity, assembly, and construction — the same metaphors the
+field itself uses ("building blocks", "assembling a stack").
+
+This project is not affiliated with, endorsed by, or sponsored by the LEGO
+Group or any of its affiliates. No LEGO products, logos, or proprietary
+assets are included. All sounds in assets/sounds/ are original recordings by
+the author and are included under the project license for use within this
+course only.
+
+If you believe anything here infringes your rights, open an issue — we will
+resolve it promptly.
+
+CREDITS
+
+This course was co-created by Aditya Pagare (main author) and AI, working
+together: the human decided what to teach and how it should feel; the
+machine wrote, verified, and hardened every line. Built brick by brick,
+by both of them.

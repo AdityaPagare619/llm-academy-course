@@ -1,0 +1,52 @@
+# dependencies
+node_modules/
+
+# local output
+screenshots/
+vision-suite-*/
+*.log
+
+# secrets
+.env
+.env.local
+
+# internal workbench (never published)
+archive/
+CLAUDES-GENERATED-WORK/
+exported/
+*.ipynb
+*.py
+*.bin
+model_meta.json
+__pycache__/
+fix_braces*.js
+functional_test*.js
+debug_*.js
+diagnose_*.js
+test_*.js
+test_*.mjs
+MASTER_*.md
+WORK_REPORT.md
+COURSE_AUDIT_REPORT.md
+EXPANDED_CURRICULUM.md
+sequenced_work_order.md
+styles.css
+start-server.js
+inject_*.js
+void_construction.js
+pin_canvas_width.js
+probe-out.json
+verify-*.js
+probe-*.js
+probe_*.js
+runtime_probe_*.js
+canvas_fill_audit.js
+capture_vision.js
+exam_gate_*.js
+gate-r16-*.js
+publish_gate2_test.js
+shoot_module.js
+shot_firstbrick.js
+audit_design.js
+contrast_audit.js
+canvas_audit_baseline*.json
