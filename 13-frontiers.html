@@ -1,0 +1,2258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='2' y='8' width='28' height='16' rx='3' fill='%23C14E38'/%3E%3Ccircle cx='8' cy='16' r='2' fill='%23EEF0E3'/%3E%3Ccircle cx='16' cy='16' r='2' fill='%23EEF0E3'/%3E%3Ccircle cx='24' cy='16' r='2' fill='%23EEF0E3'/%3E%3C/svg%3E">
+<title>Module 13 — The Frontier Observatory | LLM Academy</title>
+<meta name="description" content="The final module: scaling laws that govern the field, the compute frontier, reasoning models, state-space machines, MoE at scale, and the mission builder where you design your own frontier model and watch the laws predict its fate.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700;0,9..144,800;0,9..144,900;1,9..144,600&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<style>
+:root {
+    --ink: #2B2A24;      --ink-soft: #6B6A5C;   --ink-faint: #84837A;
+    --paper: #EEF0E3;    --paper-alt: #E6E9D8;  --surface: #FFFEFA;
+    --surface-alt: #F7F5EA; --surface-code: #26251F;
+    --border: #DBD5BF;   --border-light: #E9E4D2;
+    --coral: #C14E38;    --coral-light: #E8A99B; --coral-bg: #FBEAE5;  --coral-dark: #9C3B29;
+    --teal: #177E76;     --teal-light: #8FC9C2;  --teal-bg: #E6F3F1;   --teal-dark: #14615A;
+    --gold: #E3A61C;     --gold-light: #F3D385;  --gold-bg: #FCF2DC;   --gold-dark: #8C6A12;
+    --lavender: #7C64C9; --lavender-light: #C3B7E6; --lavender-bg: #F1EDFA; --lavender-dark: #4F3C93;
+    --mint: #408047;     --mint-light: #A9CBAB;  --mint-bg: #E9F2E8;   --mint-dark: #2F5F34;
+    --peach: #B25D23;    --peach-light: #F0BF95; --peach-bg: #FBEEE1;  --peach-dark: #9C531E;
+    --sky: #2E7BB8;      --sky-light: #9CC6E4;   --sky-bg: #E7F1F8;    --sky-dark: #1D5580;
+    --rose: #B44C71;     --rose-light: #E7AFC5;  --rose-bg: #FBEBF1;   --rose-dark: #8A3A58;
+    --font-display: 'Fraunces', serif; --font-body: 'IBM Plex Sans', sans-serif; --font-mono: 'IBM Plex Mono', monospace;
+    --radius-sm: 8px; --radius-md: 14px; --radius-lg: 22px; --radius-full: 999px;
+    --shadow-sm: 3px 3px 0 rgba(43,42,36,0.12);
+    --shadow-md: 5px 5px 0 rgba(43,42,36,0.14), 0 2px 8px rgba(43,42,36,0.05);
+    --shadow-lg: 8px 8px 0 rgba(43,42,36,0.15), 0 6px 18px rgba(43,42,36,0.07);
+    --space-xs: 6px; --space-sm: 12px; --space-md: 20px; --space-lg: 32px; --space-xl: 48px; --space-2xl: 64px;
+    --transition-fast: 150ms ease;
+    --transition-base: 260ms cubic-bezier(.34,1.56,.64,1);
+    --transition-slow: 450ms cubic-bezier(.22,1,.36,1);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; scroll-behavior: auto !important; }
+}
+html { scroll-behavior: smooth; }
+:focus-visible { outline: 3px solid var(--gold-dark); outline-offset: 2px; border-radius: 3px; }
+body { font-family: var(--font-body); color: var(--ink); background: var(--paper); line-height: 1.6; font-size: 16px;
+    background-image: radial-gradient(circle, rgba(43,42,36,0.06) 1.3px, transparent 1.5px); background-size: 24px 24px; background-attachment: fixed; }
+h1,h2,h3,h4 { font-family: var(--font-display); font-weight: 700; line-height: 1.15; letter-spacing: -0.01em; color: var(--ink); }
+h1 { font-size: clamp(1.9rem,3.8vw,2.8rem); font-weight: 800; }
+h2 { font-size: clamp(1.4rem,2.4vw,1.85rem); }
+h3 { font-size: 1.15rem; }
+p { margin-bottom: var(--space-md); color: var(--ink-soft); }
+code, .mono { font-family: var(--font-mono); }
+.container { max-width: 1240px; margin: 0 auto; padding: 0 24px; }
+.flex { display: flex; } .items-center { align-items: center; } .gap-2 { gap: 8px; } .gap-4 { gap: 16px; } .justify-center { justify-content: center; } .justify-between { justify-content: space-between; }
+.grid { display: grid; } .grid-2 { grid-template-columns: 1fr 1fr; gap: 24px; } .grid-3 { grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+.mt-4 { margin-top: 16px; } .mt-8 { margin-top: 32px; } .mb-4 { margin-bottom: 16px; } .text-center { text-align: center; }
+@media (max-width: 900px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+
+@keyframes riseIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes pop { from { opacity: 0; transform: scale(0.7); } to { opacity: 1; transform: scale(1); } }
+@keyframes floatY { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+.stagger-children > * { animation: riseIn 0.55s cubic-bezier(.22,1,.36,1) both; }
+.stagger-children > *:nth-child(1) { animation-delay: .03s; } .stagger-children > *:nth-child(2) { animation-delay: .09s; }
+.stagger-children > *:nth-child(3) { animation-delay: .15s; } .stagger-children > *:nth-child(4) { animation-delay: .21s; }
+
+.academy-header { background: var(--surface); border-bottom: 2.5px solid var(--ink); height: 72px; position: sticky; top: 0; z-index: 100; }
+.header-inner { display: flex; align-items: center; justify-content: space-between; height: 100%; gap: 12px; flex-wrap: wrap; }
+.logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+.logo-icon { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; background: var(--rose-bg); border: 2.5px solid var(--ink); border-radius: var(--radius-sm); position: relative; box-shadow: 3px 3px 0 var(--ink); }
+.logo-icon::before, .logo-icon::after { content: ""; position: absolute; top: -6px; width: 9px; height: 9px; border-radius: 50%; background: var(--rose-bg); border: 2px solid var(--ink); }
+.logo-icon::before { left: 8px; } .logo-icon::after { right: 8px; }
+.logo-text { font-family: var(--font-display); font-weight: 800; font-size: 1.1rem; }
+.logo-sub { font-size: 0.7rem; color: var(--ink-soft); font-weight: 500; }
+.header-nav { display: flex; gap: 4px; }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-family: var(--font-body); font-weight: 700; font-size: 0.85rem; text-decoration: none; padding: 10px 20px; border-radius: var(--radius-md); border: 2.5px solid var(--ink); cursor: pointer; transition: transform var(--transition-fast), box-shadow var(--transition-fast); background: var(--surface); color: var(--ink); }
+.btn-coral { background: var(--coral); color: #fff8f4; box-shadow: 4px 4px 0 var(--ink); }
+.btn-teal { background: var(--teal); color: #fff; box-shadow: 4px 4px 0 var(--ink); }
+.btn-gold { background: var(--gold); color: var(--ink); box-shadow: 4px 4px 0 var(--ink); }
+.btn-mint { background: var(--mint); color: #fff; box-shadow: 4px 4px 0 var(--ink); }
+.btn-lavender { background: var(--lavender); color: #fff; box-shadow: 4px 4px 0 var(--ink); }
+.btn-peach { background: var(--peach); color: #fff; box-shadow: 4px 4px 0 var(--ink); }
+.btn-sky { background: var(--sky); color: #fff; box-shadow: 4px 4px 0 var(--ink); }
+.btn-rose { background: var(--rose); color: #fff; box-shadow: 4px 4px 0 var(--ink); }
+.btn-outline { background: var(--surface); color: var(--ink); box-shadow: 4px 4px 0 var(--border); }
+.btn:hover { transform: translate(-1px,-1px); box-shadow: 5px 5px 0 var(--ink); }
+.btn:active { transform: translate(3px,3px); box-shadow: 1px 1px 0 var(--ink); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; }
+
+.pill { display: inline-flex; align-items: center; justify-content: center; padding: 6px 14px; font-size: 0.75rem; font-weight: 700; border: 2px solid var(--ink); border-radius: var(--radius-full); background: var(--surface); color: var(--ink-soft); cursor: pointer; transition: all var(--transition-fast); }
+.pill:hover { background: var(--gold-bg); color: var(--ink); }
+.pill.active { background: var(--ink); color: var(--paper); }
+.pill-group { display: inline-flex; gap: 6px; flex-wrap: wrap; }
+
+.brick-panel { background: var(--surface); border: 2.5px solid var(--ink); border-radius: var(--radius-lg); box-shadow: var(--shadow-md); position: relative; }
+.brick-panel::before, .brick-panel::after { content: ""; position: absolute; top: -7px; width: 12px; height: 12px; border-radius: 50%; background: var(--surface); border: 2.5px solid var(--ink); }
+.brick-panel::before { left: 22px; } .brick-panel::after { left: 40px; }
+
+.section { padding: 52px 0; border-bottom: 2px solid var(--border); }
+.section-header { margin-bottom: 26px; max-width: 800px; }
+.section-label { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; font-family: var(--font-mono); }
+.section-num { display: inline-flex; padding: 4px 12px; border-radius: var(--radius-sm); border: 2px solid var(--ink); font-weight: 700; }
+.section-num.coral { background: var(--coral-bg); color: var(--coral-dark); }
+.section-num.teal { background: var(--teal-bg); color: var(--teal-dark); }
+.section-num.gold { background: var(--gold-bg); color: var(--gold-dark); }
+.section-num.lavender { background: var(--lavender-bg); color: var(--lavender-dark); }
+.section-num.mint { background: var(--mint-bg); color: var(--mint-dark); }
+.section-num.peach { background: var(--peach-bg); color: var(--peach-dark); }
+.section-num.sky { background: var(--sky-bg); color: var(--sky-dark); }
+.section-num.rose { background: var(--rose-bg); color: var(--rose-dark); }
+.section-title { font-size: 1.6rem; }
+.section-desc { color: var(--ink-soft); font-size: 1.02rem; }
+
+.card { background: var(--surface); border: 2.5px solid var(--ink); border-radius: var(--radius-md); padding: 20px; box-shadow: var(--shadow-sm); }
+.card-alt { background: var(--surface-alt); border: 2px solid var(--border); border-radius: var(--radius-md); padding: 18px; }
+.card h4 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; font-family: var(--font-mono); }
+.card h4.coral { color: var(--coral-dark); } .card h4.teal { color: var(--teal-dark); }
+.card h4.gold { color: var(--gold-dark); } .card h4.lavender { color: var(--lavender-dark); }
+.card h4.mint { color: var(--mint-dark); } .card h4.sky { color: var(--sky-dark); }
+.card h4.peach { color: var(--peach-dark); } .card h4.rose { color: var(--rose-dark); }
+.card p:last-child { margin-bottom: 0; }
+.card p { font-size: 0.85rem; color: var(--ink-soft); }
+
+.lab-shell { background: var(--surface); border: 2.5px solid var(--ink); border-radius: var(--radius-lg); box-shadow: var(--shadow-md); overflow: hidden; }
+.lab-toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 14px 18px; background: var(--surface-alt); border-bottom: 2px solid var(--border); }
+.lab-toolbar .spacer { flex: 1; }
+.lab-stage { padding: 20px; background: radial-gradient(circle, rgba(43,42,36,0.05) 1px, transparent 1.2px) 0 0/16px 16px, var(--surface); }
+.lab-stage canvas { display: block; width: 100%; border-radius: var(--radius-sm); }
+.lab-readout { font-family: var(--font-mono); font-size: 0.78rem; padding: 12px 18px; background: var(--paper-alt); border-top: 2px solid var(--border); color: var(--ink-soft); }
+.lab-readout strong { color: var(--ink); }
+.canvas-title { font-family: var(--font-mono); font-size: 0.7rem; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.step-badge { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 0.72rem; font-weight: 700; padding: 5px 12px; border-radius: var(--radius-full); background: var(--ink); color: var(--paper); }
+.legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 0.72rem; font-family: var(--font-mono); color: var(--ink-soft); }
+.legend span.sw { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; border: 1.5px solid var(--ink); }
+.explain-strip { font-size: 0.82rem; background: var(--gold-bg); border: 2px solid var(--gold-dark); border-radius: var(--radius-sm); padding: 10px 14px; margin-top: 12px; min-height: 20px; font-family: var(--font-mono); color: var(--gold-dark); font-weight: 600; }
+.explain-strip.teal { background: var(--teal-bg); border-color: var(--teal-dark); color: var(--teal-dark); }
+.explain-strip.coral { background: var(--coral-bg); border-color: var(--coral-dark); color: var(--coral-dark); }
+.explain-strip.lavender { background: var(--lavender-bg); border-color: var(--lavender-dark); color: var(--lavender-dark); }
+.explain-strip.mint { background: var(--mint-bg); border-color: var(--mint-dark); color: var(--mint-dark); }
+.explain-strip.rose { background: var(--rose-bg); border-color: var(--rose-dark); color: var(--rose-dark); }
+.explain-strip.sky { background: var(--sky-bg); border-color: var(--sky-dark); color: var(--sky-dark); }
+
+.math-block { background: var(--lavender-bg); border-left: 3px solid var(--lavender); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; padding: 12px 16px; margin: 12px 0; overflow-x: auto; font-size: 0.9rem; }
+.math-inline { background: var(--surface-alt); padding: 2px 6px; border-radius: 4px; font-family: var(--font-mono); font-size: 0.85em; border: 1px solid var(--border); }
+
+.callout { display: flex; gap: 12px; padding: var(--space-md); border-radius: var(--radius-md); border: 2px solid; margin: var(--space-md) 0; }
+.callout.coral { border-color: var(--coral); background: var(--coral-bg); }
+.callout.teal { border-color: var(--teal); background: var(--teal-bg); }
+.callout.gold { border-color: var(--gold); background: var(--gold-bg); }
+.callout.mint { border-color: var(--mint); background: var(--mint-bg); }
+.callout.lavender { border-color: var(--lavender); background: var(--lavender-bg); }
+.callout.rose { border-color: var(--rose); background: var(--rose-bg); }
+.callout.sky { border-color: var(--sky); background: var(--sky-bg); }
+.callout-icon { font-size: 1.2rem; flex-shrink: 0; }
+.callout strong { color: var(--ink); }
+.callout p:last-child, .callout div { margin-bottom: 0; }
+
+.stat-big { font-family: var(--font-display); font-size: 1.8rem; font-weight: 800; display: block; }
+.stat-big.coral { color: var(--coral-dark); } .stat-big.teal { color: var(--teal-dark); }
+.stat-big.gold { color: var(--gold-dark); } .stat-big.lavender { color: var(--lavender-dark); }
+.stat-big.mint { color: var(--mint-dark); } .stat-big.sky { color: var(--sky-dark); } .stat-big.rose { color: var(--rose-dark); }
+.stat-label { font-size: 0.75rem; color: var(--ink-faint); }
+.academy-footer { margin-top: var(--space-xl); padding: var(--space-xl) 0; border-top: 2.5px solid var(--ink); background: var(--surface-alt); text-align: center; font-size: 0.85rem; color: var(--ink-soft); }
+.input { width: 100%; border: 2.5px solid var(--ink); border-radius: var(--radius-md); background: var(--surface); font-family: var(--font-body); color: var(--ink); padding: 12px 16px; font-size: 0.95rem; outline: none; }
+.input:focus { box-shadow: 3px 3px 0 var(--gold); }
+.slider-row { display: flex; align-items: center; gap: 12px; margin: 8px 0; }
+.slider-row label { font-size: 0.8rem; color: var(--ink-soft); min-width: 110px; font-weight: 600; font-family: var(--font-mono); }
+.slider-row input[type="range"] { flex: 1; accent-color: var(--coral); height: 4px; }
+.slider-row .val { font-family: var(--font-mono); font-size: 0.78rem; font-weight: 700; min-width: 62px; text-align: right; color: var(--gold-dark); }
+
+.hero { padding: var(--space-2xl) 0 var(--space-lg); text-align: center; position: relative; }
+.hero-badges { display: inline-flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; justify-content: center; }
+.hero p.lede { max-width: 740px; margin: 0 auto; font-size: 1.06rem; }
+.hero-launch-preview { max-width: 780px; margin: 32px auto 0; }
+
+.sound-toggle { position: fixed; bottom: 18px; right: 18px; z-index: 200; width: 46px; height: 46px; border-radius: 50%; border: 2.5px solid var(--ink); background: var(--surface); box-shadow: 3px 3px 0 var(--ink); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; transition: transform var(--transition-fast); }
+.sound-toggle:hover { transform: translateY(-2px); }
+.sound-toggle.muted { opacity: 0.4; }
+
+.toc-bar { display: flex; gap: 4px; flex-wrap: wrap; margin: 20px auto; justify-content: center; max-width: 920px; }
+.toc-link { font-family: var(--font-mono); font-size: 0.68rem; font-weight: 700; padding: 4px 10px; border-radius: var(--radius-full); border: 1.5px solid var(--border); background: var(--surface); color: var(--ink-soft); text-decoration: none; transition: all var(--transition-fast); }
+.toc-link:hover { border-color: var(--coral); color: var(--coral-dark); }
+
+@media (max-width: 700px) {
+    .lab-toolbar { padding: 12px; }
+    .sound-toggle { bottom: 12px; right: 12px; }
+}
+
+/* ════════════════ PART DIVIDERS ════════════════ */
+.part-divider { text-align: center; padding: var(--space-2xl) 0 var(--space-lg); position: relative; border-top: 3px solid var(--ink); margin-top: var(--space-xl); }
+.part-divider::before { content: ""; position: absolute; top: -3px; left: 50%; transform: translateX(-50%); width: 60px; height: 6px; background: var(--rose); border-radius: 0 0 4px 4px; }
+.part-number { font-family: var(--font-mono); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 6px; }
+.part-title { font-family: var(--font-display); font-size: clamp(1.6rem, 3vw, 2.2rem); font-weight: 800; color: var(--ink); margin-bottom: 4px; }
+.part-subtitle { font-family: var(--font-body); font-size: 0.95rem; color: var(--ink-soft); font-style: italic; margin-bottom: 0; }
+
+/* ════════════════ SECTION GOAL ════════════════ */
+.section-goal { display: flex; align-items: flex-start; gap: 10px; background: linear-gradient(135deg, var(--gold-bg), var(--surface)); border: 2px solid var(--gold); border-radius: var(--radius-md); padding: 14px 18px; margin-top: 14px; font-size: 0.88rem; font-weight: 600; color: var(--gold-dark); line-height: 1.5; }
+
+/* ════════════════ NOTEBOOK ════════════════ */
+.notebook-spread { margin: var(--space-lg) 0; border: 2.5px solid var(--ink); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-lg); position: relative; }
+.notebook-spine { display: flex; align-items: center; gap: 8px; padding: 10px 18px; background: var(--ink); color: var(--paper); font-family: var(--font-mono); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+.notebook-spine .spine-studs { display: flex; gap: 4px; }
+.notebook-spine .spine-studs span { width: 8px; height: 8px; border-radius: 50%; background: var(--rose); border: 1.5px solid rgba(255,255,255,0.3); }
+.notebook-pages-container { position: relative; overflow: hidden; }
+.notebook-page { padding: var(--space-lg) var(--space-xl); background: var(--surface); background-image: linear-gradient(to right, rgba(43,42,36,0.04) 1px, transparent 1px); background-size: 28px 28px; min-height: 200px; display: none; animation: fadeIn 0.4s ease both; }
+.notebook-page.active { display: block; }
+.notebook-page h3 { font-family: var(--font-display); font-size: 1.3rem; margin-bottom: var(--space-md); color: var(--ink); display: flex; align-items: center; gap: 10px; }
+.notebook-page p { font-size: 0.92rem; color: var(--ink-soft); max-width: 720px; }
+.notebook-page .page-highlight { background: var(--rose-bg); border-left: 4px solid var(--rose); padding: 14px 18px; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; margin: var(--space-md) 0; font-size: 0.9rem; font-weight: 600; color: var(--rose-dark); }
+.notebook-page .page-year { font-family: var(--font-display); font-size: 2.4rem; font-weight: 800; color: var(--rose); opacity: 0.25; float: left; margin-right: 14px; line-height: 1; }
+.notebook-nav { display: flex; justify-content: space-between; align-items: center; padding: 10px 18px; background: var(--surface-alt); border-top: 2px solid var(--border); }
+.notebook-nav .page-indicator { font-family: var(--font-mono); font-size: 0.72rem; color: var(--ink-faint); font-weight: 600; }
+.notebook-nav button { font-family: var(--font-mono); font-size: 0.78rem; font-weight: 700; padding: 6px 14px; border: 2px solid var(--ink); border-radius: var(--radius-sm); background: var(--surface); color: var(--ink); cursor: pointer; transition: all var(--transition-fast); }
+.notebook-nav button:hover { background: var(--gold-bg); transform: translateY(-1px); }
+.notebook-nav button:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
+
+/* ════════════════ PREDICTION CARDS ════════════════ */
+.prediction-card { border: 2.5px solid var(--lavender); border-radius: var(--radius-lg); overflow: hidden; margin: var(--space-lg) 0; box-shadow: var(--shadow-md); }
+.prediction-header { display: flex; align-items: center; gap: 10px; padding: 14px 20px; background: var(--lavender-bg); border-bottom: 2px solid var(--lavender); font-family: var(--font-mono); font-size: 0.78rem; font-weight: 700; color: var(--lavender-dark); text-transform: uppercase; letter-spacing: 0.06em; }
+.prediction-body { padding: 20px; background: var(--surface); }
+.prediction-question { font-size: 1.05rem; font-weight: 700; color: var(--ink); margin-bottom: var(--space-md); line-height: 1.4; }
+.prediction-options { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: var(--space-md); }
+.prediction-options .pred-btn { flex: 1; min-width: 120px; padding: 14px 18px; border: 2.5px solid var(--border); border-radius: var(--radius-md); background: var(--surface); cursor: pointer; font-family: var(--font-body); font-size: 0.9rem; font-weight: 600; color: var(--ink); text-align: center; transition: all var(--transition-fast); position: relative; }
+.prediction-options .pred-btn:hover { border-color: var(--lavender); background: var(--lavender-bg); transform: translateY(-2px); box-shadow: var(--shadow-sm); }
+.prediction-options .pred-btn.selected { border-color: var(--lavender); background: var(--lavender-bg); color: var(--lavender-dark); }
+.prediction-options .pred-btn.correct { border-color: var(--mint); background: var(--mint-bg); color: var(--mint-dark); animation: pop 0.3s ease both; }
+.prediction-options .pred-btn.correct::after { content: "✓"; position: absolute; top: -8px; right: -8px; width: 22px; height: 22px; border-radius: 50%; background: var(--mint); color: #fff; font-size: 0.7rem; display: flex; align-items: center; justify-content: center; border: 2px solid var(--ink); }
+.prediction-options .pred-btn.incorrect { border-color: var(--coral); background: var(--coral-bg); color: var(--coral-dark); opacity: 0.6; }
+.prediction-reveal { display: none; padding: 16px; background: var(--mint-bg); border: 2px solid var(--mint); border-radius: var(--radius-md); font-size: 0.88rem; color: var(--mint-dark); animation: riseIn 0.4s ease both; }
+.prediction-reveal.show { display: block; }
+.prediction-reveal.wrong { background: var(--coral-bg); border-color: var(--coral); color: var(--coral-dark); }
+
+/* ════════════════ WORKED EXAMPLES ════════════════ */
+.worked-example { border: 2.5px solid var(--teal); border-radius: var(--radius-lg); overflow: hidden; margin: var(--space-lg) 0; box-shadow: var(--shadow-sm); }
+.worked-example-header { display: flex; align-items: center; gap: 10px; padding: 12px 18px; background: var(--teal-bg); border-bottom: 2px solid var(--teal); font-family: var(--font-mono); font-size: 0.78rem; font-weight: 700; color: var(--teal-dark); text-transform: uppercase; letter-spacing: 0.06em; }
+.worked-steps { padding: 20px; background: var(--surface); counter-reset: wstep; }
+.worked-step { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1.5px solid var(--border-light); counter-increment: wstep; }
+.worked-step:last-child { border-bottom: none; }
+.worked-step::before { content: counter(wstep); flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%; background: var(--teal); color: #fff; font-family: var(--font-mono); font-size: 0.75rem; font-weight: 700; display: flex; align-items: center; justify-content: center; border: 2px solid var(--ink); }
+.worked-step-content { flex: 1; }
+.worked-step-content .step-formula { font-family: var(--font-mono); font-size: 0.85rem; background: var(--surface-alt); padding: 8px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border); margin: 6px 0; display: inline-block; }
+.worked-step-content .step-result { font-family: var(--font-mono); font-weight: 700; color: var(--teal-dark); font-size: 0.9rem; }
+.worked-step-content p { font-size: 0.85rem; margin-bottom: 4px; }
+
+/* ════════════════ TABLES / CHIPS / EXAM ════════════════ */
+.truth-table { width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: 0.82rem; margin: var(--space-md) 0; }
+.truth-table th { padding: 10px 14px; background: var(--ink); color: var(--paper); font-weight: 700; text-align: center; border: 2px solid var(--ink); }
+.truth-table td { padding: 10px 14px; text-align: center; border: 2px solid var(--border); background: var(--surface); font-weight: 600; }
+.truth-table tr.highlight td { background: var(--gold-bg); }
+.truth-table td.pass { background: var(--mint-bg); color: var(--mint-dark); }
+.truth-table td.fail { background: var(--coral-bg); color: var(--coral-dark); }
+.formula-part { cursor: pointer; padding: 1px 4px; border-radius: 3px; transition: background var(--transition-fast), color var(--transition-fast); }
+.formula-part:hover, .formula-part.active { background: var(--gold-bg); color: var(--gold-dark); }
+.stud-row { display: inline-flex; gap: 5px; align-items: center; }
+.stud { width: 12px; height: 12px; border-radius: 50%; background: var(--rose); border: 2px solid var(--ink); box-shadow: inset 0 2px 0 rgba(255,255,255,0.35); }
+.exam-q { margin-bottom: 28px; padding-bottom: 20px; border-bottom: 1.5px dashed var(--border); text-align: left; }
+.exam-q:last-of-type { border-bottom: none; }
+.exam-q .q-text { font-weight: 700; font-size: 0.95rem; margin-bottom: 10px; color: var(--ink); }
+.exam-q .q-scenario { font-size: 0.85rem; color: var(--ink-soft); background: var(--surface-alt); border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 12px 16px; margin-bottom: 12px; font-family: var(--font-mono); line-height: 1.55; }
+.exam-options { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.exam-opt { display: flex; align-items: flex-start; gap: 10px; padding: 12px 16px; border: 2px solid var(--border); border-radius: var(--radius-md); cursor: pointer; font-size: 0.85rem; transition: all var(--transition-fast); background: var(--surface); }
+.exam-opt:hover { border-color: var(--sky); background: var(--sky-bg); }
+.exam-opt input { margin-top: 3px; accent-color: var(--sky); }
+.exam-opt.picked { border-color: var(--sky); background: var(--sky-bg); }
+.exam-opt.right { border-color: var(--mint); background: var(--mint-bg); }
+.exam-opt.wrong { border-color: var(--coral); background: var(--coral-bg); }
+.cert-card { margin-top: 24px; padding: 28px; border: 3px solid var(--gold); border-radius: var(--radius-lg); background: linear-gradient(135deg, var(--gold-bg), var(--surface)); text-align: center; position: relative; overflow: hidden; }
+.cert-card::before { content: ""; position: absolute; inset: 8px; border: 1.5px dashed var(--gold-dark); border-radius: var(--radius-md); pointer-events: none; }
+
+@media (max-width: 700px) {
+    .notebook-page { padding: var(--space-md); }
+    .prediction-options { flex-direction: column; }
+    .prediction-options .pred-btn { min-width: unset; }
+    .part-divider { padding: var(--space-xl) 0 var(--space-md); }
+}
+
+/* ===== R15 LEGO-FEEL chrome (additive, scoped) ===== */
+.lego-strip{display:inline-flex;gap:3px;align-items:flex-end;margin:0 6px;vertical-align:middle}
+.lego-strip i{display:inline-block;width:13px;height:20px;border-radius:3px;box-shadow:0 3px 0 rgba(43,42,36,.18),inset 0 2px 0 rgba(255,255,255,.35),inset -2px -3px 0 rgba(43,42,36,.14)}
+.lego-strip i::after{content:"";display:block;width:5px;height:4px;margin:3px auto 0;border-radius:2px;background:rgba(43,42,36,.25);box-shadow:7px 0 0 rgba(43,42,36,.25)}
+.lego-divider{height:14px;margin:20px 0;background:repeating-linear-gradient(90deg,rgba(43,42,36,.10) 0 4px,transparent 4px 26px);border-bottom:2px solid rgba(43,42,36,.14);position:relative}
+.lego-divider::before{content:"";position:absolute;left:0;right:0;top:0;height:5px;background:repeating-linear-gradient(90deg,rgba(43,42,36,.18) 0 3px,transparent 3px 26px)}
+.lego-btn{position:relative;border-radius:6px 6px 4px 4px;box-shadow:0 4px 0 rgba(43,42,36,.22),inset 0 2px 0 rgba(255,255,255,.35);transition:transform .06s ease,box-shadow .06s ease}
+.lego-btn:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(43,42,36,.22)}
+.lego-btn::before{content:"";position:absolute;top:-5px;left:10%;width:80%;height:5px;border-radius:3px;background:rgba(255,255,255,.5);opacity:.85;box-shadow:0 1px 0 rgba(43,42,36,.25)}
+
+</style>
+</head>
+<body>
+
+<header class="academy-header">
+    <div class="container header-inner">
+        <a href="index.html" class="logo">
+            <div class="logo-icon">🔭</div>
+            <div>
+                <div class="logo-text">The Frontier Observatory</div>
+                <div class="logo-sub">Module 13 · Where the Field Is Going</div>
+            </div>
+        </a>
+        <nav class="header-nav">
+            <a href="12-interpretability.html" class="pill" style="text-decoration:none;">← Module 12</a>
+            <a href="index.html" class="pill" style="text-decoration:none;">Hub</a>
+        </nav>
+    </div>
+</header>
+
+<main class="container">
+
+<!-- ════════════════ HERO ════════════════ -->
+<section class="hero">
+    <div class="hero-badges">
+        <span class="pill" style="background:var(--rose-bg); color:var(--rose-dark); border-color:var(--rose);">🔭 MODULE 13 · FRONTIERS</span>
+        <span class="pill" style="background:var(--sky-bg); color:var(--sky-dark); border-color:var(--sky);">📈 REAL SCALING LAWS</span>
+        <span class="pill" style="background:var(--mint-bg); color:var(--mint-dark); border-color:var(--mint);">🚀 MISSION BUILDER</span>
+    </div>
+    <h1>The Laws Are Written.<br>Now <span style="color:var(--rose-dark);">Design What Comes Next</span>.<span class="lego-strip" aria-hidden="true"><i style="background:var(--coral)"></i><i style="background:var(--teal)"></i><i style="background:var(--gold)"></i></span></h1>
+    <p class="lede">
+        You built the transformer. You trained it, aligned it, opened it up, and shipped it.
+        This final module gives you the laws that govern the whole field — the scaling curves that
+        decide which models live and die — and then hands you the launchpad: design your own
+        frontier mission, and watch the laws predict its fate.
+    </p>
+    <a class="btn btn-rose lego-btn" href="#part-1" style="margin-top:22px;">🔭 Enter the Observatory →</a>
+    <div class="hero-launch-preview lab-shell">
+        <div class="lab-stage" style="padding:12px;">
+            <canvas id="canvas-hero-launch" height="280" role="img" aria-label="A rocket built from stacked bricks lifting along a scaling-law trajectory curve."></canvas>
+        </div>
+        <div class="lab-readout" id="hero-readout">A brick-rocket riding the scaling curve: as models grow, loss falls along a power law — until the data runs out. <strong>This module is the reason the curve bends.</strong></div>
+    </div>
+    <nav class="toc-bar">
+        <a href="#part-1" class="toc-link" style="background:var(--coral-bg); border-color:var(--coral);">I · The Law</a>
+        <a href="#sec-1" class="toc-link">13.1 Scaling Laws</a>
+        <a href="#sec-2" class="toc-link">13.2 The Compute Budget</a>
+        <a href="#part-2" class="toc-link" style="background:var(--teal-bg); border-color:var(--teal);">II · The Machines</a>
+        <a href="#sec-3" class="toc-link">13.3 Test-Time Compute</a>
+        <a href="#sec-4" class="toc-link">13.4 State Space Models</a>
+        <a href="#part-3" class="toc-link" style="background:var(--gold-bg); border-color:var(--gold);">III · The Scale</a>
+        <a href="#sec-5" class="toc-link">13.5 MoE at Scale</a>
+        <a href="#sec-6" class="toc-link">13.6 Long Context</a>
+        <a href="#part-4" class="toc-link" style="background:var(--lavender-bg); border-color:var(--lavender);">IV · The Sky</a>
+        <a href="#sec-7" class="toc-link">13.7 The Mission Builder</a>
+        <a href="#sec-8" class="toc-link">13.8 The Road Ahead</a>
+        <a href="#part-5" class="toc-link" style="background:var(--rose-bg); border-color:var(--rose);">V · Exam</a>
+        <a href="#sec-9" class="toc-link">13.9 Diagnostic Exam 🎓</a>
+    </nav>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════
+     PART I — THE LAW
+     ════════════════════════════════════════════════════════════ -->
+<div class="part-divider" id="part-1">
+    <div class="part-number">Part I</div>
+    <h2 class="part-title">The Law — Scaling Curves That Decide Everything</h2>
+    <p class="part-subtitle">Before the frontier there was a discovery: model loss falls on predictable power laws. Compute became a dial, not a gamble.</p>
+</div>
+
+<!-- ════════════════ 13.1 SCALING LAWS ════════════════ -->
+<section class="section" id="sec-1">
+    <div class="section-header">
+        <div class="section-label"><span class="section-num coral">SECTION 13.1 ★</span></div>
+        <h2 class="section-title">The Empirical Law — Loss as a Power Law</h2>
+        <p class="section-desc">Kaplan et al. (2020) found it; Chinchilla (Hoffmann et al., 2022) nailed the constants. Language-model loss follows a smooth, predictable curve as you add parameters and data — the same curve this lab fits live in your browser.</p>
+    </div>
+    <div class="section-goal">🎯 By the end of this section, you will be able to predict how loss changes when you double a model's parameters, and explain why "Chinchilla-optimal" means parameters and data must grow together.</div>
+
+    <div class="lab-shell mt-4">
+        <div class="lab-toolbar">
+            <span class="step-badge">LAB 13.1</span>
+            <span class="lego-strip" aria-hidden="true"><i style="background:var(--coral)"></i><i style="background:var(--rose)"></i></span><span style="font-weight:700; font-size:0.9rem;">The scaling surface — N and D sliders drive the real Chinchilla fit</span>
+            <div class="spacer"></div>
+            <div class="pill-group">
+                <button class="pill" id="scaling-sonify">🎧 Hear the curve</button>
+                <button class="pill" id="scaling-animate">▶ Sweep compute</button>
+            </div>
+        </div>
+        <div class="lab-stage">
+            <canvas id="canvas-scaling" height="330"></canvas>
+            <div class="slider-row" style="margin-top:12px;">
+                <label>params N (log)</label>
+                <input type="range" id="scaling-n" min="7" max="13" value="9.5" step="0.1">
+                <span class="val" id="scaling-n-v">1.0B</span>
+            </div>
+            <div class="slider-row">
+                <label>tokens D (log)</label>
+                <input type="range" id="scaling-d" min="8" max="14" value="10.5" step="0.1">
+                <span class="val" id="scaling-d-v">10B</span>
+            </div>
+        </div>
+        <div class="lab-readout" id="scaling-readout"><strong>The Chinchilla fit (nats):</strong> L(N,D) = 1.69 + 406.4·N⁻⁰·³⁴ + 410.7·D⁻⁰·²⁸. Move N: loss falls steeply at first, then flattens — the curve of diminishing returns. Move D: the same shape. <strong>The insight:</strong> both must grow, or you waste one of them.</div>
+    </div>
+
+    <div class="worked-example">
+        <div class="worked-example-header">🧮 Worked Example — Doubling the Model</div>
+        <div class="worked-steps">
+            <div class="worked-step"><div class="worked-step-content">
+                <p><strong>Setup:</strong> N = 1B params, D = 10B tokens. Compute the loss from the fit.</p>
+                <span class="step-formula">L = 1.69 + 406.4·(10⁹)⁻⁰·³⁴ + 410.7·(10¹⁰)⁻⁰·²⁸ ≈ 1.69 + 0.35 + 0.65 ≈ 2.69 nats</span>
+            </div></div>
+            <div class="worked-step"><div class="worked-step-content">
+                <p><strong>Double N</strong> (2B params, same data): the N-term shrinks.</p>
+                <span class="step-formula">ΔL ≈ 406.4·(2⁻⁰·³⁴ − 1)·(10⁹)⁻⁰·³⁴ ≈ −0.074 nats</span>
+            </div></div>
+            <div class="worked-step"><div class="worked-step-content">
+                <p><strong>Or double D instead:</strong> the D-term shrinks.</p>
+                <span class="step-formula">ΔL ≈ 410.7·(2⁻⁰·²⁸ − 1)·(10¹⁰)⁻⁰·²⁸ ≈ −0.115 nats</span>
+            </div></div>
+            <div class="worked-step"><div class="worked-step-content">
+                <p><strong>Now double both (Chinchilla's move):</strong> both terms shrink together — and per unit of compute, that's the most loss you can buy.</p>
+                <p class="step-result">→ The exponents (0.34 vs 0.28) tell you data is the harder-to-satisfy term. That asymmetry is the entire reason "more data" became the industry's mantra after 2022.</p>
+            </div></div>
+        </div>
+    </div>
+
+    <div class="notebook-spread" id="nb-scaling">
+        <div class="notebook-spine"><div class="spine-studs"><span></span><span></span><span></span></div>📓 Instruction Manual · The Scaling Papers — and the derivation that mattered</div>
+        <div class="notebook-pages-container">
+            <div class="notebook-page active" data-page="1">
+                <h3>2020 · Kaplan — "bigger models beat everything"</h3>
+                <p><span class="page-year">2020</span>The first scaling paper: loss falls as a power law in parameters, data, and compute. Kaplan's headline: <em>model size matters most</em> — so the field scaled models hard, leaving most models massively <strong>under-trained</strong> (too many params, too few tokens).</p>
+                <div class="page-highlight">Under-training became the industry's dirty secret: GPT-2 was trained on ~40 tokens per parameter. Kaplan's own curves suggested ~300 would do far better.</div>
+            </div>
+            <div class="notebook-page" data-page="2">
+                <h3>2022 · Chinchilla — "data matters as much as size"</h3>
+                <p><span class="page-year">2022</span>Hoffmann et al. re-fit the curves with more careful compute accounting and found parameters and data should grow <em>about equally</em>. Their 70B Chinchilla matched the 280B Gopher — same compute, 4× fewer parameters, same loss. The field pivoted overnight: models got smaller, datasets got bigger, and the "~20 tokens per parameter" rule was born.</p>
+                <div class="page-highlight">The derivation (Page 3) is the reason: minimize the loss surface under a compute budget. It is one line of calculus, and it changed the entire industry.</div>
+            </div>
+            <div class="notebook-page" data-page="3">
+                <h3>The Derivation — why N ∝ C^0.45</h3>
+                <p>Given L = c + A·N⁻ᵅ + B·D⁻ᵝ and compute C ≈ 6·N·D, minimize L over N with D = C/(6N):</p>
+                <div class="math-block">$$\frac{d}{dN}\left[c + A N^{-\alpha} + B (C/6N)^{-\beta}\right] = -\alpha A N^{-\alpha-1} + \beta B (C/6)^{-\beta} N^{\beta-1} = 0$$</div>
+                <p>Solving: <span class="math-inline">N_opt ∝ C^{β/(α+β)}</span> and <span class="math-inline">D_opt ∝ C^{α/(α+β)}</span>. With Chinchilla's α=0.34, β=0.28: <strong>N ∝ C^0.45, D ∝ C^0.55</strong> — both grow, data slightly faster. The "20 tokens per parameter" heuristic is this exponent pair wearing a hat.</p>
+            </div>
+            <div class="notebook-page" data-page="4">
+                <h3>2024-2026 · The Refinements</h3>
+                <p><span class="page-year">2024</span>Frontier labs publish their own fits (Llama-3, Qwen, DeepSeek) with slightly different constants and steeper data exponents; the "Chinchilla regime" is roughly right, but compute-efficient training deliberately <em>over-trains</em> small models on huge data (the "compute-optimal at serving time" trick: small models trained past the point of diminishing returns because they're cheap to run).</p>
+                <div class="page-highlight">The lesson for your own models: the fit constants are corpus-dependent — but the SHAPE of the law is robust. Predict with it, verify against it, and never trust a single number.</div>
+            </div>
+        </div>
+        <div class="notebook-nav">
+            <button id="nb-scaling-prev">← Prev</button>
+            <span class="page-indicator">Page 1 of 4</span>
+            <button id="nb-scaling-next">Next →</button>
+        </div>
+    </div>
+
+    <div class="prediction-card" id="pred-law">
+        <div class="prediction-header">🔮 Predict Before You Compute</div>
+        <div class="prediction-body">
+            <div class="prediction-question">A lab doubles its training compute (C × 2). To stay Chinchilla-optimal, how should it split the new compute between N and D?</div>
+            <div class="prediction-options">
+                <button class="pred-btn" data-answer="both">Grow BOTH — roughly +37% params and +46% data (N ∝ C^0.45, D ∝ C^0.55)</button>
+                <button class="pred-btn" data-answer="params">Put it all into parameters — Kaplan showed model size matters most</button>
+                <button class="pred-btn" data-answer="data">Put it all into data — Chinchilla proved data is the bottleneck</button>
+            </div>
+            <div class="prediction-reveal" id="pred-law-reveal">
+                <strong>Grow both.</strong> The derivation on Page 3 is exact: with α=0.34 and β=0.28, the optimal split is N ∝ C^0.45 and D ∝ C^0.55. All-params wastes the steep part of the data term; all-data wastes the model term. The industry's "20 tokens per parameter" is this pair in disguise.
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ════════════════ 13.2 THE COMPUTE BUDGET ════════════════ -->
+<section class="section" id="sec-2">
+    <div class="section-header">
+        <div class="section-label"><span class="section-num sky">SECTION 13.2</span></div>
+        <h2 class="section-title">The IsoFLOP Frontier — Squeezing Every FLOP</h2>
+        <p class="section-desc">For a fixed compute budget, the N/D split is a choice — and the loss surface has a valley. The IsoFLOP curves are slices through that valley: one U-shape per budget, one optimal point per U.</p>
+    </div>
+    <div class="section-goal">🎯 By the end of this section, you will be able to read an IsoFLOP curve, find the compute-optimal point by eye, and explain the cost of deviating from it.</div>
+
+    <div class="lab-shell mt-4">
+        <div class="lab-toolbar">
+            <span class="step-badge">LAB 13.2</span>
+            <span class="lego-strip" aria-hidden="true"><i style="background:var(--sky)"></i><i style="background:var(--gold)"></i></span><span style="font-weight:700; font-size:0.9rem;">IsoFLOP curves — one compute budget, all possible N/D splits</span>
+            <div class="spacer"></div>
+            <div class="pill-group" id="isoflop-budgets">
+                <button class="pill active" data-budget="19">C = 10^19</button>
+                <button class="pill" data-budget="20">C = 10^20</button>
+                <button class="pill" data-budget="21">C = 10^21</button>
+            </div>
+        </div>
+        <div class="lab-stage">
+            <canvas id="canvas-isoflop" height="300"></canvas>
+            <input type="range" id="isoflop-c" min="17" max="22" step="0.1" value="19" style="display:none" aria-hidden="true">
+        </div>
+        <div class="lab-readout" id="isoflop-readout"><strong>The U-shape:</strong> each curve holds compute fixed (C ≈ 6ND) and varies the split. Too few params → the model can't learn (left wall). Too many → the data term starves (right wall). The valley is the Chinchilla point. Bigger budgets → deeper valleys, lower loss, and the optimum slides right.</div>
+    </div>
+
+    <div class="callout sky">
+        <span class="callout-icon">📐</span>
+        <div><strong>Reading the frontier:</strong> every frontier lab publishes roughly the same picture — the same U-shapes, different constants. When a model "beats" another at the same compute, what it really did was sit closer to the valley. The frontier is not a hardware race; it is a curve-fitting race with FLOPs as the currency.</div>
+    </div>
+
+    <div class="prediction-card" id="pred-compute">
+        <div class="prediction-header">🔮 Predict Before You Compute</div>
+        <div class="prediction-body">
+            <div class="prediction-question">Two teams use the same compute budget (C ≈ 9×10^23 FLOPs). Team A trains a 500B model on 300B tokens; Team B trains a 100B model on 1.5T tokens. What does the IsoFLOP picture predict?</div>
+            <div class="prediction-options">
+                <button class="pred-btn" data-answer="b">Team B wins — A under-trained its model, and the data-starved regime sits high on the U-shape wall</button>
+                <button class="pred-btn" data-answer="a">Team A wins — bigger models always beat smaller ones</button>
+                <button class="pred-btn" data-answer="tie">Tie — compute is compute, the split doesn't matter</button>
+            </div>
+            <div class="prediction-reveal" id="pred-compute-reveal">
+                <strong>Team B wins.</strong> Team A is the classic under-trained regime: 300B tokens on 500B params is ~0.6 tokens per parameter — far below Chinchilla's ~20. On the IsoFLOP curve, A sits high on the right wall while B sits in the valley. Same compute, very different loss. This exact mistake fueled the 2022 data panic.
+            </div>
+        </div>
+    </div>
+</section>
+<!-- ════════════════════════════════════════════════════════════
+     PART II — THE MACHINES
+     ════════════════════════════════════════════════════════════ -->
+<div class="part-divider" id="part-2">
+    <div class="part-number">Part II</div>
+    <h2 class="part-title">The Machines — Reasoning and State</h2>
+    <p class="part-subtitle">The frontier's two biggest shifts since 2024: spending compute at inference time, and replacing attention with state.</p>
+</div>
+
+<!-- ════════════════ 13.3 TEST-TIME COMPUTE ════════════════ -->
+<section class="section" id="sec-3">
+    <div class="section-header">
+        <div class="section-label"><span class="section-num teal">SECTION 13.3 ★</span></div>
+        <h2 class="section-title">The Reasoning Frontier — Compute at Inference Time</h2>
+        <p class="section-desc">Scaling laws govern training. The 2024-2026 revolution added a second axis: <em>test-time compute</em>. Give the model more tokens to think — search, verify, backtrack — and its accuracy climbs on hard problems, sometimes steeply. o1 and o3 (OpenAI), DeepSeek-R1, Gemini 2.5, and Claude's "thinking" modes all ride this curve.</p>
+    </div>
+    <div class="section-goal">🎯 By the end of this section, you will be able to explain why test-time compute helps on hard problems and hurts on trivia, and read the tradeoff honestly.</div>
+
+    <div class="lab-shell mt-4">
+        <div class="lab-toolbar">
+            <span class="step-badge">LAB 13.3</span>
+            <span style="font-weight:700; font-size:0.9rem;">The reasoning frontier — accuracy vs thinking budget</span>
+            <div class="spacer"></div>
+            <div class="pill-group">
+                <button class="pill active" data-reason="hard">Hard math (o1-style)</button>
+                <button class="pill" data-reason="easy">Trivia (no benefit)</button>
+            </div>
+        </div>
+        <div class="lab-stage">
+            <canvas id="canvas-reason" height="300"></canvas>
+            <input type="range" id="reason-t" min="1" max="5" step="0.05" value="3.4771" style="display:none" aria-hidden="true">
+        </div>
+        <div class="lab-readout" id="reason-readout"><strong>Hard problems:</strong> accuracy climbs as you grant more thinking tokens — steeply at first, then saturating (a log-like curve; shape reported for o1-class models, labeled approx). <strong>Trivia:</strong> the curve is flat — extra thought is wasted latency. The engineering skill is knowing which curve you're on.</div>
+    </div>
+
+    <div class="notebook-spread" id="nb-reason">
+        <div class="notebook-spine"><div class="spine-studs"><span></span><span></span><span></span></div>📓 Instruction Manual · The Thinking Timeline</div>
+        <div class="notebook-pages-container">
+            <div class="notebook-page active" data-page="1">
+                <h3>2022 · Chain-of-Thought — the first nudge</h3>
+                <p><span class="page-year">2022</span>Wei et al. discover that "think step by step" unlocks multi-step reasoning that direct answer-generation fumbles. The model's own tokens become a scratchpad. Modest gains, no training change.</p>
+                <div class="page-highlight">The seed: the model already reasons internally — prompting just externalizes it. Test-time compute had entered the room.</div>
+            </div>
+            <div class="notebook-page" data-page="2">
+                <h3>2024 · o1 — RL on reasoning traces</h3>
+                <p><span class="page-year">2024</span>OpenAI trains o1 with reinforcement learning on long reasoning traces: the model learns to <em>search</em> — backtrack, reconsider, verify — inside its hidden "thinking" tokens. On hard math/coding benchmarks the gain is a step-change, not a nudge. The industry races to replicate: DeepSeek-R1 (2025, open weights), Gemini 2.5, Claude thinking modes.</p>
+                <div class="page-highlight">The deep result: reasoning is a trainable skill, not a prompt trick. RL found strategies humans never wrote down.</div>
+            </div>
+            <div class="notebook-page" data-page="3">
+                <h3>2025-2026 · The economics of thinking</h3>
+                <p><span class="page-year">2025</span>Thinking costs tokens — and money. R1-style models think on easy questions too, unless the system decides when to think. The frontier's practical skill is the <em>adaptive switch</em>: a cheap model for trivia, a thinking model for hard math, and a router deciding which. The flat curve in the lab is the reason.</p>
+            </div>
+        </div>
+        <div class="notebook-nav">
+            <button id="nb-reason-prev">← Prev</button>
+            <span class="page-indicator">Page 1 of 3</span>
+            <button id="nb-reason-next">Next →</button>
+        </div>
+    </div>
+
+    <div class="prediction-card" id="pred-reason">
+        <div class="prediction-header">🔮 Predict Before You Compute</div>
+        <div class="prediction-body">
+            <div class="prediction-question">A thinking model spends 5,000 reasoning tokens on "What is the capital of France?" What happens to accuracy vs. a 50-token answer?</div>
+            <div class="prediction-options">
+                <button class="pred-btn" data-answer="flat">It stays flat — trivia sits on the flat part of the curve; the thinking budget is wasted latency</button>
+                <button class="pred-btn" data-answer="better">It improves — more thinking always helps</button>
+                <button class="pred-btn" data-answer="worse">It gets worse — long chains introduce more error</button>
+            </div>
+            <div class="prediction-reveal" id="pred-reason-reveal">
+                <strong>Flat.</strong> The capital of France is retrievable knowledge, not a search problem — the accuracy curve for trivia never rises. The failure mode of thinking models isn't wrong answers on trivia; it's expensive ones. That's why every frontier API now offers a "reasoning effort" dial and why the router problem became an industry.
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ════════════════ 13.4 STATE SPACE MODELS ════════════════ -->
+<section class="section" id="sec-4">
+    <div class="section-header">
+        <div class="section-label"><span class="section-num gold">SECTION 13.4</span></div>
+        <h2 class="section-title">State Space Models — Attention's Linear-Time Rival</h2>
+        <p class="section-desc">Attention's cost is O(n²) in sequence length — the wall Module 11's FlashAttention climbed. Mamba (Gu & Dao, 2023-2024) takes a different road: a recurrent state that compresses history to a fixed-size vector, scanning the sequence in O(n).</p>
+    </div>
+    <div class="section-goal">🎯 By the end of this section, you will be able to run a state-space recurrence by hand, and state exactly what the O(n) trick gives up.</div>
+
+    <div class="lab-shell mt-4">
+        <div class="lab-toolbar">
+            <span class="step-badge">LAB 13.4</span>
+            <span style="font-weight:700; font-size:0.9rem;">The scan — a real recurrence, step by step</span>
+            <div class="spacer"></div>
+            <div class="pill-group">
+                <button class="pill" id="ssm-step">⏭ Step</button>
+                <button class="pill" id="ssm-auto">▶ Auto</button>
+            </div>
+        </div>
+        <div class="lab-stage">
+            <canvas id="canvas-ssm" height="320"></canvas>
+        </div>
+        <div class="lab-readout" id="ssm-readout"><strong>The recurrence:</strong> h_t = A·h_{t−1} + B·x_t, y_t = C·h_t — one state vector, updated per token, no pairwise matrix. Attention compares every pair; the SSM compresses everything into one vector. That compression IS the trade: recall of exact details fades as the state overwrites itself.</div>
+    </div>
+
+    <div class="worked-example">
+        <div class="worked-example-header">🧮 Worked Example — The Scan by Hand (state dim 2, A = 0.8)</div>
+        <div class="worked-steps">
+            <div class="worked-step"><div class="worked-step-content">
+                <p><strong>Token 1 · x = [1, 0]:</strong> h₁ = 0.8·[0,0] + [1,0] = [1, 0]. Output y₁ = C·h₁ (C = [1, 0]).</p>
+                <span class="step-formula">h₁ = [1.00, 0.00] → y₁ = 1.00</span>
+            </div></div>
+            <div class="worked-step"><div class="worked-step-content">
+                <p><strong>Token 2 · x = [0, 1]:</strong> the state mixes the new input with the decaying old one.</p>
+                <span class="step-formula">h₂ = 0.8·[1,0] + [0,1] = [0.80, 1.00] → y₂ = 0.80</span>
+            </div></div>
+            <div class="worked-step"><div class="worked-step-content">
+                <p><strong>Token 3 · x = [0, 0]:</strong> no input — the state just decays.</p>
+                <span class="step-formula">h₃ = 0.8·[0.8,1] + 0 = [0.64, 0.80] → y₃ = 0.64</span>
+            </div></div>
+            <div class="worked-step"><div class="worked-step-content">
+                <p><strong>The lesson:</strong> token 1's influence halves every step (0.8^k). Attention would remember it exactly at any distance; the SSM remembers it <em>approximately</em>, forever. That is the price of O(n).</p>
+                <p class="step-result">→ Mamba-2 and hybrid models (Jamba, Zamba) keep attention where exact recall matters and SSM where compression is fine.</p>
+            </div></div>
+        </div>
+    </div>
+
+    <div class="prediction-card" id="pred-ssm">
+        <div class="prediction-header">🔮 Predict Before You Compute</div>
+        <div class="prediction-body">
+            <div class="prediction-question">Which task would an SSM-based model struggle with most, compared to a transformer?</div>
+            <div class="prediction-options">
+                <button class="pred-btn" data-answer="recall">Exact long-range recall — "repeat the 500th token verbatim" — because the state compresses and overwrites</button>
+                <button class="pred-btn" data-answer="speed">Processing speed — the recurrence is sequential and can't parallelize</button>
+                <button class="pred-btn" data-answer="short">Short-range tasks — the state decays too fast even nearby</button>
+            </div>
+            <div class="prediction-reveal" id="pred-ssm-reveal">
+                <strong>Exact long-range recall.</strong> The state is a fixed-size summary; a needle 500 tokens back has been overwritten many times. This is the measured weakness of pure SSMs on retrieval-heavy tasks — and the exact reason the 2024-2026 pattern is <em>hybrid</em>: SSM for the bulk, attention (or retrieval) for the needles.
+            </div>
+        </div>
+    </div>
+</section>
+<!-- ════════════════════════════════════════════════════════════
+     PART III — THE SCALE
+     ════════════════════════════════════════════════════════════ -->
+<div class="part-divider" id="part-3">
+    <div class="part-number">Part III</div>
+    <h2 class="part-title">The Scale — Big Models, Longer Memory</h2>
+    <p class="part-subtitle">How the frontier fits trillions of parameters into finite hardware — and how it remembers millions of tokens.</p>
+</div>
+
+<!-- ════════════════ 13.5 MOE AT FRONTIER SCALE ════════════════ -->
+<section class="section" id="sec-5">
+    <div class="section-header">
+        <div class="section-label"><span class="section-num mint">SECTION 13.5</span></div>
+        <h2 class="section-title">MoE at Frontier Scale — 671B Total, 37B Active</h2>
+        <p class="section-desc">Module 03 taught you the router. Now see it at scale: DeepSeek-V3 (671B total parameters, 37B active per token), Mixtral 8×7B, GPT-4-class systems. The trick: most of the brain sleeps on every token — only a few experts wake up.</p>
+    </div>
+    <div class="section-goal">🎯 By the end of this section, you will be able to compute active vs total parameters, explain the load-balancing problem, and state why MoE trains cheap but serves tricky.</div>
+
+    <div class="lab-shell mt-4">
+        <div class="lab-toolbar">
+            <span class="step-badge">LAB 13.5</span>
+            <span style="font-weight:700; font-size:0.9rem;">The routing dashboard — real gating, live experts</span>
+            <div class="spacer"></div>
+            <div class="pill-group">
+                <button class="pill active" data-moe="tokens">Route tokens</button>
+                <button class="pill" data-moe="load">Load balance</button>
+            </div>
+        </div>
+        <div class="lab-stage">
+            <canvas id="canvas-moe" height="320"></canvas>
+        </div>
+        <div class="lab-readout" id="moe-readout"><strong>Live gating:</strong> each token's hidden state multiplies a real router matrix; softmax picks the top experts. Watch the active-parameter counter: 3 of 6 experts awake ≈ half the compute, all the knowledge. Flip to LOAD BALANCE to see the failure mode: when one expert hoards tokens, the others starve — and the load-balancing loss exists to stop it.</div>
+    </div>
+
+    <div class="notebook-spread" id="nb-moe">
+        <div class="notebook-spine"><div class="spine-studs"><span></span><span></span><span></span></div>📓 Instruction Manual · The MoE Math</div>
+        <div class="notebook-pages-container">
+            <div class="notebook-page active" data-page="1">
+                <h3>Page 1 · Total vs Active</h3>
+                <p>A router per layer picks the top-k experts for each token. Total parameters = all experts' weights (the knowledge). Active parameters = the k experts actually run (the compute). DeepSeek-V3: 671B total, 37B active — 18× knowledge per FLOP.</p>
+                <div class="math-block">$$\text{FLOPs per token} \propto \text{active}, \qquad \text{memory} \propto \text{total}$$</div>
+                <div class="page-highlight">This is why MoE trains cheaper per FLOP than dense — but serving still loads ALL experts into VRAM (total!), so a 671B MoE needs multi-GPU serving even though each token touches 37B.</div>
+            </div>
+            <div class="notebook-page" data-page="2">
+                <h3>Page 2 · The Load-Balancing Loss</h3>
+                <p>Without a penalty, the router collapses: one expert learns to win most tokens, the others atrophy. The fix is an auxiliary loss that rewards even usage (Shazeer 2017; the Switch Transformer's load-balancing term, 2021).</p>
+                <div class="math-block">$$\mathcal{L}_{aux} = \alpha \cdot N \cdot \sum_{i=1}^{E} f_i \cdot p_i$$</div>
+                <p><span class="math-inline">f_i</span> = fraction of tokens routed to expert i, <span class="math-inline">p_i</span> = the router's average probability for i. The product is small only when routing matches probability — i.e., when experts are used proportionally.</p>
+            </div>
+            <div class="notebook-page" data-page="3">
+                <h3>Page 3 · The 2024-2026 Record</h3>
+                <p><span class="page-year">2024</span>Mixtral 8×7B proves open-weight MoE can match dense quality at 3× lower inference FLOPs. <span class="page-year">2025</span>DeepSeek-V3: 671B total / 37B active with fine-grained experts (256) and shared experts — the largest open frontier model of its era; R1 adds the reasoning layer on top. The lesson: the architecture you built in Module 03, scaled 10,000×.</p>
+            </div>
+        </div>
+        <div class="notebook-nav">
+            <button id="nb-moe-prev">← Prev</button>
+            <span class="page-indicator">Page 1 of 3</span>
+            <button id="nb-moe-next">Next →</button>
+        </div>
+    </div>
+
+    <div class="prediction-card" id="pred-moe">
+        <div class="prediction-header">🔮 Predict Before You Compute</div>
+        <div class="prediction-body">
+            <div class="prediction-question">You delete the load-balancing loss from a 100-expert MoE and train for a long time. What do you observe?</div>
+            <div class="prediction-options">
+                <button class="pred-btn" data-answer="collapse">The router collapses — a few experts hoard tokens, the rest starve, and effective capacity drops</button>
+                <button class="pred-btn" data-answer="improve">Training gets faster — the loss was pure overhead</button>
+                <button class="pred-btn" data-answer="nothing">Nothing changes — routing is self-balancing</button>
+            </div>
+            <div class="prediction-reveal" id="pred-moe-reveal">
+                <strong>Collapse.</strong> Routing is a competition; without the balancing term, the winners take all. This is a measured failure mode on real MoE training runs — the auxiliary loss exists because the collapse was observed, not theorized. Check the lab's LOAD BALANCE view: the hoarding pattern is exactly what α·N·Σfᵢpᵢ penalizes.
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ════════════════ 13.6 LONG CONTEXT ════════════════ -->
+<section class="section" id="sec-6">
+    <div class="section-header">
+        <div class="section-label"><span class="section-num peach">SECTION 13.6</span></div>
+        <h2 class="section-title">The Context Frontier — The 1M-Token Era</h2>
+        <p class="section-desc">GPT-4 launched at 8K tokens. By 2026, frontier models advertise 200K, 1M, even 2M. This section is the honest math of what context length actually costs — attention, memory, and accuracy.</p>
+    </div>
+    <div class="section-goal">🎯 By the end of this section, you will be able to compute the real cost of doubling context, and explain why "supports 1M tokens" and "uses 1M tokens well" are different claims.</div>
+
+    <div class="lab-shell mt-4">
+        <div class="lab-toolbar">
+            <span class="step-badge">LAB 13.6</span>
+            <span class="lego-strip" aria-hidden="true"><i style="background:var(--peach)"></i><i style="background:var(--sky)"></i></span><span style="font-weight:700; font-size:0.9rem;">The context cost meter — slide the window, watch the bills</span>
+        </div>
+        <div class="lab-stage">
+            <canvas id="canvas-context" height="300"></canvas>
+            <div class="slider-row" style="margin-top:12px;">
+                <label>context (log)</label>
+                <input type="range" id="ctx-len" min="12" max="21" value="17" step="1">
+                <span class="val" id="ctx-len-v">128K</span>
+            </div>
+        </div>
+        <div class="lab-readout" id="context-readout"><strong>Three bills, one slider:</strong> attention FLOPs grow O(T²) (quadratic — the wall), KV cache memory grows O(T) linearly (the 11.2 formula), and "effective recall" — how much the model actually uses — grows sublinearly (real measured pattern, labeled approx). The frontier's tricks (RoPE scaling, sliding windows, retrieval) bend each bill differently.</div>
+    </div>
+
+    <div class="callout peach">
+        <span class="callout-icon">🧯</span>
+        <div><strong>The honest read of "1M context":</strong> the model can <em>accept</em> 1M tokens (the cache fits) — but attention quality on needles past ~100K degrades (the "needle-in-haystack" saturation), and cost per query explodes. The marketing number is a memory claim, not an accuracy claim. When you deploy, you measure the curve you saw in Lab 13.3 — for context, not thinking.</div>
+    </div>
+
+    <div class="prediction-card" id="pred-context">
+        <div class="prediction-header">🔮 Predict Before You Compute</div>
+        <div class="prediction-body">
+            <div class="prediction-question">You double a model's context from 64K to 128K. How does the attention cost change?</div>
+            <div class="prediction-options">
+                <button class="pred-btn" data-answer="quad">It ~quadruples — attention is O(T²): twice the tokens, four times the pairwise scores</button>
+                <button class="pred-btn" data-answer="double">It doubles — longer sequences cost proportionally more</button>
+                <button class="pred-btn" data-answer="flat">It stays flat — FlashAttention made it linear</button>
+            </div>
+            <div class="prediction-reveal" id="pred-context-reveal">
+                <strong>It quadruples.</strong> FlashAttention (Module 11) made the <em>memory</em> linear, but the pairwise <em>compute</em> is still O(T²) — 128K² = 4× 64K². This is why every "long context" system quietly uses sparsity, sliding windows, or retrieval: the quadratic bill is a law, not a bug.
+            </div>
+        </div>
+    </div>
+</section>
+<!-- ════════════════════════════════════════════════════════════
+     PART IV — THE SKY
+     ════════════════════════════════════════════════════════════ -->
+<div class="part-divider" id="part-4">
+    <div class="part-number">Part IV</div>
+    <h2 class="part-title">The Sky — Your Mission</h2>
+    <p class="part-subtitle">Every law you learned is now a dial on your launchpad. Design a frontier mission. Watch the laws predict its fate.</p>
+</div>
+
+<!-- ════════════════ 13.7 THE MISSION BUILDER ════════════════ -->
+<section class="section" id="sec-7">
+    <div class="section-header">
+        <div class="section-label"><span class="section-num lavender">SECTION 13.7 ★ SIGNATURE LAB</span></div>
+        <h2 class="section-title">The Mission Builder — Assemble Your Frontier Model</h2>
+        <p class="section-desc">The capstone construction lab of the course: five config plates, one launchpad. Pick your architecture, scale, data, training recipe, and serving plan — then RUN the mission simulator, which applies the real Chinchilla law and the real serving math to your choices.</p>
+    </div>
+    <div class="section-goal">🎯 By the end of this section, you will be able to spec a complete frontier mission — architecture, compute budget, data split, serving plan — and predict its loss, cost, and failure modes before spending a single FLOP.</div>
+
+    <div class="lab-shell mt-4">
+        <div class="lab-toolbar">
+            <span class="step-badge">LAB 13.7 · CONFIGURE → LAUNCH → REPORT</span>
+            <span style="font-weight:700; font-size:0.9rem;">The launchpad — five plates, one rocket</span>
+            <div class="spacer"></div>
+            <button class="btn btn-rose lego-btn" id="mission-run" disabled>🚀 LAUNCH MISSION</button>
+            <button class="btn btn-outline" id="mission-reset">⟲ Reset</button>
+        </div>
+        <div class="lab-stage">
+            <div class="grid-2" style="gap:20px; align-items:start;">
+                <div>
+                    <div class="canvas-title">The launchpad — your rocket rides the scaling curve</div>
+                    <canvas id="canvas-mission" height="360"></canvas>
+                </div>
+                <div>
+                    <div class="canvas-title">Config plates — five choices, five consequences</div>
+                    <div id="mission-plates" style="display:flex; flex-direction:column; gap:10px;"></div>
+                    <div id="mission-verdict" class="explain-strip lavender" style="margin-top:12px;">Choose one option from each plate, then LAUNCH. The simulator computes predicted loss from the Chinchilla fit, training FLOPs, active vs total params, and serving cost — then tells you the honest failure mode of your design.</div>
+                </div>
+            </div>
+        </div>
+        <div class="lab-readout" id="mission-readout"><strong>The report card:</strong> every number is real arithmetic on the laws you learned — L(N,D) from 13.1, C≈6ND from 13.2, active/total from 13.5, VRAM from Module 11. A mission that ignores Chinchilla gets the U-shape wall. A mission that ignores serving gets the OOM. The laws don't negotiate.</div>
+    </div>
+
+    <div class="brick-panel" style="padding:var(--space-xl); text-align:center; margin-top:32px; background:linear-gradient(135deg, var(--rose-bg), var(--gold-bg));">
+        <h2 style="margin-bottom:12px;">You Now Know How to Build One</h2>
+        <p style="max-width:620px; margin:0 auto 24px;">Everything in this course — every brick, every formula, every failure — exists because someone asked how the machine works and then built the answer. The frontier is not a place you visit. It is the next model, and you now hold every law it will obey.</p>
+    </div>
+</section>
+
+<!-- ════════════════ 13.8 THE ROAD AHEAD ════════════════ -->
+<section class="section" id="sec-8" style="border-bottom:none;">
+    <div class="section-header">
+        <div class="section-label"><span class="section-num rose">SECTION 13.8</span></div>
+        <h2 class="section-title">The Road Ahead — What the Laws Don't Cover</h2>
+        <p class="section-desc">The scaling laws are real — and they are not the whole story. The honest map of the open frontier, as of 2026.</p>
+    </div>
+    <div class="section-goal">🎯 By the end of this section, you will be able to name the open problems that scaling alone cannot solve — and pick the one you want to attack.</div>
+
+    <div class="grid-3 mt-4 stagger-children">
+        <div class="card">
+            <h4 class="coral">The Data Ceiling</h4>
+            <p style="font-size:0.85rem;">High-quality text is finite. Labs recycle corpora, synthesize data, and mine reasoning traces — but the power law wants ever-more tokens. The honest question: does the curve bend when the data well runs dry? Frontier labs are betting both ways.</p>
+        </div>
+        <div class="card">
+            <h4 class="teal">Evaluation Collapse</h4>
+            <p style="font-size:0.85rem;">Benchmarks saturate (Module 10). Contamination spreads. The field measures itself with instruments that no longer discriminate. Building honest evals is one of the highest-leverage skills in the entire industry — and it is yours from Module 10.</p>
+        </div>
+        <div class="card">
+            <h4 class="gold">The Alignment Gap</h4>
+            <p style="font-size:0.85rem;">Scaling made models capable; alignment (Module 06) makes them safe. But capability outruns control: red-teaming, interpretability (Module 12), and mechanistic guarantees are all still catching up. Every frontier lab's hardest problem is listed in a module you've now completed.</p>
+        </div>
+    </div>
+    <div class="grid-3 mt-4 stagger-children">
+        <div class="card">
+            <h4 class="lavender">Agent Reliability</h4>
+            <p style="font-size:0.85rem;">Agents (Module 09) hold tools and take actions — and still fail in ways that are hard to predict. Long-horizon reliability, memory, and self-correction are open problems with real jobs behind them.</p>
+        </div>
+        <div class="card">
+            <h4 class="sky">Architecture's Next Act</h4>
+            <p style="font-size:0.85rem;">SSMs, MoE, long-context tricks (13.4-13.6) are refinements of the transformer, not replacements. The next architecture — if it comes — must beat attention on its own terms. The people who build it will be the people who understand the current one deeply.</p>
+        </div>
+        <div class="card">
+            <h4 class="mint">The Interpretability Promise</h4>
+            <p style="font-size:0.85rem;">If we can truly read models (Module 12), we can certify them — guarantee behaviors instead of hope for them. It is the deepest unsolved problem on this board, and the one most likely to be solved by someone willing to build the next lens.</p>
+        </div>
+    </div>
+
+    <div class="callout rose mt-8">
+        <span class="callout-icon">🎓</span>
+        <div><strong>You built the machine.</strong> From the first AND gate in Module 00 to the mission launchpad today: a tokenizer, an embedding space, a transformer, a training loop, an alignment recipe, a serving stack, an evaluation yard, a reasoning agent, a telescope, a circuit bench, and a scaling law. Few people on Earth hold this exact toolchain. The frontier is hiring.</div>
+    </div>
+</section>
+<!-- ════════════════════════════════════════════════════════════
+     PART V — THE FRONTIER DIAGNOSTIC EXAM
+     ════════════════════════════════════════════════════════════ -->
+<div class="part-divider" id="part-5">
+    <div class="part-number">Part V</div>
+    <h2 class="part-title">The Frontier Diagnostic Exam</h2>
+    <p class="part-subtitle">Five frontier incidents. Five diagnoses. No scrolling up — this is the final retrieval practice of the course.</p>
+</div>
+
+<div class="lego-divider" aria-hidden="true"></div>
+
+<section class="section" id="sec-9" style="border-bottom:none;">
+    <div class="section-label"><span class="section-num rose">SECTION 13.9 · CAPSTONE</span></div>
+    <div class="section-goal">🎯 The course's final retrieval-practice moment: answer from memory. 4/5 earns The Frontier Cartographer brick — and completes the LLM Academy.</div>
+
+    <div class="brick-panel" style="padding:28px; margin-top:20px;">
+        <div id="exam-questions">
+
+            <div class="exam-q" data-q="1">
+                <div class="q-scenario">INCIDENT — a well-funded lab trains a 1-trillion-parameter model on 10 billion tokens. The training run costs millions. The model underperforms a 70B model trained on 2 trillion tokens — at higher cost.</div>
+                <div class="q-text">Q1 · What went wrong, per the laws you learned?</div>
+                <div class="exam-options">
+                    <label class="exam-opt"><input type="radio" name="q1" value="data"> <strong>Catastrophic under-training:</strong> 10B tokens on 1T params is ~0.01 tokens per parameter — far below Chinchilla's ~20. The data term in L(N,D) dominates, and the model sits high on the IsoFLOP right wall.</label>
+                    <label class="exam-opt"><input type="radio" name="q1" value="arch"> <strong>Architecture failure:</strong> transformers cannot scale past a trillion parameters.</label>
+                    <label class="exam-opt"><input type="radio" name="q1" value="opt"> <strong>Optimizer failure:</strong> the training diverged and they didn't notice.</label>
+                </div>
+            </div>
+
+            <div class="exam-q" data-q="2">
+                <div class="q-scenario">INCIDENT — a product team deploys a reasoning model (o1-class) to answer all support queries. Latency triples, API costs quadruple, and accuracy on the actual query mix is unchanged.</div>
+                <div class="q-text">Q2 · What is the correct diagnosis?</div>
+                <div class="exam-options">
+                    <label class="exam-opt"><input type="radio" name="q2" value="trivia"> <strong>Wrong curve:</strong> support queries are mostly retrieval + simple reasoning — the flat part of the test-time-compute curve. The thinking budget buys nothing; the team needs an adaptive switch, not a blanket reasoning model.</label>
+                    <label class="exam-opt"><input type="radio" name="q2" value="latency"> <strong>Infrastructure bug:</strong> the serving stack can't handle reasoning tokens.</label>
+                    <label class="exam-opt"><input type="radio" name="q2" value="prompt"> <strong>Prompt problem:</strong> the queries need better few-shot examples.</label>
+                </div>
+            </div>
+
+            <div class="exam-q" data-q="3">
+                <div class="q-scenario">INCIDENT — a lab trains a 128-expert MoE. After 200B tokens, they inspect routing: expert #7 handles 61% of tokens; 40 experts handle under 0.5% each. Effective capacity is far below spec.</div>
+                <div class="q-text">Q3 · What is happening, and what was missing?</div>
+                <div class="exam-options">
+                    <label class="exam-opt"><input type="radio" name="q3" value="imbalance"> <strong>Router collapse:</strong> expert #7 won the routing competition. The load-balancing auxiliary loss (α·N·Σ fᵢpᵢ) was missing or too weak — without it, winners take all and the dead experts are wasted memory.</label>
+                    <label class="exam-opt"><input type="radio" name="q3" value="init"> <strong>Bad initialization:</strong> expert #7 was initialized differently and got lucky.</label>
+                    <label class="exam-opt"><input type="radio" name="q3" value="data"> <strong>Data skew:</strong> the corpus genuinely belongs to expert #7.</label>
+                </div>
+            </div>
+
+            <div class="exam-q" data-q="4">
+                <div class="q-scenario">INCIDENT — an SSM-based model (Mamba-style, no attention) powers a document-QA product. Users report it fails when the answer appears once near the start of a 200K-token document and the question mentions it verbatim at the end.</div>
+                <div class="q-text">Q4 · Why does the pure SSM fail where a transformer succeeds?</div>
+                <div class="exam-options">
+                    <label class="exam-opt"><input type="radio" name="q4" value="recall"> <strong>The state overwrote it:</strong> exact long-range recall is the known SSM weakness — the fixed-size state compresses and overwrites history, so a needle 199K tokens back is unrecoverable. Hybrid designs (attention for needles, SSM for the bulk) exist precisely for this.</label>
+                    <label class="exam-opt"><input type="radio" name="q4" value="speed"> <strong>It ran out of time:</strong> the recurrence is sequential and too slow at 200K tokens.</label>
+                    <label class="exam-opt"><input type="radio" name="q4" value="rope"> <strong>RoPE overflow:</strong> positional encoding fails past 128K.</label>
+                </div>
+            </div>
+
+            <div class="exam-q" data-q="5">
+                <div class="q-scenario">INCIDENT — a startup advertises "1M-token context" on a model trained at 32K, using RoPE scaling with no additional training. A customer's contract review misses a clause at token 850,000 — with severe consequences.</div>
+                <div class="q-text">Q5 · What is the honest post-mortem?</div>
+                <div class="exam-options">
+                    <label class="exam-opt"><input type="radio" name="q5" value="extrap"> <strong>Extrapolation isn't verification:</strong> RoPE scaling makes long positions <em>computable</em>, not <em>usable</em>. Context claims must be validated with evals (needle tests, long-range recall) at the advertised length — Module 10's lesson applied to context.</label>
+                    <label class="exam-opt"><input type="radio" name="q5" value="cache"> <strong>KV cache overflow:</strong> the cache ran out of memory at 850K tokens.</label>
+                    <label class="exam-opt"><input type="radio" name="q5" value="legal"> <strong>Customer error:</strong> no model can be expected to read 1M tokens.</label>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="text-center" style="margin-top:24px;">
+            <button class="btn btn-coral" id="btn-submit-exam" style="font-size:1.05rem; padding:14px 36px;">Submit Final Diagnostic</button>
+        </div>
+
+        <div id="exam-result" style="display:none; margin-top:28px; padding:24px; border-radius:var(--radius-md); border:2.5px solid var(--ink); background:var(--surface-alt); text-align:center;">
+            <h3 id="exam-score-title" style="margin-bottom:8px;">Diagnostic Score: 0/5</h3>
+            <p id="exam-score-desc" style="max-width:560px; margin:0 auto 16px;"></p>
+            <div id="exam-level" style="margin-bottom:16px;"></div>
+            <div id="exam-cert"></div>
+        </div>
+    </div>
+</section>
+
+</main>
+
+<footer class="academy-footer">
+    <div class="container">
+        <p>Built brick by brick · <strong>LLM Academy</strong> · Module 13: The Frontier Observatory</p>
+        <p style="margin-top:4px; font-size:0.75rem;">Every curve, law, and mission report on this page was computed live from real formulas — Chinchilla fits, IsoFLOP slices, MoE gating, and serving math. No servers, no fakes.</p>
+    </div>
+</footer>
+
+<p style="font-family:var(--font-mono);font-size:0.62rem;color:var(--ink-faint);text-align:center;margin:24px auto;">LEGO® is a trademark of the LEGO Group. This course is not affiliated with, endorsed by, or sponsored by the LEGO Group.</p>
+
+<button class="sound-toggle" id="sound-toggle" title="Toggle sound">🔊</button>
+
+<script>
+'use strict';
+/* ════════════════════════════════════════════════════════════════
+   MODULE 13 ENGINE — the laws, live.
+   Chinchilla fit: L(N,D) = 1.69 + 406.4·N^-0.34 + 410.7·D^-0.28 (nats,
+   on Chinchilla's corpus/tokenizer — the SHAPE is robust, constants
+   are corpus-specific). C ≈ 6ND. All labs compute from these.
+   ════════════════════════════════════════════════════════════════ */
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+function getCss(v) { return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+const CORAL=getCss('--coral'), TEAL=getCss('--teal'), GOLD=getCss('--gold'), LAV=getCss('--lavender'),
+      MINT=getCss('--mint'), SKY=getCss('--sky'), PEACH=getCss('--peach'), ROSE=getCss('--rose'),
+      INK=getCss('--ink'), INKSOFT=getCss('--ink-soft'), INKFAINT=getCss('--ink-faint'),
+      BORDER=getCss('--border'), SURFALT=getCss('--surface-alt');
+function hexToRgba(hex,a){ hex=hex.replace('#',''); if(hex.length===3)hex=hex.split('').map(c=>c+c).join(''); const r=parseInt(hex.slice(0,2),16),g=parseInt(hex.slice(2,4),16),b=parseInt(hex.slice(4,6),16); return `rgba(${r},${g},${b},${a})`; }
+const REDUCED = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+function setupCanvas(id, heightPx){
+    const c = document.getElementById(id); if(!c) return null;
+    const rect = c.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    const w = rect.width || 600, h = heightPx || (parseInt(c.getAttribute('height'),10) || 300);
+    c.width = Math.round(w*dpr); c.height = Math.round(h*dpr);
+    c.style.height = h + 'px';
+    c.style.width = w + 'px';
+    const ctx = c.getContext('2d');
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    ctx.fillStyle = '#FFFEFA';
+    ctx.fillRect(0, 0, w, h);
+    ctx.fillStyle = 'rgba(43,42,36,0.035)';
+    const studStep = 24;
+    for(let px = studStep/2; px < w; px += studStep){
+        for(let py = studStep/2; py < h; py += studStep){
+            ctx.beginPath(); ctx.arc(px, py, 2, 0, Math.PI * 2); ctx.fill();
+        }
+    }
+    return { canvas: c, ctx, w, h };
+}
+if (!CanvasRenderingContext2D.prototype.roundRect) {
+    CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+        if (typeof r === 'number') r = [r, r, r, r];
+        r = r || [0, 0, 0, 0];
+        const [tl, tr, br, bl] = r;
+        this.moveTo(x + tl, y);
+        this.lineTo(x + w - tr, y); this.arcTo(x + w, y, x + w, y + tr, tr);
+        this.lineTo(x + w, y + h - br); this.arcTo(x + w, y + h, x + w - br, y + h, br);
+        this.lineTo(x + bl, y + h); this.arcTo(x, y + h, x, y + h - bl, bl);
+        this.lineTo(x, y + tl); this.arcTo(x, y, x + tl, y, tl);
+        this.closePath();
+        return this;
+    };
+}
+const SoundFX = (function() {
+    let ctx = null, enabled = true;
+    function ensureCtx() { if (!ctx) { try { ctx = new (window.AudioContext||window.webkitAudioContext)(); } catch(e) { enabled = false; } } if (ctx && ctx.state === 'suspended') { try { ctx.resume().catch(() => {}); } catch(e) {} } return ctx; }
+    function tone(freq, dur, type, vol) {
+        if (!enabled) return;
+        const ac = ensureCtx(); if (!ac) return;
+        const o = ac.createOscillator(), g = ac.createGain();
+        o.type = type || 'sine'; o.frequency.value = freq;
+        g.gain.setValueAtTime(vol || 0.04, ac.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + (dur || 0.12));
+        o.connect(g); g.connect(ac.destination);
+        o.start(); o.stop(ac.currentTime + (dur || 0.12));
+    }
+    return {
+        click: () => tone(520, 0.08, 'sine', 0.03),
+        success: () => { tone(523, 0.1, 'sine', 0.04); setTimeout(()=>tone(659, 0.1, 'sine', 0.04), 90); setTimeout(()=>tone(784, 0.16, 'sine', 0.05), 180); },
+        step: () => tone(340, 0.05, 'triangle', 0.02),
+        land: () => { tone(196, 0.1, 'triangle', 0.045); setTimeout(()=>tone(110, 0.16, 'sine', 0.05), 60); },
+        thud: () => { tone(90, 0.2, 'sine', 0.07); setTimeout(()=>tone(58, 0.16, 'sine', 0.05), 30); },
+        complete: () => { tone(392, 0.12, 'sine', 0.04); setTimeout(()=>tone(523, 0.12, 'sine', 0.04), 110); setTimeout(()=>tone(659, 0.2, 'sine', 0.05), 220); },
+        toggle: (on) => { enabled = on; }
+    };
+})();
+$('#sound-toggle').addEventListener('click', function() {
+    const muted = this.classList.toggle('muted');
+    this.textContent = muted ? '🔇' : '🔊';
+    SoundFX.toggle(!muted);
+    if (!muted) SoundFX.click();
+});
+function initNotebook(containerId) {
+    const nb = document.getElementById(containerId);
+    if (!nb) return;
+    const pages = nb.querySelectorAll('.notebook-page');
+    const prevBtn = nb.querySelector('[id$="-prev"]');
+    const nextBtn = nb.querySelector('[id$="-next"]');
+    const indicator = nb.querySelector('.page-indicator');
+    let current = 0;
+    function show(idx) {
+        pages.forEach(p => p.classList.remove('active'));
+        pages[idx].classList.add('active');
+        current = idx;
+        if (prevBtn) prevBtn.disabled = idx === 0;
+        if (nextBtn) nextBtn.disabled = idx === pages.length - 1;
+        if (indicator) indicator.textContent = `Page ${idx + 1} of ${pages.length}`;
+        SoundFX.click();
+    }
+    if (prevBtn) prevBtn.addEventListener('click', () => { if (current > 0) show(current - 1); });
+    if (nextBtn) nextBtn.addEventListener('click', () => { if (current < pages.length - 1) show(current + 1); });
+    show(0);
+}
+function revealPrediction(cardId, correctAnswer, clickedBtn) {
+    const card = document.getElementById(cardId);
+    if (!card) return;
+    const reveal = document.getElementById(cardId + '-reveal');
+    const buttons = card.querySelectorAll('.pred-btn');
+    const isCorrect = clickedBtn.dataset.answer === correctAnswer;
+    buttons.forEach(b => {
+        b.style.pointerEvents = 'none';
+        if (b === clickedBtn) { b.classList.add(isCorrect ? 'correct' : 'incorrect'); b.classList.add('selected'); }
+        else if (b.dataset.answer === correctAnswer && !isCorrect) b.classList.add('correct');
+        else b.style.opacity = '0.4';
+    });
+    if (reveal) { reveal.classList.add('show'); if (!isCorrect) reveal.classList.add('wrong'); }
+    if (isCorrect) SoundFX.success(); else SoundFX.step();
+}
+function wirePrediction(cardId, answer) {
+    $$( '#' + cardId + ' .pred-btn').forEach(b => b.addEventListener('click', () => revealPrediction(cardId, answer, b)));
+}
+function fmt(x, d){ return Number(x).toFixed(d === undefined ? 4 : d); }
+function fmtEng(x){ return x >= 1e12 ? (x/1e12).toFixed(1) + 'T' : x >= 1e9 ? (x/1e9).toFixed(1) + 'B' : x >= 1e6 ? (x/1e6).toFixed(1) + 'M' : fmt(x,1); }
+
+/* ════════════════ THE LAWS ════════════════ */
+const CHINCHILLA = { c: 1.69, A: 406.4, alpha: 0.34, B: 410.7, beta: 0.28 };
+function chinchillaLoss(N, D){ return CHINCHILLA.c + CHINCHILLA.A*Math.pow(N, -CHINCHILLA.alpha) + CHINCHILLA.B*Math.pow(D, -CHINCHILLA.beta); }
+function isoLoss(N, C){ const D = C/(6*N); return chinchillaLoss(N, D); }
+function optExponent(){ const a = CHINCHILLA.alpha, b = CHINCHILLA.beta; return { n: b/(a+b), d: a/(a+b) }; }
+/* ════════════════════════════════════════════════════════════════
+   HERO · THE BRICK-ROCKET — riding the scaling curve
+   ════════════════════════════════════════════════════════════════ */
+let heroT = 0;
+function drawHeroLaunch(){
+    const s = setupCanvas('canvas-hero-launch', 280); if(!s) return;
+    const { ctx, w, h } = s;
+    ctx.clearRect(0,0,w,h);
+    kitFrame(ctx, w, h, "The Frontier Launchpad — what comes next");
+
+    const pad = 46, pw = w - pad*2, ph = h - pad*2;
+    /* curve: loss vs N (log axis), Chinchilla shape */
+    ctx.fillStyle = INK; ctx.font = 'bold 10px "IBM Plex Mono",monospace'; ctx.textAlign = 'center';
+    ctx.fillText('loss falls on a power law — until the data runs out', w/2, 16);
+    ctx.strokeStyle = hexToRgba(INK, 0.15); ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(pad, pad); ctx.lineTo(pad, h-pad); ctx.lineTo(w-pad, h-pad); ctx.stroke();
+    ctx.fillStyle = INKFAINT; ctx.font = '8px "IBM Plex Mono",monospace'; ctx.textAlign = 'right';
+    ctx.fillText('loss →', pad - 6, pad + 8);
+    ctx.fillText('params → (log)', w/2, h - 10);
+    const N0 = 1e7, N1 = 1e13;
+    const lossAt = n => chinchillaLoss(n, 1e13) - 1.4;
+    const xOf = n => pad + (Math.log10(n) - 7)/(13-7) * pw;
+    const yOf = l => pad + ph - Math.min(1, l/2.2) * ph;
+    ctx.strokeStyle = ROSE; ctx.lineWidth = 3;
+    ctx.beginPath();
+    for(let i = 0; i <= 80; i++){
+        const n = N0 * Math.pow(N1/N0, i/80);
+        const x = xOf(n), y = yOf(lossAt(n));
+        i === 0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+    /* data-exhaustion break: curve flattens → the 'wall' */
+    ctx.strokeStyle = hexToRgba(CORAL, 0.9); ctx.lineWidth = 2.5; ctx.setLineDash([6,4]);
+    ctx.beginPath(); ctx.moveTo(xOf(1e11), yOf(lossAt(1e11))); ctx.lineTo(xOf(1e13), yOf(lossAt(1e13) + 0.35)); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = CORAL; ctx.font = 'bold 8px "IBM Plex Mono",monospace'; ctx.textAlign = 'center';
+    ctx.fillText('data wall', xOf(1e13) - 30, yOf(lossAt(1e13) + 0.35) - 4);
+    /* the brick rocket: stacked studded bricks riding the curve */
+    const prog = REDUCED ? 0.5 : (Math.sin(heroT*0.5) + 1)/2;
+    const n = N0 * Math.pow(N1/N0, 0.15 + prog*0.75);
+    const rx = xOf(n), ry = yOf(lossAt(n));
+    const bw = 26, cols = ['var(--rose)','var(--gold)','var(--teal)','var(--sky)','var(--coral)'];
+    cols.forEach((col, i) => {
+        ctx.fillStyle = col;
+        ctx.strokeStyle = INK; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.roundRect(rx - bw/2, ry - 14 - i*16, bw, 16, 4); ctx.fill(); ctx.stroke();
+        for(let st = 0; st < 2; st++){
+            ctx.fillStyle = hexToRgba('#FFFFFF', 0.3);
+            ctx.beginPath(); ctx.arc(rx - 6 + st*12, ry - 14 - i*16 + 3.5, 2.6, 0, Math.PI*2); ctx.fill();
+        }
+    });
+    ctx.fillStyle = INK; ctx.font = 'bold 8px "IBM Plex Mono",monospace'; ctx.textAlign = 'center';
+    ctx.fillText('N = ' + fmtEng(n), rx, ry - 14 - cols.length*16 - 6);
+    ctx.fillStyle = INKSOFT; ctx.font = '8px "IBM Plex Mono",monospace';
+    ctx.fillText('real Chinchilla shape · rocket rides the law', w/2, h - 8);
+}
+function heroLaunchTick(){
+    heroT += 0.02;
+    drawHeroLaunch();
+    if(!REDUCED) requestAnimationFrame(heroLaunchTick);
+}
+
+/* ════════════════════════════════════════════════════════════════
+   LAB 13.1 · THE SCALING SURFACE
+   ════════════════════════════════════════════════════════════════ */
+let scalingAnim = null, scalingSonify = null, scalingImpossibleAt = 0;
+function drawScaling(){
+    const s = setupCanvas('canvas-scaling', 330); if(!s) return;
+    const { ctx, w, h } = s;
+    ctx.clearRect(0,0,w,h);
+    kitFrame(ctx, w, h, "Scaling Laws — more is better (to a point)");
+
+    const N = Math.pow(10, +$('#scaling-n').value);
+    const D = Math.pow(10, +$('#scaling-d').value);
+    $('#scaling-n-v').textContent = fmtEng(N);
+    $('#scaling-d-v').textContent = fmtEng(D);
+    const pad = 50, pw = w - pad*2, ph = h - pad*2;
+    ctx.strokeStyle = hexToRgba(INK, 0.15); ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(pad, pad); ctx.lineTo(pad, h-pad); ctx.lineTo(w-pad, h-pad); ctx.stroke();
+    ctx.fillStyle = INKFAINT; ctx.font = '8px "IBM Plex Mono",monospace'; ctx.textAlign = 'right';
+    ctx.fillText('L (nats)', pad - 6, pad + 8);
+    ctx.fillText('N → (log)', w/2, h - 10);
+    /* L(N) at fixed D */
+    const lossAt = n => chinchillaLoss(n, D);
+    const N0 = 1e7, N1 = 1e13;
+    const xOf = n => pad + (Math.log10(n) - 7)/6 * pw;
+    const lo = lossAt(N0), hi = lossAt(N1);
+    const yOf = l => pad + (hi - l)/(hi - lo) * ph;
+    kitGrid(ctx, pad, pad, w-pad, h-pad, 6, 4);
+    ctx.fillStyle = hexToRgba(INK, 0.6); ctx.font = '600 9px "IBM Plex Mono",monospace'; ctx.textAlign = 'center';
+    [7, 9, 11, 13].forEach(e => ctx.fillText('10^' + e, xOf(Math.pow(10, e)), h - pad + 14));
+    ctx.textAlign = 'right';
+    ctx.fillText(fmt(hi, 2), pad - 8, pad + 6);
+    ctx.fillText(fmt((hi + lo) / 2, 2), pad - 8, pad + ph / 2 + 3);
+    ctx.fillText(fmt(lo, 2), pad - 8, h - pad + 4);
+    ctx.strokeStyle = CORAL; ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    for(let i = 0; i <= 90; i++){
+        const n = N0 * Math.pow(N1/N0, i/90);
+        const x = xOf(n), y = yOf(lossAt(n));
+        i === 0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+    /* current point */
+    const cx = xOf(N), cy = yOf(chinchillaLoss(N, D));
+    ctx.fillStyle = ROSE; ctx.strokeStyle = INK; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(cx, cy, 7, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+    kitStud(ctx, cx, cy, 7, ROSE);   /* R15 — stud materiality on the "you are here" drag point */
+    ctx.fillStyle = INK; ctx.font = 'bold 9px "IBM Plex Mono",monospace'; ctx.textAlign = 'left';
+    ctx.fillText('you are here: L = ' + fmt(chinchillaLoss(N,D), 3), cx + 12, cy - 8);
+    /* doubling marker */
+    const cx2 = xOf(N*2), cy2 = yOf(chinchillaLoss(N*2, D));
+    ctx.strokeStyle = hexToRgba(ROSE, 0.5); ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx2, cy); ctx.lineTo(cx2, cy2); ctx.stroke();
+    ctx.fillStyle = ROSE; ctx.font = 'bold 8px "IBM Plex Mono",monospace'; ctx.textAlign = 'center';
+    ctx.fillText('ΔL ≈ ' + fmt(chinchillaLoss(N,D) - chinchillaLoss(N*2,D), 3), (cx+cx2)/2, cy - 6);
+    const dL = chinchillaLoss(N,D) - chinchillaLoss(N*2,D);
+    const dD = chinchillaLoss(N,D) - chinchillaLoss(N, D*2);
+    kitReadout(ctx, w - 255, pad, 235, [
+        ['L(N, D)', fmt(chinchillaLoss(N, D), 3), ROSE],
+        ['ΔL when N×2', fmt(dL, 3), CORAL],
+        ['ΔL when D×2', fmt(dD, 3), SKY]
+    ]);
+    $('#scaling-readout').innerHTML = '<strong>Current loss:</strong> L(' + fmtEng(N) + ', ' + fmtEng(D) + ') = ' + fmt(chinchillaLoss(N,D), 3) + ' nats. Doubling N buys ΔL ≈ ' + fmt(dL, 3) + '; doubling D buys ΔL ≈ ' + fmt(dD, 3) + '. ' + (dD > dL ? 'Data is the better buy here — the D-term dominates (β < α means D needs the help).' : 'Parameters are the better buy — the N-term dominates.' );
+    /* R14 FORM→SEE — the rose point is a hand-held marker (geo stash for hit tests) */
+    const cvEl = document.getElementById('canvas-scaling');
+    if(cvEl) cvEl._scalingGeo = { x: cx, y: cy, pad, pw, ph, h, N, D };
+    ctx.fillStyle = INKFAINT; ctx.font = '8px "IBM Plex Mono",monospace'; ctx.textAlign = 'left';
+    ctx.fillText('drag me along the curve', cx + 12, cy + 14);
+    if(Date.now() - scalingImpossibleAt < 3000){
+        ctx.fillStyle = hexToRgba(CORAL, 0.16);
+        ctx.beginPath(); ctx.arc(cx, cy, 15 + 4*Math.sin(Date.now()/90), 0, Math.PI*2); ctx.fill();
+        ctx.strokeStyle = CORAL; ctx.lineWidth = 2; ctx.stroke();
+        /* R15 — 3 orbiting studs on the leap-of-faith clamp (300ms orbit, driven by the impossible timestamp) */
+        for(let k = 0; k < 3; k++){
+            const orbA = (Date.now() - scalingImpossibleAt)/300 * Math.PI*2 + k*Math.PI*2/3;
+            kitStud(ctx, cx + Math.cos(orbA)*26, cy + Math.sin(orbA)*26, 4, CORAL);
+        }
+        kitNotice(ctx, pad + 6, h - 70, w - pad*2 - 12, [
+            'beyond the chart\'s edge — the law is fit on real launches;',
+            'extrapolating that far is a leap of faith'
+        ], CORAL);
+        $('#scaling-readout').innerHTML += ' <span style="color:var(--coral-dark);font-weight:700;">⛔ IMPOSSIBLE: beyond the chart\'s edge — the law is fit on real launches; extrapolating that far is a leap of faith.</span>';
+    }
+}
+$('#scaling-n').addEventListener('input', () => { drawScaling(); SoundFX.step(); });
+$('#scaling-d').addEventListener('input', () => { drawScaling(); SoundFX.step(); });
+$('#scaling-sonify').addEventListener('click', function(){
+    if(this.classList.toggle('active')){
+        let i = 0;
+        scalingSonify = setInterval(() => {
+            const n = Math.pow(10, 7 + (i%80)/80*6);
+            const l = chinchillaLoss(n, 1e13);
+            SoundFX.tone(320 - l*70, 0.07, 'sine', 0.025);
+            i++;
+        }, 90);
+    } else { clearInterval(scalingSonify); scalingSonify = null; }
+    SoundFX.click();
+});
+$('#scaling-animate').addEventListener('click', function(){
+    if(this.classList.toggle('active')){
+        let i = 0;
+        scalingAnim = setInterval(() => {
+            $('#scaling-d').value = 8 + (i++ % 60)/60*6;
+            drawScaling(); SoundFX.step();
+        }, 120);
+    } else { clearInterval(scalingAnim); scalingAnim = null; }
+    SoundFX.click();
+});
+/* R14 FORM→SEE — push the frontier with your hand: drag the rose point ALONG the curve */
+(function(){
+    const cv = document.getElementById('canvas-scaling');
+    if(!cv) return;
+    cv.style.touchAction = 'none';
+    let dragging = false, impossible = false;
+    function local(ev){ const r = cv.getBoundingClientRect(); return { x: ev.clientX - r.left, y: ev.clientY - r.top }; }
+    cv.addEventListener('pointerdown', function(ev){
+        const g = cv._scalingGeo; if(!g) return;
+        const p = local(ev);
+        if(Math.hypot(p.x - g.x, p.y - g.y) > 26) return;
+        ev.preventDefault(); dragging = true; impossible = false;
+        try { cv.setPointerCapture(ev.pointerId); } catch(e){}
+    });
+    cv.addEventListener('pointermove', function(ev){
+        if(!dragging) return;
+        ev.preventDefault();
+        const g = cv._scalingGeo; if(!g) return;
+        const p = local(ev);
+        let logN = 7 + (p.x - g.pad)/g.pw * 6;
+        if(logN < 7 || logN > 13){
+            if(!impossible){ impossible = true; kitShake(cv); SoundFX.thud(); }
+            scalingImpossibleAt = Date.now();
+            logN = Math.min(13, Math.max(7, logN));
+        } else {
+            impossible = false;
+            SoundFX.step();
+        }
+        $('#scaling-n').value = Math.round(logN * 100) / 100;
+        drawScaling();
+    });
+    function endDrag(ev){
+        if(!dragging) return;
+        dragging = false;
+        try { cv.releasePointerCapture(ev.pointerId); } catch(e){}
+        if(impossible){ scalingImpossibleAt = Date.now(); }
+        else { SoundFX.land(); }
+        impossible = false;
+    }
+    cv.addEventListener('pointerup', endDrag);
+    cv.addEventListener('pointercancel', endDrag);
+})();
+
+/* ════════════════════════════════════════════════════════════════
+   LAB 13.2 · ISOFLOP CURVES
+   ════════════════════════════════════════════════════════════════ */
+let isoflopBudget = 19, isoflopBudgetC = 19, isoflopChipAt = 0, isoflopImpossibleAt = 0;
+function nOptFor(C){
+    const a = CHINCHILLA.alpha, b = CHINCHILLA.beta;
+    return Math.pow((CHINCHILLA.A*a)/(CHINCHILLA.B*b), 1/(a+b)) * Math.pow(C/6, b/(a+b));
+}
+function drawIsoflop(){
+    const s = setupCanvas('canvas-isoflop', 300); if(!s) return;
+    const { ctx, w, h } = s;
+    ctx.clearRect(0,0,w,h);
+    kitFrame(ctx, w, h, "IsoFLOP — the compute valley");
+
+    const C = Math.pow(10, isoflopBudgetC);
+    const pad = 50, pw = w - pad*2, ph = h - pad*2;
+    ctx.strokeStyle = hexToRgba(INK, 0.15); ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(pad, pad); ctx.lineTo(pad, h-pad); ctx.lineTo(w-pad, h-pad); ctx.stroke();
+    ctx.fillStyle = INKFAINT; ctx.font = '8px "IBM Plex Mono",monospace'; ctx.textAlign = 'right';
+    ctx.fillText('L (nats)', pad - 6, pad + 8);
+    ctx.fillText('N → (log)', w/2, h - 10);
+    const N0 = Math.pow(10, isoflopBudget - 5.2), N1 = Math.pow(10, isoflopBudget - 1.8);
+    const xOf = n => pad + (Math.log10(n) - Math.log10(N0))/(Math.log10(N1) - Math.log10(N0)) * pw;
+    const los = [];
+    for(let i = 0; i <= 90; i++){
+        const n = N0 * Math.pow(N1/N0, i/90);
+        los.push({ n, l: isoLoss(n, C) });
+    }
+    const lo = Math.min(...los.map(o => o.l)), hi = Math.max(...los.map(o => o.l));
+    const yOf = l => pad + (hi - l)/(hi - lo) * ph;
+    kitGrid(ctx, pad, pad, w-pad, h-pad, 6, 4);
+    ctx.fillStyle = hexToRgba(INK, 0.6); ctx.font = '600 9px "IBM Plex Mono",monospace'; ctx.textAlign = 'center';
+    [0.25, 0.5, 0.75].forEach(q => ctx.fillText('10^' + fmt(Math.log10(N0) + (Math.log10(N1) - Math.log10(N0)) * q, 1), pad + pw * q, h - pad + 14));
+    ctx.textAlign = 'right';
+    ctx.fillText(fmt(hi, 2), pad - 8, pad + 6);
+    ctx.fillText(fmt((hi + lo) / 2, 2), pad - 8, pad + ph / 2 + 3);
+    ctx.fillText(fmt(lo, 2), pad - 8, h - pad + 4);
+    ctx.strokeStyle = SKY; ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    los.forEach((o, i) => { const x = xOf(o.n), y = yOf(o.l); i === 0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y); });
+    ctx.stroke();
+    /* optimum */
+    const nOpt = nOptFor(C);
+    const dOpt = C/(6*nOpt);
+    const ox = xOf(nOpt), oy = yOf(isoLoss(nOpt, C));
+    ctx.fillStyle = GOLD; ctx.strokeStyle = INK; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(ox, oy, 8, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+    kitStud(ctx, ox - 13, oy, 4.5, GOLD); kitStud(ctx, ox + 13, oy, 4.5, GOLD);   /* R15 — studs flanking the Chinchilla point */
+    ctx.fillStyle = GOLD; ctx.font = 'bold 9px "IBM Plex Mono",monospace'; ctx.textAlign = 'center';
+    ctx.fillText('Chinchilla point', ox, oy - 14);
+    ctx.fillStyle = INKSOFT; ctx.font = '8px "IBM Plex Mono",monospace';
+    ctx.fillText('N* = ' + fmtEng(nOpt) + ' · D* = ' + fmtEng(dOpt), ox, oy + 22);
+    ctx.fillStyle = INK; ctx.font = 'bold 10px "IBM Plex Mono",monospace'; ctx.textAlign = 'center';
+    ctx.fillText('IsoFLOP slice · C = 10^' + fmt(isoflopBudgetC, 1) + ' FLOPs (≈ ' + fmtEng(C) + ')', w/2, 16);
+    kitReadout(ctx, w - 260, pad + 30, 240, [
+        ['compute C', fmtEng(C), SKY],
+        ['optimal N*', fmtEng(nOpt), GOLD],
+        ['tokens D*', fmtEng(dOpt), MINT],
+        ['D*/N* ratio', fmt(dOpt / nOpt, 0), INK]
+    ]);
+    $('#isoflop-readout').innerHTML = '<strong>The valley:</strong> at C = 10^' + fmt(isoflopBudgetC, 1) + ', the optimal split is N* ≈ ' + fmtEng(nOpt) + ' params, D* ≈ ' + fmtEng(dOpt) + ' tokens (≈ ' + fmt(dOpt/nOpt, 0) + ' tokens/param). Deviating left wastes the model; deviating right starves it. The gold dot is the Chinchilla point — where the field aims every launch.';
+    /* R14 FORM→SEE — the compute-budget drag handle on the C axis */
+    const cvEl = document.getElementById('canvas-isoflop');
+    if(cvEl) cvEl._isoflopGeo = { pad, pw, ph, h, logC: isoflopBudgetC, nOpt, dOpt };
+    const C_MIN = 17, C_MAX = 22;
+    const xOfC = lc => pad + (lc - C_MIN)/(C_MAX - C_MIN) * pw;
+    const hx = xOfC(isoflopBudgetC);
+    ctx.fillStyle = INKFAINT; ctx.font = '8px "IBM Plex Mono",monospace'; ctx.textAlign = 'right';
+    ctx.fillText('drag the gold brick — your compute budget C (log)', w - pad - 2, 30);
+    ctx.strokeStyle = hexToRgba(GOLD, 0.55); ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(xOfC(C_MIN), 38); ctx.lineTo(xOfC(C_MAX), 38); ctx.stroke();
+    for(let lc = C_MIN; lc <= C_MAX; lc++){
+        ctx.strokeStyle = hexToRgba(GOLD, 0.4); ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(xOfC(lc), 35); ctx.lineTo(xOfC(lc), 41); ctx.stroke();
+        ctx.fillStyle = INKFAINT; ctx.font = '7px "IBM Plex Mono",monospace'; ctx.textAlign = 'center';
+        ctx.fillText(lc, xOfC(lc), 47);
+    }
+    const bx = hx - 22, by = 30;
+    kitBrick3(ctx, bx, by, 44, 14, GOLD, 2);   /* R15 — the budget handle as a 2.5D ABS brick */
+    ctx.fillStyle = INK; ctx.font = 'bold 8px "IBM Plex Mono",monospace';
+    ctx.textAlign = hx > w - 90 ? 'right' : 'left';
+    ctx.fillText('C = 10^' + fmt(isoflopBudgetC, 1), hx > w - 90 ? hx - 28 : hx + 28, by + 10);
+    if(Date.now() - isoflopImpossibleAt < 3000){
+        /* R15 — 3 orbiting studs on the refused budget handle (300ms orbit, driven by the impossible timestamp) */
+        for(let k = 0; k < 3; k++){
+            const orbA = (Date.now() - isoflopImpossibleAt)/300 * Math.PI*2 + k*Math.PI*2/3;
+            kitStud(ctx, hx + Math.cos(orbA)*30, 38 + Math.sin(orbA)*12, 4.5, GOLD);
+        }
+        kitNotice(ctx, pad + 6, h - 88, w - pad*2 - 12, [
+            'no compute budget there — the C axis is log; each step is 10×'
+        ], CORAL);
+    }
+    if(Date.now() - isoflopChipAt < 3000){
+        kitNotice(ctx, pad + 6, h - 58, w - pad*2 - 12, [
+            'your budget 10^' + fmt(isoflopBudgetC, 1) + ': N* = ' + fmtEng(nOpt) + ', D* = ' + fmtEng(dOpt) + ' —',
+            'the valley says spend in this ratio (' + fmt(dOpt/nOpt, 0) + ' tokens/param)'
+        ], GOLD);
+        $('#isoflop-readout').innerHTML += ' <span style="color:var(--gold-dark);font-weight:700;">Your budget 10^' + fmt(isoflopBudgetC, 1) + ': N* = ' + fmtEng(nOpt) + ', D* = ' + fmtEng(dOpt) + ' — the valley says spend in this ratio.</span>';
+    }
+    if(Date.now() - isoflopImpossibleAt < 3000){
+        $('#isoflop-readout').innerHTML += ' <span style="color:var(--coral-dark);font-weight:700;">⛔ IMPOSSIBLE: no compute budget there — the C axis is log; each step is 10×.</span>';
+    }
+    $$('#isoflop-budgets .pill').forEach(p => p.classList.toggle('active', Math.abs(+p.dataset.budget - isoflopBudgetC) < 0.05));
+}
+$$('#isoflop-budgets .pill').forEach(p => p.addEventListener('click', () => {
+    $$('#isoflop-budgets .pill').forEach(x => x.classList.remove('active')); p.classList.add('active');
+    isoflopBudget = +p.dataset.budget; isoflopBudgetC = isoflopBudget;
+    const hr = document.getElementById('isoflop-c'); if(hr) hr.value = isoflopBudgetC;
+    isoflopChipAt = Date.now();
+    drawIsoflop(); SoundFX.click();
+}));
+/* R14 FORM→SEE — walk the compute valley: drag the gold budget handle on the C axis */
+(function(){
+    const cv = document.getElementById('canvas-isoflop');
+    if(!cv) return;
+    cv.style.touchAction = 'none';
+    let dragging = false, impossible = false;
+    function local(ev){ const r = cv.getBoundingClientRect(); return { x: ev.clientX - r.left, y: ev.clientY - r.top }; }
+    cv.addEventListener('pointerdown', function(ev){
+        const g = cv._isoflopGeo; if(!g) return;
+        const p = local(ev);
+        const hx = g.pad + (g.logC - 17)/(22 - 17) * g.pw;
+        if(Math.hypot(p.x - hx, p.y - 38) > 24) return;
+        ev.preventDefault(); dragging = true; impossible = false;
+        try { cv.setPointerCapture(ev.pointerId); } catch(e){}
+    });
+    cv.addEventListener('pointermove', function(ev){
+        if(!dragging) return;
+        ev.preventDefault();
+        const g = cv._isoflopGeo; if(!g) return;
+        const p = local(ev);
+        let lc = 17 + (p.x - g.pad)/g.pw * 5;
+        if(lc < 17 || lc > 22){
+            if(!impossible){ impossible = true; kitShake(cv); SoundFX.thud(); }
+            isoflopImpossibleAt = Date.now();
+            lc = Math.min(22, Math.max(17, lc));
+        } else {
+            impossible = false;
+            SoundFX.step();
+        }
+        isoflopBudgetC = Math.round(lc * 100) / 100;
+        const hr = document.getElementById('isoflop-c'); if(hr) hr.value = isoflopBudgetC;
+        isoflopChipAt = Date.now();
+        drawIsoflop();
+    });
+    function endDrag(ev){
+        if(!dragging) return;
+        dragging = false;
+        try { cv.releasePointerCapture(ev.pointerId); } catch(e){}
+        isoflopChipAt = Date.now();
+        if(impossible){ isoflopImpossibleAt = Date.now(); }
+        else { SoundFX.land(); }
+        impossible = false;
+    }
+    cv.addEventListener('pointerup', endDrag);
+    cv.addEventListener('pointercancel', endDrag);
+})();
+/* R14 — hidden range keyboard/programmatic fallback for the custom budget */
+(function(){
+    const hr = document.getElementById('isoflop-c');
+    if(!hr) return;
+    hr.addEventListener('input', () => {
+        isoflopBudgetC = +hr.value;
+        isoflopChipAt = Date.now();
+        drawIsoflop(); SoundFX.step();
+    });
+})();
+
+/* ════════════════════════════════════════════════════════════════
+   LAB 13.3 · THE REASONING FRONTIER
+   ════════════════════════════════════════════════════════════════ */
+let reasonMode = 'hard', reasonAnim = null, reasonSonify = null, reasonTokLog = Math.log10(3000), reasonChipAt = 0;
+function reasonAcc(tokens){
+    if(reasonMode === 'hard') return 0.22 + 0.76*(1 - Math.exp(-tokens/2500));
+    return 0.90;
+}
+function drawReason(){
+    const s = setupCanvas('canvas-reason', 300); if(!s) return;
+    const { ctx, w, h } = s;
+    ctx.clearRect(0,0,w,h);
+    kitFrame(ctx, w, h, "Reasoning — thinking tokens buy accuracy");
+
+    const pad = 50, pw = w - pad*2, ph = h - pad*2;
+    ctx.strokeStyle = hexToRgba(INK, 0.15); ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(pad, pad); ctx.lineTo(pad, h-pad); ctx.lineTo(w-pad, h-pad); ctx.stroke();
+    ctx.fillStyle = INKFAINT; ctx.font = '8px "IBM Plex Mono",monospace'; ctx.textAlign = 'right';
+    ctx.fillText('accuracy', pad - 6, pad + 8);
+    ctx.fillText('thinking tokens → (log)', w/2, h - 10);
+    const T0 = 10, T1 = 1e5;
+    const xOf = t => pad + (Math.log10(t) - 1)/4 * pw;
+    const yOf = a => pad + (1 - a) * ph;
+    kitGrid(ctx, pad, pad, w-pad, h-pad, 6, 4);
+    ctx.fillStyle = hexToRgba(INK, 0.6); ctx.font = '600 9px "IBM Plex Mono",monospace'; ctx.textAlign = 'center';
+    [10, 100, 1000, 10000, 100000].forEach(t => ctx.fillText(fmtEng(t), xOf(t), h - pad + 14));
+    ctx.textAlign = 'right';
+    [0.2, 0.5, 0.8, 1.0].forEach(a => ctx.fillText(fmt(a, 1), pad - 8, yOf(a) + 3));
+    ctx.strokeStyle = reasonMode === 'hard' ? TEAL : hexToRgba(TEAL, 0.4);
+    ctx.lineWidth = reasonMode === 'hard' ? 3 : 1.5;
+    ctx.beginPath();
+    for(let i = 0; i <= 80; i++){
+        const t = T0 * Math.pow(T1/T0, i/80);
+        const x = xOf(t), y = yOf(reasonAcc(t));
+        i === 0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+    /* flat line reference for easy mode */
+    if(reasonMode === 'hard'){
+        ctx.strokeStyle = hexToRgba(INK, 0.25); ctx.lineWidth = 1.5; ctx.setLineDash([5,4]);
+        ctx.beginPath(); ctx.moveTo(pad, yOf(0.90)); ctx.lineTo(w-pad, yOf(0.90)); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = INKFAINT; ctx.font = '8px "IBM Plex Mono",monospace'; ctx.textAlign = 'left';
+        ctx.fillText('trivia: flat at 0.90 — no benefit', pad + 6, yOf(0.90) - 4);
+    }
+    ctx.fillStyle = INK; ctx.font = 'bold 10px "IBM Plex Mono",monospace'; ctx.textAlign = 'center';
+    ctx.fillText(reasonMode === 'hard' ? 'hard math — accuracy climbs with thinking budget (shape approx, o1-class)' : 'trivia — the thinking budget buys nothing (flat)', w/2, 16);
+    /* R14 FORM→SEE — the thinking-budget marker: drag the guide line, the dot rides the curve */
+    const T = Math.pow(10, reasonTokLog);
+    const cvEl = document.getElementById('canvas-reason');
+    if(cvEl) cvEl._reasonGeo = { x: xOf(T), pad, pw, ph, h };
+    ctx.strokeStyle = hexToRgba(INK, 0.3); ctx.lineWidth = 1.5; ctx.setLineDash([4,4]);
+    ctx.beginPath(); ctx.moveTo(xOf(T), pad); ctx.lineTo(xOf(T), h - pad); ctx.stroke();
+    ctx.setLineDash([]);
+    const bx = xOf(T) - 12, by = h - pad - 18;
+    ctx.fillStyle = TEAL; ctx.strokeStyle = INK; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.roundRect(bx, by, 24, 18, 4); ctx.fill(); ctx.stroke();
+    for(let st = 0; st < 2; st++){
+        ctx.fillStyle = hexToRgba('#FFFFFF', 0.35);
+        ctx.beginPath(); ctx.arc(bx + 6 + st*12, by + 4, 2.4, 0, Math.PI*2); ctx.fill();
+    }
+    ctx.fillStyle = INKFAINT; ctx.font = '8px "IBM Plex Mono",monospace';
+    ctx.textAlign = xOf(T) > w - 60 ? 'right' : 'left';
+    ctx.fillText('drag the budget', xOf(T) > w - 60 ? bx - 4 : bx + 28, by + 12);
+    const mx = xOf(T), my = yOf(reasonAcc(T));
+    ctx.fillStyle = reasonMode === 'hard' ? TEAL : hexToRgba(TEAL, 0.5);
+    ctx.strokeStyle = INK; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(mx, my, 6, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = INK; ctx.font = 'bold 8px "IBM Plex Mono",monospace'; ctx.textAlign = 'left';
+    ctx.fillText(fmt(reasonAcc(T)*100, 0) + '% @ ' + fmtEng(T), mx + 10, my - 6);
+    if(Date.now() - reasonChipAt < 3000){
+        kitNotice(ctx, pad + 6, h - 58, w - pad*2 - 12, [
+            'diminishing returns — the curve is flat;',
+            'every extra token is latency, not intelligence'
+        ], CORAL);
+    }
+    kitReadout(ctx, w - 240, pad, 220, [
+        ['acc @ 100 tok', fmt(reasonAcc(100), 2), TEAL],
+        ['acc @ 100K tok', fmt(reasonAcc(1e5), 2), TEAL],
+        ['trivia ref', '0.90 flat', INK],
+        ['at ' + fmtEng(T), fmt(reasonAcc(T)*100, 0) + '%', TEAL]
+    ]);
+    const rpct = Math.round(reasonAcc(T)*100);
+    const rknee = T <= 2500 ? 'the steep part — the budget is buying accuracy' : 'you\'re past the knee — spending for crumbs';
+    $('#reason-readout').innerHTML = '<strong>At ' + fmtEng(T) + ' thinking tokens: ' + rpct + '%</strong> — ' + (reasonMode === 'hard' ? rknee + '.' : 'trivia: flat at 0.90 — the budget buys nothing (extra thought is wasted latency).') + ' ' + (reasonMode === 'hard' ? '<strong>Hard problems:</strong> accuracy rises steeply then saturates (log-like; shape reported for o1-class models, labeled approx). The engineering skill: spend thinking tokens only on the steep part of the curve.' : 'This is why every frontier API ships a "reasoning effort" dial and why the adaptive switch is an industry.');
+    if(Date.now() - reasonChipAt < 3000){
+        $('#reason-readout').innerHTML += ' <span style="color:var(--coral-dark);font-weight:700;">⛔ IMPOSSIBLE: diminishing returns — the curve is flat; every extra token is latency, not intelligence.</span>';
+    }
+}
+$$('[data-reason]').forEach(p => p.addEventListener('click', () => {
+    $$('[data-reason]').forEach(x => x.classList.remove('active')); p.classList.add('active');
+    reasonMode = p.dataset.reason; drawReason(); SoundFX.click();
+}));
+/* R14 FORM→SEE — spend the thinking budget: drag the marker along the budget axis */
+(function(){
+    const cv = document.getElementById('canvas-reason');
+    if(!cv) return;
+    cv.style.touchAction = 'none';
+    let dragging = false, flat = false;
+    function local(ev){ const r = cv.getBoundingClientRect(); return { x: ev.clientX - r.left, y: ev.clientY - r.top }; }
+    cv.addEventListener('pointerdown', function(ev){
+        const g = cv._reasonGeo; if(!g) return;
+        const p = local(ev);
+        if(Math.abs(p.x - g.x) > 14 || p.y < g.pad || p.y > g.h - g.pad) return;
+        ev.preventDefault(); dragging = true; flat = false;
+        try { cv.setPointerCapture(ev.pointerId); } catch(e){}
+    });
+    cv.addEventListener('pointermove', function(ev){
+        if(!dragging) return;
+        ev.preventDefault();
+        const g = cv._reasonGeo; if(!g) return;
+        const p = local(ev);
+        let logT = 1 + (p.x - g.pad)/g.pw * 4;      /* 10 .. 1e5 tokens */
+        logT = Math.min(5, Math.max(1, logT));
+        reasonTokLog = logT;
+        const hr = document.getElementById('reason-t'); if(hr) hr.value = logT;
+        const inFlat = reasonMode === 'hard' && logT >= Math.log10(50000);
+        if(inFlat){
+            if(!flat){ flat = true; kitShake(cv); SoundFX.thud(); }
+            reasonChipAt = Date.now();
+        } else {
+            flat = false;
+            SoundFX.step();
+        }
+        drawReason();
+    });
+    function endDrag(ev){
+        if(!dragging) return;
+        dragging = false;
+        try { cv.releasePointerCapture(ev.pointerId); } catch(e){}
+        if(!flat) SoundFX.land();
+        flat = false;
+    }
+    cv.addEventListener('pointerup', endDrag);
+    cv.addEventListener('pointercancel', endDrag);
+})();
+/* R14 — hidden range keyboard/programmatic fallback for the thinking budget */
+(function(){
+    const hr = document.getElementById('reason-t');
+    if(!hr) return;
+    hr.addEventListener('input', () => {
+        reasonTokLog = +hr.value;
+        drawReason(); SoundFX.step();
+    });
+})();
+
+/* ════════════════════════════════════════════════════════════════
+   LAB 13.4 · THE SSM SCAN
+   ════════════════════════════════════════════════════════════════ */
+const SSM_TEXT = 'mamba';
+let ssmStep = 0, ssmState = [[0,0]], ssmOutputs = [], ssmTimer = null;
+function ssmTick(){
+    const inp = (i) => {
+        const code = SSM_TEXT.charCodeAt(i % SSM_TEXT.length) % 7 / 10;
+        return [code, (i*37 % 5)/10];
+    };
+    ssmState = [[0,0]];
+    ssmOutputs = [];
+    for(let i = 0; i < 8; i++){
+        const prev = ssmState[ssmState.length - 1];
+        const x = inp(i);
+        const h = [0.8*prev[0] + x[0], 0.8*prev[1] + x[1]];
+        ssmState.push(h);
+        ssmOutputs.push(h[0]);
+    }
+}
+function drawSSM(){
+    const s = setupCanvas('canvas-ssm', 320); if(!s) return;
+    const { ctx, w, h } = s;
+    ctx.clearRect(0,0,w,h);
+    kitFrame(ctx, w, h, "State Spaces — the new music");
+
+    if(ssmOutputs.length === 0) ssmTick();
+    const n = 8, bw = Math.min(72, (w - 60)/n - 8), x0 = 30, yBase = h - 46;
+    ctx.save(); ctx.strokeStyle = hexToRgba(INK, 0.10); ctx.lineWidth = 1;
+    [0.25, 0.5, 0.75, 1.0].forEach(v => { const yy = yBase - 20 - v * 110; ctx.beginPath(); ctx.moveTo(x0, yy); ctx.lineTo(x0 + n * (bw + 8), yy); ctx.stroke(); });
+    ctx.restore();
+    ctx.fillStyle = hexToRgba(INK, 0.5); ctx.font = '600 8px "IBM Plex Mono",monospace'; ctx.textAlign = 'left';
+    [0, 0.5, 1.0].forEach(v => ctx.fillText(fmt(v, 1), x0 + n * (bw + 8) + 4, yBase - 20 - v * 110 + 3));
+    ctx.fillStyle = INK; ctx.font = 'bold 10px "IBM Plex Mono",monospace'; ctx.textAlign = 'center';
+    ctx.fillText('h_t = 0.8·h_{t−1} + B·x_t — the state carries history forward, decaying', w/2, 18);
+    for(let i = 0; i < n; i++){
+        const x = x0 + i*(bw + 8);
+        const active = i === ssmStep;
+        /* token brick */
+        ctx.fillStyle = active ? hexToRgba(TEAL, 0.9) : SURFALT;
+        ctx.strokeStyle = INK; ctx.lineWidth = active ? 2.5 : 1.5;
+        ctx.beginPath(); ctx.roundRect(x, 40, bw, 34, 6); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = active ? '#FFF' : INK; ctx.font = 'bold 12px "IBM Plex Mono",monospace'; ctx.textAlign = 'center';
+        ctx.fillText(SSM_TEXT[i % SSM_TEXT.length], x + bw/2, 62);
+        /* state vector bars */
+        const h = ssmState[i+1];
+        const barW = Math.min(10, (bw - 10)/2);
+        for(let d = 0; d < 2; d++){
+            const v = h[d];
+            const bh = Math.max(3, Math.abs(v)*110);
+            const col = d === 0 ? TEAL : SKY;
+            ctx.fillStyle = hexToRgba(col, 0.35 + Math.min(0.6, Math.abs(v)));
+            ctx.fillRect(x + 6 + d*(barW + 4), yBase - 20 - bh, barW, bh);
+        }
+        /* output trace point */
+        const oy = yBase - 20 - Math.max(3, ssmOutputs[i]*110);
+        ctx.fillStyle = active ? CORAL : hexToRgba(CORAL, 0.5);
+        ctx.beginPath(); ctx.arc(x + bw/2, oy, active ? 6 : 4, 0, Math.PI*2); ctx.fill();
+        ctx.strokeStyle = INK; ctx.lineWidth = 1; ctx.stroke();
+        ctx.fillStyle = INKFAINT; ctx.font = '8px "IBM Plex Mono",monospace'; ctx.textAlign = 'center';
+        ctx.fillText('y=' + fmt(ssmOutputs[i], 2), x + bw/2, yBase - 20 - Math.max(3, ssmOutputs[i]*110) - 10);
+        ctx.fillStyle = INKSOFT; ctx.font = 'bold 8px "IBM Plex Mono",monospace';
+        ctx.fillText('t' + (i+1), x + bw/2, yBase + 16);
+    }
+    kitReadout(ctx, w - 240, 44, 220, [
+        ['token', '\'' + SSM_TEXT[ssmStep % SSM_TEXT.length] + '\'', INK],
+        ['hₜ', '[' + fmt(ssmState[ssmStep + 1][0], 2) + ', ' + fmt(ssmState[ssmStep + 1][1], 2) + ']', TEAL],
+        ['yₜ', fmt(ssmOutputs[ssmStep] || 0, 2), CORAL]
+    ]);
+    ctx.fillStyle = INKFAINT; ctx.font = '8px "IBM Plex Mono",monospace'; ctx.textAlign = 'left';
+    ctx.fillText('bars = state h_t (2 dims) · dots = outputs y_t · token 1 influence decays as 0.8^k', 10, h - 8);
+    if(ssmStep >= 7){
+        ctx.fillStyle = CORAL; ctx.font = 'bold 10px "IBM Plex Mono",monospace'; ctx.textAlign = 'center';
+        ctx.fillText('t1 influence after 7 steps: 0.8⁷ ≈ ' + fmt(Math.pow(0.8,7), 3) + ' — the state remembered, approximately', w/2, 34);
+    }
+    $('#ssm-readout').innerHTML = '<strong>Step ' + (ssmStep+1) + ' of 8:</strong> h_' + (ssmStep+1) + ' = 0.8·' + fmt(ssmState[ssmStep][0], 2) + ' + x_' + (ssmStep+1) + ' → y = ' + fmt(ssmOutputs[ssmStep], 3) + '. Every step compresses the past a little more — that is the O(n) trade, live.';
+}
+$('#ssm-step').addEventListener('click', () => { ssmStep = Math.min(7, ssmStep + 1); drawSSM(); SoundFX.step(); });
+$('#ssm-auto').addEventListener('click', function(){
+    if(this.classList.toggle('active')){
+        ssmStep = 0;
+        ssmTimer = setInterval(() => {
+            if(ssmStep >= 7){ clearInterval(ssmTimer); ssmTimer = null; this.classList.remove('active'); }
+            else { ssmStep++; drawSSM(); SoundFX.step(); }
+        }, 600);
+    } else { clearInterval(ssmTimer); ssmTimer = null; }
+    SoundFX.click();
+});
+
+/* ════════════════════════════════════════════════════════════════
+   LAB 13.5 · THE MOE ROUTING DASHBOARD
+   ════════════════════════════════════════════════════════════════ */
+const MOE_EXPERTS = 6, MOE_TOKENS = 12;
+let moeView = 'tokens';
+const MOE_ROUTER = (function(){
+    const rng = mulberry32(424242);
+    const w = [];
+    for(let i = 0; i < 4*MOE_EXPERTS; i++) w.push((rng()*2 - 1));
+    return w;
+})();
+function moeGate(x){
+    const logits = [];
+    for(let e = 0; e < MOE_EXPERTS; e++){
+        let s = 0;
+        for(let i = 0; i < 4; i++) s += x[i]*MOE_ROUTER[e*4 + i];
+        logits.push(s);
+    }
+    return softmaxRow(logits);
+}
+function mulberry32(seed){
+    let a = seed >>> 0;
+    return function(){
+        a |= 0; a = (a + 0x6D2B79F5) | 0;
+        let t = Math.imul(a ^ (a >>> 15), 1 | a);
+        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+}
+function softmaxRow(z){ const m=Math.max(...z); const e=z.map(v=>Math.exp(v-m)); const s=e.reduce((a,b)=>a+b,0); return e.map(v=>v/s); }
+function moeHidden(i){
+    const rng = mulberry32(777 + i);
+    return [rng(), rng(), rng(), rng()];
+}
+function drawMoe(){
+    const s = setupCanvas('canvas-moe', 320); if(!s) return;
+    const { ctx, w, h } = s;
+    ctx.clearRect(0,0,w,h);
+    kitFrame(ctx, w, h, "MoE — the worlds of experts");
+
+    const pad = 40, bw = (w - pad*2 - 8*6)/MOE_TOKENS, x0 = pad;
+    ctx.fillStyle = INK; ctx.font = 'bold 10px "IBM Plex Mono",monospace'; ctx.textAlign = 'center';
+    ctx.fillText('gating softmax → top-2 experts per token · ' + MOE_EXPERTS + ' experts, ' + (MOE_TOKENS*2) + ' of ' + (MOE_TOKENS*MOE_EXPERTS) + ' slots awake', w/2, 18);
+    for(let i = 0; i < MOE_TOKENS; i++){
+        const x = x0 + i*(bw + 8);
+        const g = moeGate(moeHidden(i));
+        const ranked = g.map((p, e) => ({ p, e })).sort((a, b) => b.p - a.p);
+        const top2 = [ranked[0].e, ranked[1].e];
+        /* per-expert cells */
+        for(let e = 0; e < MOE_EXPERTS; e++){
+            const cy = 40 + e*34;
+            const on = top2.includes(e);
+            ctx.fillStyle = on ? hexToRgba(MINT, 0.35 + g[e]*0.5) : hexToRgba(INK, 0.05);
+            ctx.strokeStyle = on ? MINT : hexToRgba(INK, 0.3);
+            ctx.lineWidth = on ? 1.8 : 0.8;
+            ctx.beginPath(); ctx.roundRect(x, cy, bw, 28, 5); ctx.fill(); ctx.stroke();
+            if(on){
+                ctx.fillStyle = MINT; ctx.font = 'bold 9px "IBM Plex Mono",monospace'; ctx.textAlign = 'center';
+                ctx.fillText('E' + (e+1), x + bw/2, cy + 19);
+            }
+        }
+        ctx.fillStyle = INKSOFT; ctx.font = 'bold 8px "IBM Plex Mono",monospace'; ctx.textAlign = 'center';
+        ctx.fillText('t' + (i+1), x + bw/2, 40 + MOE_EXPERTS*34 + 14);
+    }
+    /* active-param counter */
+    const active = MOE_TOKENS*2, total = MOE_TOKENS*MOE_EXPERTS;
+    const topG = Math.max(...moeGate(moeHidden(0)).map(p => p));
+    kitReadout(ctx, w - 245, h - 90, 225, [
+        ['active / total', active + ' / ' + total, MINT],
+        ['peak gate p', fmt(topG, 3), INK]
+    ]);
+    ctx.fillStyle = INK; ctx.font = 'bold 9px "IBM Plex Mono",monospace'; ctx.textAlign = 'left';
+    ctx.fillText('active ' + active + '/' + total + ' expert-slots ≈ ' + fmt(100*active/total, 0) + '% compute · 100% knowledge', pad, h - 8);
+    $('#moe-readout').innerHTML = moeView === 'tokens'
+        ? '<strong>Live routing:</strong> each token\'s hidden state × a real router matrix → softmax → top-2 experts. Green cells are awake. Total knowledge = all ' + MOE_EXPERTS + ' experts; compute = only the top-2. Flip to LOAD BALANCE for the failure mode.'
+        : '<strong>Load balance:</strong> count which experts win. On this toy router the distribution is roughly fair because the weights were drawn i.i.d. — but real trained routers collapse without the auxiliary loss (α·N·Σfᵢpᵢ). That loss is the only thing standing between you and expert #7 winning everything.';
+}
+$$('[data-moe]').forEach(p => p.addEventListener('click', () => {
+    $$('[data-moe]').forEach(x => x.classList.remove('active')); p.classList.add('active');
+    moeView = p.dataset.moe; drawMoe(); SoundFX.click();
+}));
+
+/* ════════════════════════════════════════════════════════════════
+   LAB 13.6 · THE CONTEXT COST METER
+   ════════════════════════════════════════════════════════════════ */
+let contextChipAt = 0;
+function drawContext(){
+    const s = setupCanvas('canvas-context', 300); if(!s) return;
+    const { ctx, w, h } = s;
+    ctx.clearRect(0,0,w,h);
+    kitFrame(ctx, w, h, "The Context Wall — a million tokens");
+
+    const T = Math.pow(2, +$('#ctx-len').value);
+    $('#ctx-len-v').textContent = fmtEng(T) + (T >= 1e6 ? '' : '');
+    const pad = 50, pw = w - pad*2, ph = h - pad*2;
+    ctx.strokeStyle = hexToRgba(INK, 0.15); ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(pad, pad); ctx.lineTo(pad, h-pad); ctx.lineTo(w-pad, h-pad); ctx.stroke();
+    ctx.fillStyle = INKFAINT; ctx.font = '8px "IBM Plex Mono",monospace'; ctx.textAlign = 'right';
+    ctx.fillText('cost (log)', pad - 6, pad + 8);
+    ctx.fillText('context length → (log)', w/2, h - 10);
+    const T0 = 4096, T1 = 1048576;
+    const xOf = t => pad + (Math.log2(t) - Math.log2(T0))/(Math.log2(T1) - Math.log2(T0)) * pw;
+    const curves = [
+        { label: 'attention FLOPs (O(T²))', fn: t => t*t, color: CORAL },
+        { label: 'KV cache memory (O(T))', fn: t => t*2*32*32*128*2, color: SKY },
+        { label: 'effective recall (sublinear, approx)', fn: t => Math.sqrt(t)*10, color: MINT }
+    ];
+    const allVals = curves.map(c => [c.fn(T0), c.fn(T1)]).flat();
+    const lo = Math.min(...allVals), hi = Math.max(...allVals);
+    const yOf = v => pad + (1 - (Math.log10(v) - Math.log10(lo))/(Math.log10(hi) - Math.log10(lo))) * ph;
+    kitGrid(ctx, pad, pad, w-pad, h-pad, 6, 4);
+    ctx.fillStyle = hexToRgba(INK, 0.6); ctx.font = '600 9px "IBM Plex Mono",monospace'; ctx.textAlign = 'center';
+    [4096, 16384, 65536, 262144, 1048576].forEach(t => ctx.fillText(fmtEng(t), xOf(t), h - pad + 14));
+    ctx.textAlign = 'right';
+    [0.25, 0.5, 0.75].forEach(q => ctx.fillText('10^' + fmt(Math.log10(lo) + (Math.log10(hi) - Math.log10(lo)) * q, 1), pad - 8, pad + (1 - q) * ph + 3));
+    curves.forEach(c => {
+        ctx.strokeStyle = c.color; ctx.lineWidth = 2.2;
+        ctx.beginPath();
+        for(let i = 0; i <= 60; i++){
+            const t = T0 * Math.pow(T1/T0, i/60);
+            const x = xOf(t), y = yOf(c.fn(t));
+            i === 0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+        }
+        ctx.stroke();
+        /* current point */
+        const cx = xOf(T), cy = yOf(c.fn(T));
+        ctx.fillStyle = c.color; ctx.strokeStyle = INK; ctx.lineWidth = 1.2;
+        ctx.beginPath(); ctx.arc(cx, cy, 5, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+    });
+    ctx.fillStyle = INK; ctx.font = 'bold 10px "IBM Plex Mono",monospace'; ctx.textAlign = 'center';
+    ctx.fillText('three bills at T = ' + fmtEng(T), w/2, 16);
+    const quad = T*T, cache = T*2*32*32*128*2, recall = Math.sqrt(T)*10;
+    kitReadout(ctx, w - 255, pad, 235, [
+        ['attention ops', fmtEng(quad), CORAL],
+        ['KV cache bytes', fmtEng(cache), SKY],
+        ['effective recall', fmtEng(recall), MINT]
+    ]);
+    $('#context-readout').innerHTML = '<strong>At T = ' + fmtEng(T) + ':</strong> attention ≈ ' + fmtEng(quad) + ' pairwise ops (O(T²)) · KV cache ≈ ' + fmtEng(cache) + ' bytes (O(T), from Module 11\'s formula) · effective recall ≈ ' + fmtEng(recall) + ' (sublinear, labeled approx). Doubling context ~quadruples the attention bill — the law behind every long-context trick.';
+    /* R14 FORM→SEE — feel the wall: drag the T marker along the x-axis */
+    const cvEl = document.getElementById('canvas-context');
+    if(cvEl) cvEl._contextGeo = { x: xOf(T), pad, pw, ph, h, T };
+    ctx.strokeStyle = hexToRgba(INK, 0.3); ctx.lineWidth = 1.5; ctx.setLineDash([4,4]);
+    ctx.beginPath(); ctx.moveTo(xOf(T), pad); ctx.lineTo(xOf(T), h - pad); ctx.stroke();
+    ctx.setLineDash([]);
+    const bx = xOf(T) - 12, by = h - pad - 18;
+    kitStud(ctx, bx + 12, by + 9, 6, CORAL);   /* R15 — the T drag handle as a stud */
+    ctx.fillStyle = INKFAINT; ctx.font = '8px "IBM Plex Mono",monospace';
+    ctx.textAlign = xOf(T) > w - 60 ? 'right' : 'left';
+    ctx.fillText('drag T', xOf(T) > w - 60 ? bx - 4 : bx + 28, by + 12);
+    if(Date.now() - contextChipAt < 3000){
+        kitChipBrick(ctx, 'THE WALL — attention alone is 10^12 ops per pass', pad + 6, h - 58, CORAL, 'left');
+        $('#context-readout').innerHTML += ' <span style="color:var(--coral-dark);font-weight:700;">⛔ IMPOSSIBLE: the wall — attention alone is 10^12 ops per pass; the O(T²) bill quadruples every doubling; this is why every trick in Module 11 exists.</span>';
+    }
+}
+$('#ctx-len').addEventListener('input', () => { drawContext(); SoundFX.step(); });
+/* R14 FORM→SEE — feel the wall: drag the T marker directly along the x-axis */
+(function(){
+    const cv = document.getElementById('canvas-context');
+    if(!cv) return;
+    cv.style.touchAction = 'none';
+    let dragging = false, inWall = false;
+    function local(ev){ const r = cv.getBoundingClientRect(); return { x: ev.clientX - r.left, y: ev.clientY - r.top }; }
+    cv.addEventListener('pointerdown', function(ev){
+        const g = cv._contextGeo; if(!g) return;
+        const p = local(ev);
+        if(Math.abs(p.x - g.x) > 14 || p.y < g.pad || p.y > g.h - g.pad) return;
+        ev.preventDefault(); dragging = true; inWall = false;
+        try { cv.setPointerCapture(ev.pointerId); } catch(e){}
+    });
+    cv.addEventListener('pointermove', function(ev){
+        if(!dragging) return;
+        ev.preventDefault();
+        const g = cv._contextGeo; if(!g) return;
+        const p = local(ev);
+        let log2T = 12 + (p.x - g.pad)/g.pw * 8;   /* 4096 .. 1048576 */
+        log2T = Math.min(20, Math.max(12, log2T));
+        const T2 = Math.round(log2T);
+        const wall = T2 >= 20;
+        if(wall){
+            if(!inWall){ inWall = true; kitShake(cv); SoundFX.thud(); }
+            contextChipAt = Date.now();
+        } else {
+            inWall = false;
+            SoundFX.step();
+        }
+        $('#ctx-len').value = T2;
+        drawContext();
+    });
+    function endDrag(ev){
+        if(!dragging) return;
+        dragging = false;
+        try { cv.releasePointerCapture(ev.pointerId); } catch(e){}
+        if(!inWall) SoundFX.land();
+        inWall = false;
+    }
+    cv.addEventListener('pointerup', endDrag);
+    cv.addEventListener('pointercancel', endDrag);
+})();
+
+/* ════════════════════════════════════════════════════════════════
+   LAB 13.7 · THE MISSION BUILDER
+   ════════════════════════════════════════════════════════════════ */
+const MISSION_PLATES = [
+    { id: 'arch', label: 'ARCHITECTURE', options: [
+        { v: 'dense', label: 'Dense transformer', note: 'total = active = N' },
+        { v: 'moe', label: 'MoE (8× experts)', note: 'total = 8N · active = N' },
+        { v: 'hybrid', label: 'Hybrid SSM+attn', note: 'total = N · attention-bounded' } ] },
+    { id: 'scale', label: 'MODEL SIZE (active)', options: [
+        { v: '1b', label: '1B', note: '' }, { v: '7b', label: '7B', note: '' },
+        { v: '70b', label: '70B', note: '' }, { v: '700b', label: '700B', note: '' } ] },
+    { id: 'data', label: 'DATA TOKENS', options: [
+        { v: '100b', label: '100B', note: '' }, { v: '1t', label: '1T', note: '' }, { v: '10t', label: '10T', note: '' } ] },
+    { id: 'train', label: 'TRAINING RECIPE', options: [
+        { v: 'pre', label: 'Pretrain only', note: '' },
+        { v: 'rl', label: '+ RL reasoning', note: 'test-time compute capable' },
+        { v: 'align', label: '+ RL + alignment', note: 'safer · slight capability tax' } ] },
+    { id: 'serve', label: 'SERVING PLAN', options: [
+        { v: 'fp16', label: 'FP16', note: '2 bytes/param' }, { v: 'int8', label: 'INT8', note: '1 byte/param' }, { v: 'int4', label: 'INT4', note: '0.5 byte/param' } ] }
+];
+let mission = { arch: 'dense', scale: '7b', data: '1t', train: 'rl', serve: 'int8', launched: false };
+const MISSION_N = { '1b': 1e9, '7b': 7e9, '70b': 7e10, '700b': 7e11 };
+const MISSION_D = { '100b': 1e11, '1t': 1e12, '10t': 1e13 };
+function buildMissionPlates(){
+    const el = $('#mission-plates');
+    el.innerHTML = '';
+    MISSION_PLATES.forEach(p => {
+        const row = document.createElement('div');
+        row.innerHTML = '<div style="font-family:var(--font-mono); font-size:0.68rem; font-weight:700; color:var(--ink-faint); margin-bottom:4px;">' + p.label + '</div>';
+        const group = document.createElement('div');
+        group.className = 'pill-group';
+        p.options.forEach(o => {
+            const b = document.createElement('button');
+            b.className = 'pill' + (mission[p.id] === o.v ? ' active' : '');
+            b.dataset.plate = p.id;
+            b.dataset.val = o.v;
+            b.title = o.note;
+            b.textContent = o.label;
+            b.addEventListener('click', () => {
+                mission[p.id] = o.v;
+                mission.launched = false;
+                buildMissionPlates();
+                $('#mission-run').disabled = false;
+                $('#mission-verdict').className = 'explain-strip lavender';
+                $('#mission-verdict').innerHTML = p.label + ' set to ' + o.label + (o.note ? ' — ' + o.note : '') + '. Choose the rest, then LAUNCH.';
+                SoundFX.step();
+            });
+            group.appendChild(b);
+        });
+        row.appendChild(group);
+        el.appendChild(row);
+    });
+}
+function missionCompute(){
+    const N = MISSION_N[mission.scale];
+    const D = MISSION_D[mission.data];
+    const total = mission.arch === 'moe' ? N*8 : N;
+    const loss = chinchillaLoss(total * (mission.arch === 'moe' ? 0.9 : 1), D);
+    const flops = 6*N*D;
+    const bytes = mission.serve === 'fp16' ? 2 : mission.serve === 'int8' ? 1 : 0.5;
+    const vram = total*bytes + 2*32*32*128*4096*8*2/1e9;
+    const tpr = D/total;
+    return { N, D, total, loss, flops, bytes, vram, tpr };
+}
+function runMission(){
+    const m = missionCompute();
+    const lines = [];
+    let warnings = [];
+    lines.push('<strong>🚀 MISSION REPORT</strong> — ' + mission.scale.toUpperCase() + ' active · ' + mission.data.toUpperCase() + ' tokens · ' + mission.arch.toUpperCase() + ' · ' + mission.train.toUpperCase() + ' · ' + mission.serve.toUpperCase());
+    lines.push('Predicted loss L(N,D) = ' + fmt(m.loss, 3) + ' nats (Chinchilla fit)');
+    lines.push('Tokens per parameter: ' + fmt(m.tpr, 2) + ' ' + (m.tpr < 10 ? '⚠ far below ~20 — under-trained: the IsoFLOP right wall' : m.tpr > 100 ? '⚠ far above ~20 — over-trained for the compute: left wall' : '✓ near the Chinchilla valley'));
+    lines.push('Training FLOPs ≈ 6ND = ' + fmtEng(m.flops) + (m.flops >= 1e25 ? ' ⚠ this is a multi-billion-dollar run (approx)' : ''));
+    lines.push('Serving: ' + fmtEng(m.total) + ' total params · ' + mission.serve.toUpperCase() + ' → VRAM ≈ ' + fmtEng(m.vram) + ' GB ' + (m.vram > 80 ? '⚠ EXCEEDS one 80 GB card — multi-GPU or smaller quant required' : '✓ fits one card'));
+    if(mission.train === 'rl') lines.push('Reasoning layer active — test-time compute available; deploy the adaptive switch (13.3).');
+    if(mission.train === 'align') lines.push('Alignment applied — expect slightly lower raw accuracy, far better behavior (Module 06).');
+    if(mission.arch === 'moe') lines.push('MoE: ' + fmtEng(m.total) + ' total / ' + fmtEng(m.N) + ' active — load-balancing loss mandatory (13.5).');
+    if(mission.arch === 'hybrid') lines.push('Hybrid: SSM handles the bulk, attention reserved — watch exact-recall tasks (13.4).');
+    mission.launched = true;
+    $('#mission-verdict').className = 'explain-strip mint';
+    $('#mission-verdict').innerHTML = lines.map(l => '<div style="margin:3px 0;">' + l + '</div>').join('');
+    $('#mission-readout').innerHTML = '<strong>Laws applied:</strong> L(N,D) from 13.1 · C≈6ND from 13.2 · active/total from 13.5 · VRAM from Module 11. Every number above is arithmetic, not opinion — the laws don\'t negotiate.';
+    drawMission();
+    SoundFX.complete();
+}
+function drawMission(){
+    const s = setupCanvas('canvas-mission', 360); if(!s) return;
+    const { ctx, w, h } = s;
+    ctx.clearRect(0,0,w,h);
+    kitFrame(ctx, w, h, "The Frontier Mission — build your own");
+
+    /* launchpad */
+    const cx = w/2, padW = 200, padY = h - 70;
+    ctx.fillStyle = hexToRgba(LAV, 0.12);
+    ctx.strokeStyle = INK; ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(cx - padW, padY + 16); ctx.lineTo(cx - padW + 24, padY - 16);
+    ctx.lineTo(cx + padW + 24, padY - 16); ctx.lineTo(cx + padW, padY + 16);
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+    for(let gx = 0; gx < 6; gx++){
+        ctx.fillStyle = hexToRgba(LAV, 0.3);
+        ctx.beginPath(); ctx.ellipse(cx - padW + 30 + gx*66, padY - 4, 5, 2.5, 0, 0, Math.PI*2); ctx.fill();
+    }
+    /* R15 — stud row along the launchpad's front edge (lavender, translucent) */
+    ctx.save(); ctx.globalAlpha = 0.6;
+    for(let sx = 0; sx < 9; sx++){
+        kitStud(ctx, cx - padW + 10 + sx*(2*padW - 20)/8, padY + 12, 3.5, LAV);
+    }
+    ctx.restore();
+    if(!mission.launched){
+        ctx.fillStyle = INK; ctx.font = 'bold 12px "Fraunces",serif'; ctx.textAlign = 'center';
+        ctx.fillText('configure the five plates, then LAUNCH', cx, h/2 - 20);
+        ctx.fillStyle = INKFAINT; ctx.font = '9px "IBM Plex Mono",monospace';
+        ctx.fillText('the laws are watching', cx, h/2 + 4);
+        const rows = MISSION_PLATES.map(p => {
+            const sel = p.options.find(o => o.v === mission[p.id]);
+            return [p.label, sel ? sel.label : '—', null];
+        });
+        kitReadout(ctx, w - 275, 44, 255, rows);
+        return;
+    }
+    /* rocket: stacked bricks per plate color, riding the loss arc */
+    const m = missionCompute();
+    const colors = { arch: TEAL, scale: ROSE, data: GOLD, train: LAV, serve: SKY };
+    const plateOrder = ['arch', 'scale', 'data', 'train', 'serve'];
+    const rocketX = cx - 30 + Math.random()*0;
+    const lossBand = Math.min(0.8, Math.max(0.05, (m.loss - 1.69)/3));
+    const rocketY = padY - 90 - (1 - lossBand)*80;
+    ctx.fillStyle = INK; ctx.font = 'bold 10px "IBM Plex Mono",monospace'; ctx.textAlign = 'center';
+    ctx.fillText('L ≈ ' + fmt(m.loss, 3) + ' nats', cx, rocketY - 8 - plateOrder.length*16);
+    plateOrder.forEach((p, i) => {
+        ctx.fillStyle = colors[p];
+        ctx.strokeStyle = INK; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.roundRect(rocketX, rocketY - 14 - i*16, 60, 16, 4); ctx.fill(); ctx.stroke();
+        for(let st = 0; st < 3; st++){
+            ctx.fillStyle = hexToRgba('#FFFFFF', 0.3);
+            ctx.beginPath(); ctx.arc(rocketX + 12 + st*18, rocketY - 14 - i*16 + 3.5, 2.6, 0, Math.PI*2); ctx.fill();
+        }
+        /* R15 — one stud per plate brick, in the plate color */
+        kitStud(ctx, rocketX + 30, rocketY - 14 - i*16 + 3.5, 3.6, colors[p]);
+    });
+    /* exhaust */
+    ctx.fillStyle = hexToRgba(GOLD, 0.7);
+    ctx.beginPath(); ctx.moveTo(rocketX + 14, rocketY - 14 - 5*16);
+    ctx.lineTo(rocketX + 30, rocketY - 14 - 5*16 - 40);
+    ctx.lineTo(rocketX + 46, rocketY - 14 - 5*16);
+    ctx.closePath(); ctx.fill();
+    /* loss curve reference */
+    ctx.strokeStyle = hexToRgba(ROSE, 0.35); ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    for(let i = 0; i <= 40; i++){
+        const n = 1e8 * Math.pow(1e12/1e8, i/40);
+        const l = chinchillaLoss(n, 1e12) - 1.4;
+        const x = cx - 140 + i*7, y = padY - 20 - Math.min(1, l/2.2)*140;
+        i === 0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+    ctx.fillStyle = INKFAINT; ctx.font = '8px "IBM Plex Mono",monospace'; ctx.textAlign = 'center';
+    ctx.fillText('your rocket on the law — higher is better (lower loss)', cx, h - 8);
+}
+$('#mission-run').addEventListener('click', runMission);
+$('#mission-reset').addEventListener('click', () => {
+    mission = { arch: 'dense', scale: '7b', data: '1t', train: 'rl', serve: 'int8', launched: false };
+    buildMissionPlates();
+    $('#mission-verdict').className = 'explain-strip lavender';
+    $('#mission-verdict').innerHTML = 'Choose one option from each plate, then LAUNCH. The simulator computes predicted loss from the Chinchilla fit, training FLOPs, active vs total params, and serving cost — then tells you the honest failure mode of your design.';
+    $('#mission-run').disabled = false;
+    $('#mission-readout').innerHTML = '<strong>The report card:</strong> every number is real arithmetic on the laws you learned — L(N,D) from 13.1, C≈6ND from 13.2, active/total from 13.5, VRAM from Module 11.';
+    drawMission();
+    SoundFX.click();
+});
+
+/* ════════════════════════════════════════════════════════════════
+   CAPSTONE EXAM — 5 frontier incidents
+   ════════════════════════════════════════════════════════════════ */
+const EXAM_ANSWERS = { 1:'data', 2:'trivia', 3:'imbalance', 4:'recall', 5:'extrap' };
+let examSubmitted = false;
+$('#btn-submit-exam').addEventListener('click', () => {
+    if(examSubmitted) return;
+    let score = 0, total = 5;
+    for(let q=1;q<=total;q++){
+        const sel = $('input[name="q'+q+'"]:checked');
+        const qEl = $('[data-q="'+q+'"]');
+        if(!qEl) continue;
+        qEl.querySelectorAll('.exam-opt').forEach(o => {
+            const radio = o.querySelector('input');
+            if(radio.value === EXAM_ANSWERS[q]){ o.classList.add('right'); if(sel && sel.value === radio.value) score++; }
+            else if(sel && sel === radio) o.classList.add('wrong');
+            o.style.pointerEvents = 'none';
+        });
+    }
+    examSubmitted = true;
+    const result = $('#exam-result');
+    result.style.display = 'block';
+    const title = $('#exam-score-title');
+    const desc = $('#exam-score-desc');
+    const cert = $('#exam-cert');
+    title.textContent = 'Diagnostic Score: ' + score + '/' + total;
+    title.style.color = score>=4?'var(--mint-dark)':score>=2?'var(--gold-dark)':'var(--coral-dark)';
+    /* ── BUILDER LEVEL SYSTEM (canonical tiers, additive — never touches score/cert flow) ── */
+    const tier = score <= 2 ? 'BRICK COLLECTOR' : score === 3 ? 'APPRENTICE BUILDER' : score === 4 ? 'SKILLED BUILDER' : 'MASTER BUILDER';
+    try { localStorage.setItem('llmacademy.level.13', tier); } catch(e){}
+    const levelLines = {
+        'BRICK COLLECTOR':    { color:'var(--ink-faint)', line:'You have picked up the first frontier bricks — the laws are named and the curves are on the shelf. Walk the labs again and the launchpad will light up.' },
+        'APPRENTICE BUILDER': { color:'var(--sky)',       line:'You can follow a scaling curve and name a failure mode when you see one — one more lap and the frontier reads like a spec sheet.' },
+        'SKILLED BUILDER':    { color:'var(--gold)',      line:'You can read a scaling plot and know when a launch is lying to you.' },
+        'MASTER BUILDER':     { color:'var(--mint)',      line:'You diagnose frontier incidents cold — the laws are yours, and the next model is a design document away.' }
+    };
+    const lb = levelLines[tier];
+    $('#exam-level').innerHTML = '<div style="font-family:var(--font-mono); font-size:0.7rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:' + lb.color + ';">BUILDER LEVEL: ' + tier + '</div>' +
+        '<p style="margin:6px auto 0; font-size:0.85rem; color:var(--ink-soft); max-width:560px;">' + lb.line + '</p>';
+    if(score >= 4){
+        desc.textContent = 'Outstanding. You diagnosed ' + score + ' of ' + total + ' frontier incidents correctly — and you now hold every law this course teaches.';const _tc = score >= 5 ? 'var(--mint-dark)' : 'var(--gold-dark)';
+
+        const _tn = score >= 5 ? 'MASTER BUILDER' : 'SKILLED BUILDER';
+
+        try { localStorage.setItem('llmacademy.brick.13', 'The Frontier Cartographer'); } catch(e){}
+
+        cert.innerHTML = '<div class="cert-card"><div style="display:flex;justify-content:center;margin:6px 0 12px;">' +
+
+        '<div style="width:220px;height:110px;border-radius:12px;background:__TC__;border:2.5px solid var(--ink);' +
+
+        'box-shadow:inset 0 3px 0 rgba(255,255,255,.38), inset -4px -5px 0 rgba(43,42,36,.20), 0 5px 0 rgba(43,42,36,.22);' +
+
+        'position:relative;display:flex;align-items:center;justify-content:center;">' +
+
+        '<div style="position:absolute;top:8px;left:16px;display:flex;gap:12px;">' + '<i style="width:18px;height:11px;border-radius:6px;background:' + _tc + ';border:1.5px solid var(--ink);box-shadow:inset 0 2px 0 rgba(255,255,255,.38), inset 0 -2px 0 rgba(43,42,36,.20);display:inline-block;"></i><i style="width:18px;height:11px;border-radius:6px;background:' + _tc + ';border:1.5px solid var(--ink);box-shadow:inset 0 2px 0 rgba(255,255,255,.38), inset 0 -2px 0 rgba(43,42,36,.20);display:inline-block;"></i><i style="width:18px;height:11px;border-radius:6px;background:' + _tc + ';border:1.5px solid var(--ink);box-shadow:inset 0 2px 0 rgba(255,255,255,.38), inset 0 -2px 0 rgba(43,42,36,.20);display:inline-block;"></i><i style="width:18px;height:11px;border-radius:6px;background:' + _tc + ';border:1.5px solid var(--ink);box-shadow:inset 0 2px 0 rgba(255,255,255,.38), inset 0 -2px 0 rgba(43,42,36,.20);display:inline-block;"></i>' + '</div>' +
+
+        '<div style="position:absolute;top:25px;left:16px;display:flex;gap:12px;">' + '<i style="width:18px;height:11px;border-radius:6px;background:' + _tc + ';border:1.5px solid var(--ink);box-shadow:inset 0 2px 0 rgba(255,255,255,.38), inset 0 -2px 0 rgba(43,42,36,.20);display:inline-block;"></i><i style="width:18px;height:11px;border-radius:6px;background:' + _tc + ';border:1.5px solid var(--ink);box-shadow:inset 0 2px 0 rgba(255,255,255,.38), inset 0 -2px 0 rgba(43,42,36,.20);display:inline-block;"></i><i style="width:18px;height:11px;border-radius:6px;background:' + _tc + ';border:1.5px solid var(--ink);box-shadow:inset 0 2px 0 rgba(255,255,255,.38), inset 0 -2px 0 rgba(43,42,36,.20);display:inline-block;"></i><i style="width:18px;height:11px;border-radius:6px;background:' + _tc + ';border:1.5px solid var(--ink);box-shadow:inset 0 2px 0 rgba(255,255,255,.38), inset 0 -2px 0 rgba(43,42,36,.20);display:inline-block;"></i>' + '</div>' +
+
+        '<span style="font-family:var(--font-mono);font-weight:700;font-size:1.1rem;color:#fff;text-shadow:0 1px 0 rgba(43,42,36,.45);">13</span>' +
+
+        '</div></div><h3 style="color:var(--gold-dark);margin-bottom:6px;">🧱 The Frontier Cartographer</h3>' +
+
+        '<p style="margin:0;font-size:0.85rem;"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:__TC__;border:1.5px solid var(--ink);margin-right:6px;vertical-align:-1px;"></span>__TN__ — added to your wall</p></div>';
+        SoundFX.complete();
+    } else if(score >= 2){
+        desc.textContent = score + '/' + total + ' — Review sections 13.1, 13.3, and 13.5 for the laws you missed.';
+        SoundFX.step();
+    } else {
+        desc.textContent = score + '/' + total + ' — Re-read Parts I-IV and try again. The laws are worth knowing cold.';
+        SoundFX.step();
+    }
+    result.scrollIntoView({ behavior:'smooth', block:'center' });
+});
+
+/* ════════════════════════════════════════════════════════════════
+   WIRE PREDICTION CARDS
+   ════════════════════════════════════════════════════════════════ */
+wirePrediction('pred-law', 'both');
+wirePrediction('pred-compute', 'b');
+wirePrediction('pred-reason', 'flat');
+wirePrediction('pred-ssm', 'recall');
+wirePrediction('pred-moe', 'collapse');
+wirePrediction('pred-context', 'quad');
+
+/* ════════════════════════════════════════════════════════════════
+   INITIALIZATION
+   ════════════════════════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', function(){
+    if(typeof renderMathInElement !== 'undefined'){
+        renderMathInElement(document.body, { delimiters: [{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}] });
+    }
+    initNotebook('nb-scaling');
+    initNotebook('nb-reason');
+    initNotebook('nb-moe');
+    drawHeroLaunch();
+    if(!REDUCED) requestAnimationFrame(heroLaunchTick);
+    drawScaling();
+    drawIsoflop();
+    drawReason();
+    ssmTick(); drawSSM();
+    drawMoe();
+    drawContext();
+    buildMissionPlates(); drawMission();
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+            drawHeroLaunch(); drawScaling(); drawIsoflop(); drawReason(); drawSSM(); drawMoe(); drawContext(); drawMission();
+        }, 200);
+    });
+});
+
+/* ============ CANVAS KIT — doctrine R12/R13 craft grammar ============ */
+function kitHexA(s, a){ s = String(s).replace('#', ''); if (s.length === 3) s = s.split('').map(function(ch){ return ch + ch; }).join(''); var r = parseInt(s.slice(0,2),16), g = parseInt(s.slice(2,4),16), b = parseInt(s.slice(4,6),16); return 'rgba(' + r + ',' + g + ',' + b + ',' + a + ')'; }
+var KIT_INK = (typeof INK !== 'undefined') ? INK : '#2B2A24';
+function seededRng(seed) { var t = seed >>> 0; return function(){ t += 0x6D2B79F5; var r = Math.imul(t ^ (t >>> 15), 1 | t); r ^= r + Math.imul(r ^ (r >>> 7), 61 | r); return ((r ^ (r >>> 14)) >>> 0) / 4294967296; }; }
+function kitFrame(ctx, w, h, label){ ctx.strokeStyle = kitHexA(KIT_INK, 0.25); ctx.lineWidth = 1.5; ctx.strokeRect(8, 8, w - 16, h - 16); if (label){ ctx.fillStyle = kitHexA(KIT_INK, 0.55); ctx.font = '600 10px "IBM Plex Mono", monospace'; ctx.textAlign = 'left'; ctx.fillText(String(label).toUpperCase(), 16, 26); } }
+function kitChip(ctx, text, x, y, align){ var fs2 = 10; ctx.font = fs2 + 'px "IBM Plex Mono", monospace'; var tw = ctx.measureText(text).width + 16; var cx = align === 'right' ? x - tw : x; ctx.fillStyle = kitHexA(KIT_INK, 0.10); ctx.strokeStyle = kitHexA(KIT_INK, 0.4); ctx.lineWidth = 1.5; ctx.beginPath(); ctx.roundRect(cx, y, tw, fs2 + 8, 7); ctx.fill(); ctx.stroke(); ctx.fillStyle = kitHexA(KIT_INK, 0.75); ctx.textAlign = 'left'; ctx.fillText(text, cx + 8, y + fs2 + 2); }
+function kitAxis(ctx, x0, y0, x1, y1, color, lw){ ctx.save(); ctx.strokeStyle = color || kitHexA(KIT_INK, 0.35); ctx.lineWidth = lw || 1.5; ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y0); ctx.stroke(); ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x0, y1); ctx.stroke(); ctx.restore(); }
+function kitReadout(ctx, x, y, w, rows){ var rh = 20, pad = 8; var H = rows.length * rh + pad * 2; ctx.fillStyle = '#FFFFFF'; ctx.strokeStyle = kitHexA(KIT_INK, 0.25); ctx.lineWidth = 1.5; ctx.beginPath(); ctx.roundRect(x, y, w, H, 8); ctx.fill(); ctx.stroke(); for (var i = 0; i < rows.length; i++){ var r = rows[i]; ctx.fillStyle = kitHexA(KIT_INK, 0.6); ctx.font = '600 11px "IBM Plex Mono", monospace'; ctx.textAlign = 'left'; ctx.fillText(r[0], x + pad, y + pad + i * rh + 13); ctx.fillStyle = r[2] || KIT_INK; ctx.textAlign = 'right'; ctx.fillText(r[1], x + w - pad, y + pad + i * rh + 13); } }
+/* R14 — multi-line impossibility/consequence chip (drawn on canvas, mono, canon border) */
+function kitNotice(ctx, x, y, w, lines, accent){
+    var rh = 14, pad = 8;
+    var H = lines.length * rh + pad * 2;
+    ctx.fillStyle = 'rgba(255,255,255,0.94)';
+    ctx.strokeStyle = accent || kitHexA(KIT_INK, 0.5);
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.roundRect(x, y, w, H, 8); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = kitHexA(KIT_INK, 0.82); ctx.font = '600 9px "IBM Plex Mono", monospace'; ctx.textAlign = 'left';
+    for (var i = 0; i < lines.length; i++){ ctx.fillText(lines[i], x + pad, y + pad + i * rh + 11); }
+}
+/* R14 — impossibility shake (Canvas Animation API, non-layout) */
+function kitShake(el){
+    if(!el || typeof el.animate !== 'function') return;
+    try { el.animate([{transform:'translateX(0)'},{transform:'translateX(-5px)'},{transform:'translateX(5px)'},{transform:'translateX(-3px)'},{transform:'translateX(0)'}], {duration: 240, easing: 'ease-out'}); } catch(e){}
+}
+
+
+function kitGrid(ctx, x0, y0, x1, y1, nx, ny){
+    var g = kitHexA(KIT_INK, 0.13); ctx.save(); ctx.lineWidth = 1;
+    ctx.strokeStyle = g;
+    for (var i = 1; i < nx; i++){ var x = x0 + (x1 - x0) * i / nx; ctx.beginPath(); ctx.moveTo(x, y0); ctx.lineTo(x, y1); ctx.stroke(); }
+    for (var j = 1; j < ny; j++){ var y = y0 + (y1 - y0) * j / ny; ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(x1, y); ctx.stroke(); }
+    ctx.restore();
+}
+function kitTick(ctx, x, y, text, align, color){
+    ctx.fillStyle = color || kitHexA(KIT_INK, 0.65); ctx.font = '600 10px "IBM Plex Mono", monospace';
+    ctx.textAlign = align || 'center'; ctx.fillText(text, x, y);
+}
+
+/* ============ MATERIALITY KIT — R15 (universal stud grammar + ABS plastic) ============ */
+var MK_INK = (typeof KIT_INK !== 'undefined') ? KIT_INK : ((typeof INK !== 'undefined') ? INK : '#2B2A24');
+function kitA(h, a){ h = String(h).replace('#',''); if (h.length === 3) h = h.split('').map(function(c){return c+c;}).join(''); var r = parseInt(h.slice(0,2),16), g = parseInt(h.slice(2,4),16), b = parseInt(h.slice(4,6),16); return 'rgba(' + r + ',' + g + ',' + b + ',' + a + ')'; }
+function kitShade(h, amt){ h = String(h).replace('#',''); if (h.length === 3) h = h.split('').map(function(c){return c+c;}).join(''); var r = parseInt(h.slice(0,2),16), g = parseInt(h.slice(2,4),16), b = parseInt(h.slice(4,6),16); var t = amt > 0 ? 255 : 0, p = Math.abs(amt); r = Math.round((t - r) * p + r); g = Math.round((t - g) * p + g); b = Math.round((t - b) * p + b); return 'rgb(' + r + ',' + g + ',' + b + ')'; }
+function kitStud(ctx, x, y, r, color){
+    /* universal 3-layer stud: shadow + top + inner ring highlight (light top-left) */
+    ctx.save();
+    ctx.fillStyle = kitShade(color, -0.28); ctx.beginPath(); ctx.ellipse(x + r * 0.14, y + r * 0.16, r, r * 0.62, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = color; ctx.beginPath(); ctx.ellipse(x, y, r, r * 0.62, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = kitShade(color, 0.18); ctx.beginPath(); ctx.ellipse(x - r * 0.12, y - r * 0.16, r * 0.55, r * 0.34, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+}
+function kitBrick3(ctx, x, y, w, h, color, studs){
+    /* 2.5D ABS brick: hard shadow + dark side + lit top + stud grid */
+    var depth = Math.max(3, Math.min(8, h * 0.16));
+    ctx.save();
+    ctx.fillStyle = kitA(MK_INK, 0.16); ctx.beginPath(); ctx.roundRect(x + 3, y + depth + 3, w, h, 4); ctx.fill();
+    ctx.fillStyle = kitShade(color, -0.22); ctx.beginPath(); ctx.roundRect(x, y + depth, w, h - depth, 4); ctx.fill();
+    ctx.fillStyle = kitShade(color, 0.08); ctx.beginPath(); ctx.roundRect(x, y, w, h - depth, 4); ctx.fill();
+    ctx.strokeStyle = kitShade(color, 0.3); ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(x + 3, y + 1.5); ctx.lineTo(x + w - 3, y + 1.5); ctx.stroke();
+    var n = studs || Math.max(1, Math.floor(w / 26));
+    var gap = w / (n + 1);
+    for (var i = 1; i <= n; i++) kitStud(ctx, x + gap * i, y + (h - depth) * 0.5, Math.min(7, w * 0.09), kitShade(color, 0.10));
+    ctx.restore();
+}
+function kitChipBrick(ctx, text, x, y, accent, align){
+    var fs2 = 10; ctx.font = '600 ' + fs2 + 'px "IBM Plex Mono", monospace';
+    var tw = ctx.measureText(text).width + 22;
+    var cx = align === 'right' ? x - tw : x;
+    kitBrick3(ctx, cx, y, tw, fs2 + 10, accent || MK_INK, Math.max(2, Math.round(tw / 34)));
+    ctx.fillStyle = '#FFFFFF'; ctx.textAlign = 'left';
+    ctx.fillText(text, cx + 11, y + fs2 + 3);
+}
+
+</script>
+</body>
+</html>
+

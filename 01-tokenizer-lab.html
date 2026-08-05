@@ -1,0 +1,1850 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Module 01 — The Tokenizer Laboratory | LLM Academy</title>
+<meta name="description" content="Build BPE, WordPiece, and a bigram language model from scratch. Watch tokens physically fuse, brick by brick, in real time.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700;0,9..144,800;0,9..144,900;1,9..144,600&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<style>
+/* ═══════════════════════════════════════════════════════════════════
+   BRICKWORK DESIGN SYSTEM (shared with LLM Academy) — canonical tokens
+   ═══════════════════════════════════════════════════════════════════ */
+:root {
+    --ink: #2B2A24;      --ink-soft: #6B6A5C;   --ink-faint: #9B9A8A;
+    --paper: #EEF0E3;    --paper-alt: #E6E9D8;  --surface: #FFFEFA;
+    --surface-alt: #F7F5EA; --surface-code: #26251F;
+    --border: #DBD5BF;   --border-light: #E9E4D2;
+    --coral: #D6553F;    --coral-light: #E8A99B; --coral-bg: #FBEAE5;  --coral-dark: #9C3B29;
+    --teal: #1E8F86;     --teal-light: #8FC9C2;  --teal-bg: #E6F3F1;   --teal-dark: #14615A;
+    --gold: #E3A61C;     --gold-light: #F3D385;  --gold-bg: #FCF2DC;   --gold-dark: #8C6A12;
+    --lavender: #7C64C9; --lavender-light: #C3B7E6; --lavender-bg: #F1EDFA; --lavender-dark: #4F3C93;
+    --mint: #4B8F52;     --mint-light: #A9CBAB;  --mint-bg: #E9F2E8;   --mint-dark: #2F5F34;
+    --peach: #DD7A34;    --peach-light: #F0BF95; --peach-bg: #FBEEE1;  --peach-dark: #9C531E;
+    --sky: #2E7BB8;      --sky-light: #9CC6E4;   --sky-bg: #E7F1F8;    --sky-dark: #1D5580;
+    --rose: #C4557F;     --rose-light: #E7AFC5;  --rose-bg: #FBEBF1;   --rose-dark: #8A3A58;
+    --font-display: 'Fraunces', serif; --font-body: 'IBM Plex Sans', sans-serif; --font-mono: 'IBM Plex Mono', monospace;
+    --radius-sm: 8px; --radius-md: 14px; --radius-lg: 22px; --radius-full: 999px;
+    --shadow-sm: 3px 3px 0 rgba(43,42,36,0.12);
+    --shadow-md: 5px 5px 0 rgba(43,42,36,0.14), 0 2px 8px rgba(43,42,36,0.05);
+    --shadow-lg: 8px 8px 0 rgba(43,42,36,0.15), 0 6px 18px rgba(43,42,36,0.07);
+    --space-xs: 6px; --space-sm: 12px; --space-md: 20px; --space-lg: 32px; --space-xl: 48px; --space-2xl: 64px;
+    --transition-fast: 150ms ease;
+    --transition-base: 260ms cubic-bezier(.34,1.56,.64,1);
+    --transition-slow: 450ms cubic-bezier(.22,1,.36,1);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; scroll-behavior: auto !important; }
+}
+html { scroll-behavior: smooth; }
+body { font-family: var(--font-body); color: var(--ink); background: var(--paper); line-height: 1.6; font-size: 16px;
+    background-image: radial-gradient(circle, rgba(43,42,36,0.06) 1.3px, transparent 1.5px); background-size: 24px 24px; background-attachment: fixed; }
+h1,h2,h3,h4 { font-family: var(--font-display); font-weight: 700; line-height: 1.15; letter-spacing: -0.01em; color: var(--ink); }
+h1 { font-size: clamp(1.9rem,3.8vw,2.8rem); font-weight: 800; }
+h2 { font-size: clamp(1.4rem,2.4vw,1.85rem); }
+h3 { font-size: 1.15rem; }
+p { margin-bottom: var(--space-md); color: var(--ink-soft); }
+code, .mono { font-family: var(--font-mono); }
+.container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+.flex { display: flex; } .items-center { align-items: center; } .gap-2 { gap: 8px; } .gap-4 { gap: 16px; }
+.grid { display: grid; } .grid-2 { grid-template-columns: 1fr 1fr; gap: 24px; } .grid-3 { grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+.mt-4 { margin-top: 16px; } .mt-8 { margin-top: 32px; } .mb-4 { margin-bottom: 16px; } .text-center { text-align: center; }
+@media (max-width: 900px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+
+@keyframes riseIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes pop { from { opacity: 0; transform: scale(0.7); } to { opacity: 1; transform: scale(1); } }
+@keyframes floatY { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+@keyframes pulseGlow { 0%,100% { box-shadow: 0 0 0 0 rgba(227,166,28,0.5); } 50% { box-shadow: 0 0 0 8px rgba(227,166,28,0); } }
+.stagger-children > * { animation: riseIn 0.55s cubic-bezier(.22,1,.36,1) both; }
+.stagger-children > *:nth-child(1) { animation-delay: .03s; } .stagger-children > *:nth-child(2) { animation-delay: .09s; }
+.stagger-children > *:nth-child(3) { animation-delay: .15s; }
+
+/* ── Header ── */
+.academy-header { background: var(--surface); border-bottom: 2.5px solid var(--ink); height: 72px; position: sticky; top: 0; z-index: 100; }
+.header-inner { display: flex; align-items: center; justify-content: space-between; height: 100%; gap: 12px; flex-wrap: wrap; }
+.logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+.logo-icon { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; background: var(--teal-bg); border: 2.5px solid var(--ink); border-radius: var(--radius-sm); position: relative; box-shadow: 3px 3px 0 var(--ink); }
+.logo-icon::before, .logo-icon::after { content: ""; position: absolute; top: -6px; width: 9px; height: 9px; border-radius: 50%; background: var(--teal-bg); border: 2px solid var(--ink); }
+.logo-icon::before { left: 8px; } .logo-icon::after { right: 8px; }
+.logo-text { font-family: var(--font-display); font-weight: 800; font-size: 1.1rem; }
+.logo-sub { font-size: 0.7rem; color: var(--ink-soft); font-weight: 500; }
+.header-nav { display: flex; gap: 4px; }
+
+/* ── Buttons ── */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-family: var(--font-body); font-weight: 700; font-size: 0.85rem; text-decoration: none; padding: 10px 20px; border-radius: var(--radius-md); border: 2.5px solid var(--ink); cursor: pointer; transition: transform var(--transition-fast), box-shadow var(--transition-fast); background: var(--surface); color: var(--ink); }
+.btn-coral { background: var(--coral); color: #fff8f4; box-shadow: 4px 4px 0 var(--ink); }
+.btn-teal { background: var(--teal); color: #fff; box-shadow: 4px 4px 0 var(--ink); }
+.btn-gold { background: var(--gold); color: var(--ink); box-shadow: 4px 4px 0 var(--ink); }
+.btn-mint { background: var(--mint); color: #fff; box-shadow: 4px 4px 0 var(--ink); }
+.btn-lavender { background: var(--lavender); color: #fff; box-shadow: 4px 4px 0 var(--ink); }
+.btn-outline { background: var(--surface); color: var(--ink); box-shadow: 4px 4px 0 var(--border); }
+.btn:hover { transform: translate(-1px,-1px); box-shadow: 5px 5px 0 var(--ink); }
+.btn:active { transform: translate(3px,3px); box-shadow: 1px 1px 0 var(--ink); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; }
+.btn-sm { padding: 7px 14px; font-size: 0.78rem; }
+
+/* ── LEGO construction grammar (canon kit, from 13-frontiers) ── */
+.lego-strip{display:inline-flex;gap:3px;align-items:flex-end;margin:0 6px;vertical-align:middle}
+.lego-strip i{display:inline-block;width:13px;height:20px;border-radius:3px;box-shadow:0 3px 0 rgba(43,42,36,.18),inset 0 2px 0 rgba(255,255,255,.35),inset -2px -3px 0 rgba(43,42,36,.14)}
+.lego-strip i::after{content:"";display:block;width:5px;height:4px;margin:3px auto 0;border-radius:2px;background:rgba(43,42,36,.25);box-shadow:7px 0 0 rgba(43,42,36,.25)}
+.lego-divider{height:14px;margin:20px 0;background:repeating-linear-gradient(90deg,rgba(43,42,36,.10) 0 4px,transparent 4px 26px);border-bottom:2px solid rgba(43,42,36,.14);position:relative}
+.lego-divider::before{content:"";position:absolute;left:0;right:0;top:0;height:5px;background:repeating-linear-gradient(90deg,rgba(43,42,36,.18) 0 3px,transparent 3px 26px)}
+.lego-btn{position:relative;border-radius:6px 6px 4px 4px;box-shadow:0 4px 0 rgba(43,42,36,.22),inset 0 2px 0 rgba(255,255,255,.35);transition:transform .06s ease,box-shadow .06s ease}
+.lego-btn:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(43,42,36,.22)}
+.lego-btn::before{content:"";position:absolute;top:-5px;left:10%;width:80%;height:5px;border-radius:3px;background:rgba(255,255,255,.5);opacity:.85;box-shadow:0 1px 0 rgba(43,42,36,.25)}
+
+/* ── Exam (canon pattern, from 13-frontiers) ── */
+.exam-q { margin-bottom: 28px; padding-bottom: 20px; border-bottom: 1.5px dashed var(--border); text-align: left; }
+.exam-q:last-of-type { border-bottom: none; }
+.exam-q .q-text { font-weight: 700; font-size: 0.95rem; margin-bottom: 10px; color: var(--ink); }
+.exam-q .q-scenario { font-size: 0.85rem; color: var(--ink-soft); background: var(--surface-alt); border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 12px 16px; margin-bottom: 12px; font-family: var(--font-mono); line-height: 1.55; }
+.exam-options { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.exam-opt { display: flex; align-items: flex-start; gap: 10px; padding: 12px 16px; border: 2px solid var(--border); border-radius: var(--radius-md); cursor: pointer; font-size: 0.85rem; transition: all var(--transition-fast); background: var(--surface); }
+.exam-opt:hover { border-color: var(--sky); background: var(--sky-bg); }
+.exam-opt input { margin-top: 3px; accent-color: var(--sky); }
+.exam-opt.picked { border-color: var(--sky); background: var(--sky-bg); }
+.exam-opt.right { border-color: var(--mint); background: var(--mint-bg); }
+.exam-opt.wrong { border-color: var(--coral); background: var(--coral-bg); }
+
+/* ── R16 Builder's Wall — the collectible 2×4 ABS brick card ── */
+.brick-card2x4 { display: inline-block; margin: 18px auto 0; padding: 20px 28px 22px; background: var(--surface); border: 2.5px solid var(--ink); border-radius: var(--radius-md); box-shadow: var(--shadow-md); }
+.brick-2x4 { width: 200px; height: 100px; margin: 0 auto; background: var(--teal); border: 2.5px solid var(--ink); border-radius: 9px; box-shadow: 0 6px 0 rgba(43,42,36,.22), inset 0 -3px 0 rgba(43,42,36,.18); display: flex; flex-direction: column; justify-content: space-evenly; padding: 7px 12px; position: relative; }
+.brick-2x4 .stud-row { display: flex; justify-content: space-between; }
+.brick-2x4 .stud-row span { width: 26px; height: 26px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #A5E4DE, var(--teal-dark) 72%); border: 2px solid var(--ink); box-shadow: inset 0 2px 2px rgba(255,255,255,.55), 0 2px 0 rgba(43,42,36,.28); }
+
+/* ── Pills / tabs ── */
+.pill { display: inline-flex; align-items: center; justify-content: center; padding: 6px 14px; font-size: 0.75rem; font-weight: 700; border: 2px solid var(--ink); border-radius: var(--radius-full); background: var(--surface); color: var(--ink-soft); cursor: pointer; transition: all var(--transition-fast); }
+.pill:hover { background: var(--gold-bg); color: var(--ink); }
+.pill.active { background: var(--ink); color: var(--paper); }
+.pill-group { display: inline-flex; gap: 6px; flex-wrap: wrap; }
+
+/* ── Brick panel ── */
+.brick-panel { background: var(--surface); border: 2.5px solid var(--ink); border-radius: var(--radius-lg); box-shadow: var(--shadow-md); position: relative; }
+.brick-panel::before, .brick-panel::after { content: ""; position: absolute; top: -7px; width: 12px; height: 12px; border-radius: 50%; background: var(--surface); border: 2.5px solid var(--ink); }
+.brick-panel::before { left: 22px; } .brick-panel::after { left: 40px; }
+
+/* ── Section chrome ── */
+.section { padding: 52px 0; border-bottom: 2px solid var(--border); }
+.section-header { margin-bottom: 26px; max-width: 760px; }
+.section-label { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; font-family: var(--font-mono); }
+.section-num { display: inline-flex; padding: 4px 12px; border-radius: var(--radius-sm); border: 2px solid var(--ink); font-weight: 700; }
+.section-num.coral { background: var(--coral-bg); color: var(--coral-dark); }
+.section-num.teal { background: var(--teal-bg); color: var(--teal-dark); }
+.section-num.gold { background: var(--gold-bg); color: var(--gold-dark); }
+.section-num.lavender { background: var(--lavender-bg); color: var(--lavender-dark); }
+.section-num.mint { background: var(--mint-bg); color: var(--mint-dark); }
+.section-num.peach { background: var(--peach-bg); color: var(--peach-dark); }
+.section-num.sky { background: var(--sky-bg); color: var(--sky-dark); }
+.section-num.rose { background: var(--rose-bg); color: var(--rose-dark); }
+
+/* ── Cards ── */
+.card { background: var(--surface); border: 2.5px solid var(--ink); border-radius: var(--radius-md); padding: 20px; box-shadow: var(--shadow-sm); }
+.card-alt { background: var(--surface-alt); border: 2px solid var(--border); border-radius: var(--radius-md); padding: 18px; }
+.card h4 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; font-family: var(--font-mono); }
+.card h4.coral { color: var(--coral-dark); } .card h4.teal { color: var(--teal-dark); }
+.card h4.gold { color: var(--gold-dark); } .card h4.lavender { color: var(--lavender-dark); }
+.card h4.mint { color: var(--mint-dark); } .card h4.sky { color: var(--sky-dark); } .card h4.peach { color: var(--peach-dark); } .card h4.rose { color: var(--rose-dark); }
+.card p:last-child { margin-bottom: 0; }
+.card p { font-size: 0.85rem; color: var(--ink-soft); }
+
+/* ── Canvas ── */
+.canvas-wrap { background: var(--surface); border: 2.5px solid var(--ink); border-radius: var(--radius-md); padding: 16px; box-shadow: var(--shadow-sm); }
+.canvas-wrap canvas { display: block; width: 100%; border-radius: var(--radius-sm); cursor: default; }
+.lab-stage canvas { display: block; width: 100%; border-radius: var(--radius-sm); background: var(--surface); }
+.canvas-title { font-family: var(--font-mono); font-size: 0.7rem; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+
+/* ── Math ── */
+.math-block { background: var(--lavender-bg); border-left: 3px solid var(--lavender); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; padding: 12px 16px; margin: 12px 0; overflow-x: auto; font-size: 0.9rem; }
+.math-inline { background: var(--surface-alt); padding: 2px 6px; border-radius: 4px; font-family: var(--font-mono); font-size: 0.85em; border: 1px solid var(--border); }
+
+/* ── Callouts ── */
+.callout { display: flex; gap: 12px; padding: var(--space-md); border-radius: var(--radius-md); border: 2px solid; }
+.callout.coral { border-color: var(--coral); background: var(--coral-bg); }
+.callout.teal { border-color: var(--teal); background: var(--teal-bg); }
+.callout.gold { border-color: var(--gold); background: var(--gold-bg); }
+.callout.mint { border-color: var(--mint); background: var(--mint-bg); }
+.callout.rose { border-color: var(--rose); background: var(--rose-bg); }
+.callout.lavender { border-color: var(--lavender); background: var(--lavender-bg); }
+.callout.sky { border-color: var(--sky); background: var(--sky-bg); }
+.callout-icon { font-size: 1.2rem; flex-shrink: 0; }
+.callout strong { color: var(--ink); }
+.callout p:last-child, .callout div { margin-bottom: 0; }
+
+/* ── Token chip (legacy, still used in a few spots) ── */
+.token-chip { display: inline-flex; align-items: center; padding: 4px 10px; margin: 2px; border-radius: var(--radius-sm); font-family: var(--font-mono); font-size: 0.78rem; font-weight: 600; border: 1.5px solid var(--ink); transition: transform var(--transition-fast); }
+.token-chip:hover { transform: translateY(-2px); box-shadow: 2px 3px 0 var(--ink); }
+.token-chip .id { font-size: 0.62rem; opacity: 0.6; margin-left: 4px; }
+
+.stat-big { font-family: var(--font-display); font-size: 1.8rem; font-weight: 800; display: block; }
+.stat-big.coral { color: var(--coral-dark); } .stat-big.teal { color: var(--teal-dark); }
+.stat-big.gold { color: var(--gold-dark); } .stat-big.lavender { color: var(--lavender-dark); }
+.stat-big.mint { color: var(--mint-dark); } .stat-big.sky { color: var(--sky-dark); }
+.stat-label { font-size: 0.75rem; color: var(--ink-faint); }
+table.compare { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+table.compare th { text-align: left; padding: 12px 14px; font-family: var(--font-display); background: var(--surface-alt); border-bottom: 2.5px solid var(--ink); }
+table.compare td { padding: 10px 14px; border-bottom: 1.5px solid var(--border-light); }
+table.compare tr:hover td { background: var(--gold-bg); }
+.academy-footer { margin-top: var(--space-xl); padding: var(--space-xl) 0; border-top: 2.5px solid var(--ink); background: var(--surface-alt); text-align: center; font-size: 0.85rem; color: var(--ink-soft); }
+.input { width: 100%; border: 2.5px solid var(--ink); border-radius: var(--radius-md); background: var(--surface); font-family: var(--font-body); color: var(--ink); padding: 12px 16px; font-size: 0.95rem; outline: none; }
+.input:focus { box-shadow: 3px 3px 0 var(--gold); }
+textarea.input { font-family: var(--font-mono); font-size: 0.85rem; min-height: 90px; resize: vertical; }
+.slider-row { display: flex; align-items: center; gap: 12px; margin: 8px 0; }
+.slider-row label { font-size: 0.8rem; color: var(--ink-soft); min-width: 80px; font-weight: 600; font-family: var(--font-mono); }
+input[type=range] { flex: 1; accent-color: var(--teal-dark); height: 4px; }
+.slider-row .val { font-family: var(--font-mono); font-size: 0.78rem; font-weight: 700; min-width: 34px; text-align: right; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   NEW: PLAYGROUND SHELL — every interactive demo lives inside this
+   ═══════════════════════════════════════════════════════════════════ */
+.lab-shell { background: var(--surface); border: 2.5px solid var(--ink); border-radius: var(--radius-lg); box-shadow: var(--shadow-md); overflow: hidden; }
+.lab-toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 14px 18px; background: var(--surface-alt); border-bottom: 2px solid var(--border); }
+.lab-toolbar .spacer { flex: 1; }
+.lab-stage { padding: 20px; background:
+    radial-gradient(circle, rgba(43,42,36,0.05) 1px, transparent 1.2px) 0 0/16px 16px, var(--surface); }
+.lab-readout { font-family: var(--font-mono); font-size: 0.78rem; padding: 12px 18px; background: var(--paper-alt); border-top: 2px solid var(--border); color: var(--ink-soft); }
+.lab-readout strong { color: var(--ink); }
+
+/* ── Step counter badge ── */
+.step-badge { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 0.72rem; font-weight: 700; padding: 5px 12px; border-radius: var(--radius-full); background: var(--ink); color: var(--paper); }
+
+/* ── Legend chips ── */
+.legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 0.72rem; font-family: var(--font-mono); color: var(--ink-soft); }
+.legend span.sw { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; border: 1.5px solid var(--ink); }
+
+/* ── Explain strip: teacher's running commentary under a widget ── */
+.explain-strip { font-size: 0.82rem; background: var(--gold-bg); border: 2px solid var(--gold-dark); border-radius: var(--radius-sm); padding: 10px 14px; margin-top: 12px; min-height: 20px; font-family: var(--font-mono); color: var(--gold-dark); font-weight: 600; }
+.explain-strip.teal { background: var(--teal-bg); border-color: var(--teal-dark); color: var(--teal-dark); }
+.explain-strip.coral { background: var(--coral-bg); border-color: var(--coral-dark); color: var(--coral-dark); }
+
+/* ═══════════════════════════════════════════════════════════════════
+   HERO — animated conveyor belt teaser
+   ═══════════════════════════════════════════════════════════════════ */
+.hero { padding: var(--space-2xl) 0 var(--space-lg); text-align: center; position: relative; }
+.hero-badges { display: inline-flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; justify-content: center; }
+.hero p.lede { max-width: 700px; margin: 0 auto; font-size: 1.08rem; }
+.conveyor-wrap { max-width: 880px; margin: 36px auto 0; }
+.conveyor { position: relative; height: 132px; background: var(--surface); border: 2.5px solid var(--ink); border-radius: var(--radius-lg); box-shadow: var(--shadow-md); overflow: hidden; }
+.conveyor-belt { position: absolute; bottom: 0; left: 0; right: 0; height: 14px; background: repeating-linear-gradient(90deg, var(--ink) 0 18px, var(--ink-soft) 18px 20px); opacity: 0.85; }
+.conveyor-belt::before, .conveyor-belt::after { content: ""; position: absolute; top: -3px; width: 20px; height: 20px; border-radius: 50%; background: var(--ink); }
+.conveyor-belt::before { left: -6px; } .conveyor-belt::after { right: -6px; }
+.conveyor-stage-label { position: absolute; top: 8px; font-family: var(--font-mono); font-size: 0.62rem; text-transform: uppercase; letter-spacing: 1px; color: var(--ink-faint); font-weight: 700; }
+.conveyor-track { position: absolute; bottom: 16px; left: 0; right: 0; height: 74px; }
+.cv-item { position: absolute; bottom: 0; display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-weight: 700; font-size: 0.85rem; border: 2px solid var(--ink); border-radius: 6px; box-shadow: 2px 2px 0 var(--ink); white-space: nowrap; padding: 0 8px; height: 34px; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   1.1 — ORTHOGONAL SPACE (one-hot geometry visual)
+   ═══════════════════════════════════════════════════════════════════ */
+.axis-legend-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   1.2 — BIGRAM TRANSITION GRAPH
+   ═══════════════════════════════════════════════════════════════════ */
+.bigram-controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   1.3 — THE BRICK FORGE (BPE) — signature interaction
+   ═══════════════════════════════════════════════════════════════════ */
+.forge-brick { display: inline-flex; align-items: center; justify-content: center; height: 40px; border: 2.5px solid var(--ink); border-radius: 5px; font-family: var(--font-mono); font-weight: 700; font-size: 0.86rem; position: relative; box-shadow: 2px 2px 0 rgba(43,42,36,0.35); vertical-align: bottom; }
+.forge-brick::before { content: ""; position: absolute; top: -6px; left: 50%; transform: translateX(-50%); width: 10px; height: 6px; border-radius: 3px 3px 0 0; background: inherit; border: 2.5px solid var(--ink); border-bottom: none; }
+.forge-track { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 3px; min-height: 56px; padding: 14px 8px 8px; }
+.forge-brick.merging { animation: brickMerge 560ms cubic-bezier(.34,1.56,.64,1); }
+@keyframes brickMerge { 0% { transform: scale(1); } 35% { transform: scale(1.18) translateY(-6px); filter: brightness(1.25); } 100% { transform: scale(1); } }
+.forge-brick.ghost { opacity: 0; transform: scale(0.3); }
+.pair-grid-wrap { overflow-x: auto; }
+.pair-grid { display: grid; gap: 4px; }
+.pair-cell { aspect-ratio: 1; border-radius: 5px; border: 1.5px solid var(--border); display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: 0.62rem; font-weight: 700; color: var(--ink); position: relative; cursor: default; transition: transform 150ms ease; }
+.pair-cell:hover { transform: scale(1.15); z-index: 2; box-shadow: 0 0 0 2px var(--ink); }
+.pair-cell.winner { box-shadow: 0 0 0 2.5px var(--ink), 0 0 0 5px var(--gold); animation: pop 400ms ease; }
+.forge-vocab-shelf { display: flex; flex-wrap: wrap; gap: 5px; max-height: 130px; overflow-y: auto; padding: 4px; }
+.forge-merge-log { display: flex; flex-direction: column; gap: 4px; max-height: 180px; overflow-y: auto; font-family: var(--font-mono); font-size: 0.72rem; }
+.forge-merge-log .entry { display: flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: 5px; background: var(--surface-alt); border: 1px solid var(--border); }
+.forge-merge-log .entry .n { color: var(--ink-faint); min-width: 20px; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   1.4 — TOKENIZER FAMILY TREE (canvas) + WordPiece/BPE race
+   ═══════════════════════════════════════════════════════════════════ */
+.race-lane { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.race-lane .lane-label { font-family: var(--font-mono); font-size: 0.72rem; font-weight: 700; min-width: 92px; text-align: right; }
+.race-lane .lane-track { flex: 1; display: flex; flex-wrap: wrap; gap: 2px; min-height: 34px; align-items: center; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   1.5 — GLITCH TOKENS + BYTE-COST BAR RACE
+   ═══════════════════════════════════════════════════════════════════ */
+.glitch-token { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: var(--radius-sm); border: 2px dashed var(--coral); background: var(--coral-bg); font-family: var(--font-mono); font-size: 0.82rem; color: var(--coral-dark); font-weight: 700; animation: glitchShake 3.2s infinite; }
+@keyframes glitchShake { 0%,92%,100% { transform: translate(0,0); filter: none; } 93% { transform: translate(-2px,1px); filter: hue-rotate(20deg); } 94% { transform: translate(2px,-1px); } 95% { transform: translate(-1px,0); filter: none; } }
+.bar-race-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.bar-race-label { min-width: 108px; font-size: 0.78rem; font-weight: 700; font-family: var(--font-mono); text-align: right; }
+.bar-race-track { flex: 1; height: 28px; background: var(--surface-alt); border: 2px solid var(--ink); border-radius: 6px; overflow: hidden; position: relative; }
+.bar-race-fill { height: 100%; border-radius: 4px; display: flex; align-items: center; justify-content: flex-end; padding-right: 8px; font-family: var(--font-mono); font-size: 0.72rem; font-weight: 700; color: #fff; white-space: nowrap; transition: width 900ms cubic-bezier(.22,1,.36,1); }
+
+/* ═══════════════════════════════════════════════════════════════════
+   1.6 — TRIANGLE TRADEOFF DIAL
+   ═══════════════════════════════════════════════════════════════════ */
+.tradeoff-dial-wrap { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+
+/* ── Bridge CTA ── */
+.bridge { padding: var(--space-xl) 0; text-align: center; background: linear-gradient(135deg, var(--teal-bg), var(--sky-bg)); border-radius: var(--radius-lg); border: 2.5px solid var(--ink); box-shadow: var(--shadow-md); }
+.bridge h2 { margin-bottom: 12px; } .bridge p { max-width: 620px; margin: 0 auto 24px; }
+
+@media (max-width: 700px) {
+    .conveyor { height: 116px; }
+    .lab-toolbar { padding: 12px; }
+}
+</style>
+</head>
+<body>
+
+<header class="academy-header">
+    <div class="container header-inner">
+        <a href="index.html" class="logo">
+            <div class="logo-icon">🧩</div>
+            <div>
+                <div class="logo-text">The Tokenizer Laboratory</div>
+                <div class="logo-sub">Module 01 · How Text Becomes Numbers</div>
+            </div>
+        </a>
+        <nav class="header-nav">
+            <a href="00-neural-foundry.html" class="pill" style="text-decoration:none;">← Module 00</a>
+            <a href="index.html" class="pill" style="text-decoration:none;">Hub</a>
+            <a href="02-embedding-space.html" class="pill" style="text-decoration:none;">Module 02 →</a>
+        </nav>
+    </div>
+</header>
+
+<main class="container">
+
+<!-- ════════════════════════════════════════════════════════════════
+     HERO — the conveyor belt: text → chars → tokens → IDs, animated
+     ════════════════════════════════════════════════════════════════ -->
+<section class="hero">
+    <div class="hero-badges">
+        <span class="pill" style="background:var(--teal-bg); color:var(--teal-dark); border-color:var(--teal);">🧩 MODULE 01</span>
+        <span class="pill" style="background:var(--gold-bg); color:var(--gold-dark); border-color:var(--gold);">REAL ALGORITHMS · NO FAKES</span>
+        <span class="pill" style="background:var(--coral-bg); color:var(--coral-dark); border-color:var(--coral);">6 LABS · BUILD-IT-YOURSELF</span>
+    </div>
+    <h1>Before an AI Can Think,<br>It Must Learn to <span style="color:var(--teal-dark);">Read</span></h1>
+    <p class="lede">Neural networks only understand numbers. The tokenizer is the bridge from your text to the model's math —
+        and it's responsible for some of the weirdest bugs in AI: why models can't count letters in "strawberry",
+        why Chinese can cost several times more, and why certain cursed tokens crash GPT. You'll build the real algorithms below,
+        brick by brick — not watch a slideshow about them.</p>
+
+    <div class="conveyor-wrap">
+        <div class="conveyor">
+            <div class="conveyor-stage-label" style="left:4%;">raw text</div>
+            <div class="conveyor-stage-label" style="left:29%;">characters</div>
+            <div class="conveyor-stage-label" style="left:56%;">merged tokens</div>
+            <div class="conveyor-stage-label" style="left:82%;">integer IDs</div>
+            <div class="conveyor-track" id="hero-conveyor"></div>
+            <div class="conveyor-belt"></div>
+        </div>
+    </div>
+    <p style="font-size:0.7rem; color:var(--ink-faint); font-family:var(--font-mono); margin-top:10px; margin-bottom:0;">
+        ↑ live pipeline — the word "tokenizer" is riding the belt right now. This is section 1.3, running on autopilot.
+    </p>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════
+     1.1 — THE ONE-HOT PROBLEM → orthogonal space visual
+     ════════════════════════════════════════════════════════════════ -->
+<section class="section" id="sec-1">
+    <div class="section-header">
+        <div class="section-label"><span class="section-num coral">SECTION 1.1</span></div>
+        <h2>The Naive Approach: One Number Per Word</h2>
+        <p>The simplest idea: assign every unique word an ID, then a corner of space. This fails catastrophically — and <em>seeing why</em> geometrically is the key to everything that follows.</p>
+    </div>
+    <div class="grid-2">
+        <div>
+            <h3>Three Fatal Problems</h3>
+            <p><strong>1. Vocabulary explosion.</strong> English has ~500K words, plus names, typos, and <code>COVID-19</code>-era neologisms. Your vocabulary grows without bound.</p>
+            <p><strong>2. No similarity.</strong> In one-hot encoding, every word gets its own perpendicular axis. <code>cat</code> is exactly as far from <code>dog</code> as it is from <code>refrigerator</code>. The geometry encodes zero meaning.</p>
+            <p><strong>3. Out-of-vocabulary (OOV).</strong> A word the model has never seen gets... nothing. No axis exists for it. No representation at all.</p>
+            <div class="callout teal">
+                <span class="callout-icon">💡</span>
+                <div><strong>The fix (spoiler):</strong> Split words into <strong>subword pieces</strong>. "unbelievable" → ["un", "believ", "able"]. Now rare words share pieces with common ones, and the vocabulary stays small. That's what BPE does — Section 1.3.</div>
+            </div>
+        </div>
+        <div class="canvas-wrap">
+            <div class="canvas-title">
+                <span>4 words, exactly equal spacing — drag to rotate</span>
+                <span class="step-badge" id="onehot-dim-label">A TRUE SIMPLEX</span>
+            </div>
+            <canvas id="onehot-canvas" width="600" height="360" style="cursor:grab;"></canvas>
+            <div class="explain-strip teal" id="onehot-explain">This tetrahedron is the one shape in 3-D where all 4 points sit at IDENTICAL pairwise distance — no approximation. It's a physical stand-in for what one-hot vectors do in any dimension: every word is equally far from every other word, always.</div>
+        </div>
+    </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════
+     1.2 — N-GRAM LANGUAGE MODELS → live transition graph
+     ════════════════════════════════════════════════════════════════ -->
+<section class="section" id="sec-2">
+    <div class="section-header">
+        <div class="section-label"><span class="section-num teal">SECTION 1.2</span></div>
+        <h2>The Statistical Era: N-Gram Language Models</h2>
+        <p>Before neural networks, we predicted text by <strong>counting</strong>. A bigram model asks: given the previous character, what's the most likely next one? This is the ancestor of every LLM — and you can train one in 20 lines of code.</p>
+    </div>
+    <div class="grid-2">
+        <div>
+            <div class="math-block">
+                $$P(x_t \mid x_{t-1}) = \frac{\text{count}(x_{t-1}, x_t)}{\text{count}(x_{t-1})}$$
+            </div>
+            <p><strong>Perplexity</strong> measures how "surprised" the model is: <span class="math-inline">PPL = e^{-\frac{1}{N}\sum \log P(x_t \mid x_{t-1})}</span>. Lower = better. A perplexity of 10 means the model is as confused as if choosing uniformly among 10 options each step.</p>
+            <div class="callout gold">
+                <span class="callout-icon">🔗</span>
+                <div><strong>Why this matters:</strong> An LLM is <em>exactly</em> this — a next-token predictor — except the "counts" are computed by a neural network over a context of thousands of tokens instead of a table over 1 token of history. Same objective: minimize <span class="math-inline">−log P(correct\ next)</span>.</div>
+            </div>
+            <div class="card-alt">
+                <h4 class="teal">The sparsity curse</h4>
+                <p>A trigram model over a 50K-word vocabulary has 50K³ = 125 trillion possible rows. Almost all are zero — no amount of data fills them. This is why n-grams cap out around n=3, and why we needed neural networks.</p>
+            </div>
+        </div>
+        <div class="lab-shell">
+            <div class="lab-toolbar">
+                <span class="step-badge">1.2 · LIVE GRAPH</span>
+                <span class="spacer"></span>
+                <span class="legend"><span class="sw" style="background:var(--teal-light);"></span>edge weight = P(next | current)</span>
+            </div>
+            <div class="lab-stage">
+                <textarea class="input" id="bigram-input" style="min-height:64px;">once upon a time there was a little girl who lived in a small house near the forest. every morning she would walk to the forest to pick flowers and talk to the birds.</textarea>
+                <div class="flex gap-2 mt-4" style="flex-wrap:wrap;">
+                    <button class="btn btn-teal" id="btn-bigram-train">① Train — build the graph</button>
+                    <button class="btn btn-gold" id="btn-bigram-sample" disabled>② Walk the graph — generate text</button>
+                </div>
+                <div id="bigram-stats" class="mono" style="font-size:0.78rem; margin:12px 0 4px;"></div>
+                <canvas id="bigram-canvas" width="600" height="320" style="margin-top:6px;"></canvas>
+            </div>
+            <div class="lab-readout" id="bigram-output">Press <strong>Train</strong> to count every character pair in the text above, then <strong>Walk the graph</strong> to sample new text by literally hopping from node to node, weighted by edge thickness.</div>
+        </div>
+    </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════
+     1.3 — THE BRICK FORGE (BPE) — signature interaction
+     ════════════════════════════════════════════════════════════════ -->
+<section class="section" id="sec-3">
+    <div class="section-header">
+        <div class="section-label"><span class="section-num gold">SECTION 1.3 ★ SIGNATURE LAB</span></div>
+        <h2>Byte-Pair Encoding: The Algorithm That Powers GPT</h2>
+        <p>BPE starts with individual character-bricks and repeatedly <strong>fuses the most frequent adjacent pair</strong> into one wider brick. Common words become single tokens; rare words stay as loose pieces. This is the exact algorithm GPT-2, GPT-4, and LLaMA use — watch it weld, merge by merge.</p>
+    </div>
+
+    <div class="lab-shell">
+        <div class="lab-toolbar">
+            <span class="step-badge" id="forge-step-badge">STEP 0 · IDLE</span>
+            <span class="spacer"></span>
+            <span class="legend" id="forge-legend"></span>
+        </div>
+        <div class="lab-stage">
+            <textarea class="input" id="bpe-corpus" style="min-height:56px;">the cat sat on the mat. the cat ate the rat. the dog ran in the fog.</textarea>
+            <div class="flex gap-2 mt-4" style="flex-wrap:wrap;">
+                <button class="btn btn-teal" id="btn-bpe-init">① Shatter into character-bricks</button>
+                <button class="btn btn-gold" id="btn-bpe-step" disabled>② Fuse the hottest pair</button>
+                <button class="btn btn-coral" id="btn-bpe-auto" disabled>③ Auto-fuse ×10</button>
+                <button class="btn btn-outline" id="btn-bpe-reset" disabled>↺ Reset</button>
+            </div>
+            <div id="bpe-stats" class="mono" style="font-size:0.78rem; margin:12px 0 6px;"></div>
+
+            <div class="grid-2" style="align-items:start; margin-top:6px;">
+                <div>
+                    <div class="canvas-title">The forge — brick sequence (welds highlighted on fuse)</div>
+                    <div class="forge-track" id="bpe-sequence"></div>
+                </div>
+                <div>
+                    <div class="canvas-title">Pair-frequency heat grid — brightest tile fuses next</div>
+                    <div class="pair-grid-wrap"><div class="pair-grid" id="pair-heatgrid"></div></div>
+                </div>
+            </div>
+
+            <div class="canvas-title" style="margin-top:16px;">Vocabulary shelf — every brick ever forged, in order</div>
+            <div class="forge-vocab-shelf" id="bpe-vocab"></div>
+        </div>
+        <div class="lab-readout" id="forge-readout">Click <strong>Shatter into character-bricks</strong> to split the corpus above into its raw characters — the starting vocabulary of any BPE tokenizer.</div>
+    </div>
+
+    <div class="grid-2 mt-8">
+        <div>
+            <h3>The Algorithm</h3>
+            <div class="card-alt">
+                <p class="mono" style="font-size:0.82rem; line-height:1.8; color: var(--ink);">
+                1. Split corpus into characters<br>
+                2. Count every adjacent pair<br>
+                3. Merge the most frequent pair → new token<br>
+                4. Repeat until vocab target reached</p>
+            </div>
+            <div class="math-block">
+                $$\text{compression ratio} = \frac{\text{original chars}}{\text{tokens after BPE}}$$
+            </div>
+            <p>Real systems: GPT-2's vocabulary is 50,257 tokens — 256 bytes + &lt;|endoftext|&gt; + 50,000 learned merges, trained on 40GB of text. LLaMA-3 uses 128K tokens. The merge list <em>is</em> the tokenizer — loading it means replaying every weld in order.</p>
+        </div>
+        <div>
+            <div class="callout mint">
+                <span class="callout-icon">🧠</span>
+                <div><strong>Deep insight:</strong> BPE is a compression algorithm — invented in 1994, for data compression, not language. The model sees a compressed view of text. This is why tokenization quirks — like " strawberry" splitting into ["st","raw","berry"] — cause the model to lose track of individual letters.</div>
+            </div>
+            <div class="forge-merge-log" id="forge-merge-log" style="margin-top:16px;"></div>
+        </div>
+    </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════
+     1.4 — TOKENIZER FAMILY TREE + BPE vs WordPiece race
+     ════════════════════════════════════════════════════════════════ -->
+<section class="section" id="sec-4">
+    <div class="section-header">
+        <div class="section-label"><span class="section-num lavender">SECTION 1.4</span></div>
+        <h2>The Tokenizer Family Tree</h2>
+        <p>BPE isn't the only way to pick merges. BERT uses WordPiece — same fuse-the-bricks idea, but it scores pairs by how much they'd improve the model's likelihood of the data, not by raw frequency. Watch both algorithms race on the identical corpus and pick <em>different</em> first moves.</p>
+    </div>
+
+    <div class="canvas-wrap">
+        <div class="canvas-title">Descent of tokenizer algorithms — click a node</div>
+        <canvas id="family-tree-canvas" width="1100" height="300"></canvas>
+        <div class="explain-strip lavender" id="family-tree-explain">Click any node above to read what makes it different.</div>
+    </div>
+
+    <div class="lab-shell mt-8">
+        <div class="lab-toolbar">
+            <span class="step-badge">1.4 · RACE</span>
+            <span class="spacer"></span>
+            <span class="legend">frequency-greedy vs. likelihood-greedy, same text, same step count</span>
+        </div>
+        <div class="lab-stage">
+            <textarea class="input" id="race-corpus" style="min-height:50px;">the cat sat on the mat. the cat ate the rat. the dog ran in the fog.</textarea>
+            <div class="flex gap-2 mt-4">
+                <button class="btn btn-teal" id="btn-race-run">Run 6 merges on both, side by side</button>
+            </div>
+            <div class="mt-4">
+                <div class="race-lane">
+                    <div class="lane-label" style="color:var(--gold-dark);">BPE</div>
+                    <div class="lane-track" id="race-bpe-track"></div>
+                </div>
+                <div class="race-lane">
+                    <div class="lane-label" style="color:var(--sky-dark);">WordPiece</div>
+                    <div class="lane-track" id="race-wp-track"></div>
+                </div>
+            </div>
+        </div>
+        <div class="lab-readout" id="race-readout">BPE always fuses the pair that appears most often. WordPiece fuses the pair whose merge gives the biggest jump in likelihood score — <span class="math-inline">score(a,b) = count(a,b) / (count(a) · count(b))</span> — which favors pairs that are rare individually but strongly stick together, like "q" + "u".</div>
+    </div>
+
+    <div class="card mt-8" style="overflow-x:auto;">
+        <table class="compare">
+            <thead>
+                <tr><th>Algorithm</th><th>How it picks tokens</th><th>Used by</th><th>Key difference</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><strong>BPE</strong></td><td>Most frequent pair (greedy)</td><td>GPT-2/3/4, RoBERTa, LLaMA</td><td>Deterministic merge order</td></tr>
+                <tr><td><strong>WordPiece</strong></td><td>Max likelihood gain, not frequency</td><td>BERT, DistilBERT</td><td>Merges maximize P(corpus), not count</td></tr>
+                <tr><td><strong>Unigram</strong></td><td>Probabilistic; prunes low-value tokens</td><td>ALBERT, T5, mT5, XLNet</td><td>Starts big, removes tokens; supports sampling</td></tr>
+                <tr><td><strong>SentencePiece</strong></td><td>Toolkit running BPE/Unigram on raw text</td><td>LLaMA, Mistral, T5</td><td>Treats input as raw stream (no pre-split by spaces) — great for Japanese/Chinese</td></tr>
+                <tr><td><strong>tiktoken</strong></td><td>BPE, speed-optimized in Rust</td><td>GPT-3.5/4 (OpenAI)</td><td>3-6× faster encode; same merges as GPT-2 (p50k) or new (cl100k, o200k)</td></tr>
+                <tr><td><strong>Character-level</strong></td><td>Every char = 1 token</td><td>Our MicroGPT 🧱</td><td>Tiny vocab (80), zero OOV, but long sequences</td></tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="callout lavender mt-4">
+        <span class="callout-icon">⚖️</span>
+        <div><strong>Correction from the old module:</strong> BERT does <em>not</em> use BPE — it uses <strong>WordPiece</strong>. The distinction you just watched race: WordPiece merges whichever pair increases training-data likelihood most, rather than whichever is most frequent. Subtle, but it changes the resulting vocabulary.</div>
+    </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════
+     1.5 — GLITCH TOKENS, THE TOKENIZER TAX, CHAT TEMPLATES
+     ════════════════════════════════════════════════════════════════ -->
+<section class="section" id="sec-5">
+    <div class="section-header">
+        <div class="section-label"><span class="section-num peach">SECTION 1.5</span></div>
+        <h2>Tokenization in the Wild: Glitches, Taxes & Templates</h2>
+        <p>Where tokenization stops being theory and starts breaking production systems.</p>
+    </div>
+    <div class="grid-3">
+        <div class="card">
+            <h4 class="coral">😵 Glitch Tokens</h4>
+            <p style="margin-bottom:12px;"><strong>SolidGoldMagikarp</strong> and <strong>petertodd</strong> are real tokens in GPT's vocabulary that cause bizarre behavior:</p>
+            <div class="flex gap-2" style="flex-wrap:wrap; margin-bottom:12px;">
+                <span class="glitch-token">SolidGoldMagikarp</span>
+                <span class="glitch-token" style="animation-delay:1.1s;">petertodd</span>
+            </div>
+            <p style="font-size:0.8rem; color:var(--ink-faint);">They appear in the vocabulary (scraped from Reddit usernames) but were almost never <em>trained</em> on — so their embeddings sit near-random in space. Ask GPT-3 to repeat one and it hallucinates. Lesson: a token with no training signal is undefined behavior, not zero behavior.</p>
+        </div>
+        <div class="card">
+            <h4 class="teal">📨 Chat Templates</h4>
+            <p>Chat models don't see "a conversation" — they see one long string with special tokens marking turns:</p>
+            <div class="mono" style="font-size:0.72rem; background:var(--surface-code); color:#E8EAF6; padding:10px; border-radius:6px; margin:8px 0;">&lt;|im_start|&gt;user<br>Hello!&lt;|im_end|&gt;<br>&lt;|im_start|&gt;assistant<br>Hi!&lt;|im_end|&gt;</div>
+            <p style="font-size:0.8rem;">ChatML (OpenAI), <code>[INST]</code> (LLaMA-2), <code>&lt;start_of_turn&gt;</code> (Gemini) — different formats, same idea. Get this wrong and the model treats your chat as garbled pretraining text.</p>
+        </div>
+        <div class="card">
+            <h4 class="rose">🍓 The Strawberry Problem</h4>
+            <p>Ask GPT "how many r's in strawberry?" and it often says 2. It never sees letters — only tokens:</p>
+            <div id="strawberry-tokens" style="margin:10px 0;"></div>
+            <p style="font-size:0.8rem;">The letter "r" is buried inside different tokens at different positions. Counting requires memorizing each token's spelling — which the model mostly hasn't done.</p>
+        </div>
+    </div>
+
+    <div class="lab-shell mt-8">
+        <div class="lab-toolbar">
+            <span class="step-badge">1.5 · THE TOKENIZER TAX</span>
+            <span class="spacer"></span>
+            <span class="legend">same sentence, same BPE vocab (English-trained) — bar length = tokens needed</span>
+        </div>
+        <div class="lab-stage">
+            <p style="font-size:0.85rem; margin-bottom:14px;">All four rows below say <em>"How are you today?"</em> in a different language. Same meaning, same API price per token — wildly different cost, because the BPE vocabulary was trained mostly on English text.</p>
+            <div id="byte-race"></div>
+        </div>
+        <div class="lab-readout">This is a real, documented fairness issue in production AI systems (Ahia et al., 2023) — non-English users pay more tokens, hit context limits sooner, and get slower + costlier responses for identical meaning.</div>
+    </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════
+     1.6 — THE GRAND TRADEOFF + BRIDGE TO MODULE 02
+     ════════════════════════════════════════════════════════════════ -->
+<section class="section" id="sec-6" style="border-bottom:none;">
+    <div class="section-header">
+        <div class="section-label"><span class="section-num sky">SECTION 1.6</span></div>
+        <h2>Character vs Byte vs Subword: The Grand Tradeoff</h2>
+        <p>Every tokenizer sits on a triangle of vocabulary size, sequence length, and robustness. You can only optimize two at once. Drag the dial to see the same sentence tokenized three different ways, live.</p>
+    </div>
+
+    <div class="lab-shell">
+        <div class="lab-toolbar">
+            <span class="step-badge">1.6 · TRADEOFF DIAL</span>
+            <span class="spacer"></span>
+        </div>
+        <div class="lab-stage">
+            <input class="input" id="tradeoff-text" value="unbelievably café 日本語" style="margin-bottom:14px;">
+            <div class="pill-group" id="tradeoff-tabs">
+                <button class="pill active" data-mode="char">Character-level</button>
+                <button class="pill" data-mode="byte">Byte-level (UTF-8)</button>
+                <button class="pill" data-mode="bpe">Subword (BPE-ish)</button>
+            </div>
+            <div class="forge-track" id="tradeoff-track" style="margin-top:14px;"></div>
+            <div id="tradeoff-stats" class="mono" style="font-size:0.78rem; margin-top:10px;"></div>
+        </div>
+        <div class="lab-readout" id="tradeoff-readout"></div>
+    </div>
+
+    <div class="card mt-8" style="overflow-x:auto;">
+        <table class="compare">
+            <thead><tr><th></th><th>Character-level</th><th>Byte-level</th><th>Subword (BPE)</th></tr></thead>
+            <tbody>
+                <tr><td><strong>Vocab size</strong></td><td>~80-100</td><td>256</td><td>32K-256K</td></tr>
+                <tr><td><strong>Seq length (same text)</strong></td><td>Longest (~4×)</td><td>Long (~3×)</td><td>Short (1×)</td></tr>
+                <tr><td><strong>OOV (unknown text)</strong></td><td>Impossible ✓</td><td>Impossible ✓</td><td>Possible ✗</td></tr>
+                <tr><td><strong>Valid output guaranteed</strong></td><td>✓ Always</td><td>✗ Invalid UTF-8 possible</td><td>✓</td></tr>
+                <tr><td><strong>Sees letter structure</strong></td><td>✓</td><td>✓</td><td>✗ (sees pieces)</td></tr>
+                <tr><td><strong>Embedding matrix size</strong></td><td>Tiny</td><td>Small</td><td>Huge (vocab × d)</td></tr>
+                <tr><td><strong>Used by</strong></td><td>MicroGPT 🧱</td><td>ByT5, CANINE</td><td>GPT-4, LLaMA, Claude</td></tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="grid-2 mt-4">
+        <div class="callout teal">
+            <span class="callout-icon">🧱</span>
+            <div><strong>Why our MicroGPT uses character-level:</strong> With only 6.3M parameters trained for minutes, a subword model can't learn 32K embeddings AND language at the same time. Character-level (80 tokens) lets it focus all capacity on patterns. The cost: it reads "hello" as 5 tokens instead of 1 — so attention must learn spelling <em>and</em> meaning.</div>
+        </div>
+        <div class="callout rose">
+            <span class="callout-icon">⚠️</span>
+            <div><strong>Why byte-level produces garbage:</strong> Bytes 128–255 only form valid text in multi-byte UTF-8 sequences. A byte-level model must learn English <em>and</em> UTF-8 grammar simultaneously. Sample a lead byte with no valid continuation and you get mojibake. Character-level sidesteps this completely.</div>
+        </div>
+    </div>
+
+    <div class="bridge mt-8">
+        <h2>Numbers With Meaning?<br>That's the Next Trick</h2>
+        <p>Tokens are just IDs — they carry no meaning yet. The embedding layer is where "king" becomes geometry: a 256-dimensional vector where similar words live close together. Time to enter the Embedding Universe.</p>
+        <a href="02-embedding-space.html" class="btn btn-teal" style="font-size:1rem; padding:14px 28px;">Module 02: The Embedding Universe →</a>
+    </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════
+     1.7 — CAPSTONE EXAM: 5 questions from this module's real content
+     ════════════════════════════════════════════════════════════════ -->
+<section class="section" id="sec-7" style="border-bottom:none;">
+    <div class="section-header">
+        <div class="section-label"><span class="section-num rose">SECTION 1.7 · CAPSTONE</span></div>
+        <h2>The Capstone: Weld or Weld Not</h2>
+        <p>Five questions from the module's real content — answer from memory, no scrolling. 4/5 earns the Token Smith brick for your Builder's Wall.</p>
+    </div>
+
+    <div class="brick-panel" style="padding:28px; margin-top:20px;">
+        <div id="exam-questions">
+
+            <div class="exam-q" data-q="1">
+                <div class="q-scenario">THE OLD MODULE assigned every unique word an ID and gave each word its own perpendicular axis. A student asks: "so what actually breaks?"</div>
+                <div class="q-text">Q1 · Which of these is a real failure of one-hot word encoding — or is it all of them?</div>
+                <div class="exam-options">
+                    <label class="exam-opt"><input type="radio" name="q1" value="all3"> <strong>All three:</strong> vocabulary explosion (the vocab grows without bound), zero similarity (cat is as far from dog as from refrigerator), and OOV (a word never seen gets no axis at all). Section 1.1 calls each one fatal.</label>
+                    <label class="exam-opt"><input type="radio" name="q1" value="vocab"> <strong>Only vocabulary explosion:</strong> the other two are cosmetic annoyances, not failures.</label>
+                    <label class="exam-opt"><input type="radio" name="q1" value="dist"> <strong>Only distance:</strong> "cat" and "refrigerator" should sit closer together, but everything else works fine.</label>
+                </div>
+            </div>
+
+            <div class="exam-q" data-q="2">
+                <div class="q-scenario">THE BRICK FORGE (Section 1.3) welds adjacent character-bricks into wider bricks, one pair at a time, until the vocabulary target is reached.</div>
+                <div class="q-text">Q2 · What rule decides which adjacent pair gets fused next?</div>
+                <div class="exam-options">
+                    <label class="exam-opt"><input type="radio" name="q2" value="freq"> <strong>Most frequent pair:</strong> count every adjacent pair, weld the one that appears most. Frequency-greedy — that's BPE.</label>
+                    <label class="exam-opt"><input type="radio" name="q2" value="rand"> <strong>A random pair:</strong> the weld order is arbitrary and doesn't change the result.</label>
+                    <label class="exam-opt"><input type="radio" name="q2" value="rar"> <strong>The rarest pair:</strong> it needs the most help, so it welds first.</label>
+                </div>
+            </div>
+
+            <div class="exam-q" data-q="3">
+                <div class="q-scenario">THE RACE (Section 1.4): BPE and WordPiece run 6 merges on the identical corpus — and pick different first moves. Same text, different vocabulary.</div>
+                <div class="q-text">Q3 · What does WordPiece's scoring rule favor instead of raw frequency?</div>
+                <div class="exam-options">
+                    <label class="exam-opt"><input type="radio" name="q3" value="stick"> <strong>Pairs that stick together:</strong> score = count(a,b) / (count(a) · count(b)) favors pairs that are rare individually but strongly co-occur — like "q" + "u".</label>
+                    <label class="exam-opt"><input type="radio" name="q3" value="freq"> <strong>The same most-frequent pair:</strong> WordPiece and BPE are the same algorithm with different names.</label>
+                    <label class="exam-opt"><input type="radio" name="q3" value="len"> <strong>The longest pair:</strong> length wins every tie, every time.</label>
+                </div>
+            </div>
+
+            <div class="exam-q" data-q="4">
+                <div class="q-scenario">THE STRAWBERRY PROBLEM (Section 1.5): GPT-2 tokenizes "strawberry" into three bricks, and its attention mechanism never sees the letter "r" once.</div>
+                <div class="q-text">Q4 · Why can't the model reliably count the r's?</div>
+                <div class="exam-options">
+                    <label class="exam-opt"><input type="radio" name="q4" value="opaque"> <strong>Opaque bricks:</strong> the model only sees integer IDs — [301, 1831, 8396] — and the letters are buried inside different tokens at different positions. Counting would require memorizing each token's spelling.</label>
+                    <label class="exam-opt"><input type="radio" name="q4" value="visual"> <strong>Vision failure:</strong> the model's image pipeline can't render the letter "r".</label>
+                    <label class="exam-opt"><input type="radio" name="q4" value="train"> <strong>OOV:</strong> "strawberry" was never in the training data, so the tokenizer has no entry for it.</label>
+                </div>
+            </div>
+
+            <div class="exam-q" data-q="5">
+                <div class="q-scenario">THE SHIPPING ROOM (Section 1.3): a colleague says "we saved the vocabulary file, so we can restore the tokenizer anytime."</div>
+                <div class="q-text">Q5 · What actually IS the tokenizer?</div>
+                <div class="exam-options">
+                    <label class="exam-opt"><input type="radio" name="q5" value="merges"> <strong>The ordered merge list:</strong> the merge list <em>is</em> the tokenizer — loading it means replaying every weld in order. The raw vocab alone can't re-split text.</label>
+                    <label class="exam-opt"><input type="radio" name="q5" value="bytes"> <strong>The 256-byte alphabet:</strong> bytes alone are the whole tokenizer; merges are just an optimization.</label>
+                    <label class="exam-opt"><input type="radio" name="q5" value="text"> <strong>The training corpus:</strong> the tokenizer is whatever 40GB of text it was trained on, nothing more.</label>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="text-center" style="margin-top:24px;">
+            <button class="btn btn-coral" id="btn-submit-exam" style="font-size:1.05rem; padding:14px 36px;">Submit Capstone Exam</button>
+        </div>
+
+        <div id="exam-result" style="display:none; margin-top:28px; padding:24px; border-radius:var(--radius-md); border:2.5px solid var(--ink); background:var(--surface-alt); text-align:center;">
+            <h3 id="exam-score-title" style="margin-bottom:8px;">Diagnostic Score: 0/5</h3>
+            <p id="exam-score-desc" style="max-width:560px; margin:0 auto 16px;"></p>
+            <div id="exam-level" style="margin-bottom:16px;"></div>
+            <div id="exam-brick"></div>
+        </div>
+    </div>
+</section>
+
+</main>
+
+<footer class="academy-footer">
+    <div class="container">
+        <p>Built brick by brick · <strong>LLM Academy</strong> · Module 01: The Tokenizer Laboratory</p>
+        <p style="margin-top:4px; font-size:0.75rem;">Real algorithms: bigram LMs, BPE, WordPiece, Unigram, character-level — all implemented from scratch, running in your browser</p>
+    </div>
+</footer>
+
+<p style="font-family:var(--font-mono);font-size:0.62rem;color:var(--ink-faint);text-align:center;margin:24px auto;">LEGO® is a trademark of the LEGO Group. This course is not affiliated with, endorsed by, or sponsored by the LEGO Group.</p>
+
+<script>
+'use strict';
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+const COLORS = [
+    {c:getCss('--coral'), d:getCss('--coral-dark'), bg:getCss('--coral-bg')},
+    {c:getCss('--teal'), d:getCss('--teal-dark'), bg:getCss('--teal-bg')},
+    {c:getCss('--gold'), d:getCss('--gold-dark'), bg:getCss('--gold-bg')},
+    {c:getCss('--lavender'), d:getCss('--lavender-dark'), bg:getCss('--lavender-bg')},
+    {c:getCss('--mint'), d:getCss('--mint-dark'), bg:getCss('--mint-bg')},
+    {c:getCss('--peach'), d:getCss('--peach-dark'), bg:getCss('--peach-bg')},
+    {c:getCss('--sky'), d:getCss('--sky-dark'), bg:getCss('--sky-bg')},
+    {c:getCss('--rose'), d:getCss('--rose-dark'), bg:getCss('--rose-bg')},
+];
+function getCss(v) { return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+function colorFor(i) { return COLORS[((i%COLORS.length)+COLORS.length)%COLORS.length]; }
+function hexToRgba(hex, a) {
+    hex = hex.replace('#','');
+    if (hex.length === 3) hex = hex.split('').map(c=>c+c).join('');
+    const r = parseInt(hex.slice(0,2),16), g = parseInt(hex.slice(2,4),16), b = parseInt(hex.slice(4,6),16);
+    return `rgba(${r},${g},${b},${a})`;
+}
+function dpiCanvas(canvas) {
+    const rect = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    const w = rect.width || canvas.width, h = canvas.width ? (canvas.height/canvas.width)*w : canvas.height;
+    canvas.width = w * dpr; canvas.height = h * dpr;
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    return {ctx, w, h};
+}
+
+/* ════════════════════════════════════════════════════════════════
+   CANVAS KIT — doctrine R12/R13 craft grammar (canonical, from 13)
+   ════════════════════════════════════════════════════════════════ */
+var INK = getCss('--ink');
+function kitHexA(s, a){ s = String(s).replace('#', ''); if (s.length === 3) s = s.split('').map(function(ch){ return ch + ch; }).join(''); var r = parseInt(s.slice(0,2),16), g = parseInt(s.slice(2,4),16), b = parseInt(s.slice(4,6),16); return 'rgba(' + r + ',' + g + ',' + b + ',' + a + ')'; }
+var KIT_INK = (typeof INK !== 'undefined') ? INK : '#2B2A24';
+function seededRng(seed) { var t = seed >>> 0; return function(){ t += 0x6D2B79F5; var r = Math.imul(t ^ (t >>> 15), 1 | t); r ^= r + Math.imul(r ^ (r >>> 7), 61 | r); return ((r ^ (r >>> 14)) >>> 0) / 4294967296; }; }
+function kitFrame(ctx, w, h, label){ ctx.strokeStyle = kitHexA(KIT_INK, 0.25); ctx.lineWidth = 1.5; ctx.strokeRect(8, 8, w - 16, h - 16); if (label){ ctx.fillStyle = kitHexA(KIT_INK, 0.55); ctx.font = '600 10px "IBM Plex Mono", monospace'; ctx.textAlign = 'left'; ctx.fillText(String(label).toUpperCase(), 16, 26); } }
+function kitChip(ctx, text, x, y, align){ var fs2 = 10; ctx.font = fs2 + 'px "IBM Plex Mono", monospace'; var tw = ctx.measureText(text).width + 16; var cx = align === 'right' ? x - tw : x; ctx.fillStyle = kitHexA(KIT_INK, 0.10); ctx.strokeStyle = kitHexA(KIT_INK, 0.4); ctx.lineWidth = 1.5; ctx.beginPath(); ctx.roundRect(cx, y, tw, fs2 + 8, 7); ctx.fill(); ctx.stroke(); ctx.fillStyle = kitHexA(KIT_INK, 0.75); ctx.textAlign = 'left'; ctx.fillText(text, cx + 8, y + fs2 + 2); }
+function kitAxis(ctx, x0, y0, x1, y1, color, lw){ ctx.save(); ctx.strokeStyle = color || kitHexA(KIT_INK, 0.35); ctx.lineWidth = lw || 1.5; ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y0); ctx.stroke(); ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x0, y1); ctx.stroke(); ctx.restore(); }
+function kitReadout(ctx, x, y, w, rows){ var rh = 20, pad = 8; var H = rows.length * rh + pad * 2; ctx.fillStyle = '#FFFFFF'; ctx.strokeStyle = kitHexA(KIT_INK, 0.25); ctx.lineWidth = 1.5; ctx.beginPath(); ctx.roundRect(x, y, w, H, 8); ctx.fill(); ctx.stroke(); for (var i = 0; i < rows.length; i++){ var r = rows[i]; ctx.fillStyle = kitHexA(KIT_INK, 0.6); ctx.font = '600 11px "IBM Plex Mono", monospace'; ctx.textAlign = 'left'; ctx.fillText(r[0], x + pad, y + pad + i * rh + 13); ctx.fillStyle = r[2] || KIT_INK; ctx.textAlign = 'right'; ctx.fillText(r[1], x + w - pad, y + pad + i * rh + 13); } }
+function kitGrid(ctx, x0, y0, x1, y1, nx, ny){
+    var g = kitHexA(KIT_INK, 0.13); ctx.save(); ctx.lineWidth = 1;
+    ctx.strokeStyle = g;
+    for (var i = 1; i < nx; i++){ var x = x0 + (x1 - x0) * i / nx; ctx.beginPath(); ctx.moveTo(x, y0); ctx.lineTo(x, y1); ctx.stroke(); }
+    for (var j = 1; j < ny; j++){ var y = y0 + (y1 - y0) * j / ny; ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(x1, y); ctx.stroke(); }
+    ctx.restore();
+}
+function kitTick(ctx, x, y, text, align, color){
+    ctx.fillStyle = color || kitHexA(KIT_INK, 0.65); ctx.font = '600 10px "IBM Plex Mono", monospace';
+    ctx.textAlign = align || 'center'; ctx.fillText(text, x, y);
+}
+/* ════════════════════════════════════════════════════════════════
+   MATERIALITY KIT — R1/R15 (universal stud grammar + ABS plastic)
+   ════════════════════════════════════════════════════════════════ */
+var MK_INK = (typeof KIT_INK !== 'undefined') ? KIT_INK : ((typeof INK !== 'undefined') ? INK : '#2B2A24');
+function kitA(h, a){ h = String(h).replace('#',''); if (h.length === 3) h = h.split('').map(function(c){return c+c;}).join(''); var r = parseInt(h.slice(0,2),16), g = parseInt(h.slice(2,4),16), b = parseInt(h.slice(4,6),16); return 'rgba(' + r + ',' + g + ',' + b + ',' + a + ')'; }
+function kitShade(h, amt){ h = String(h).replace('#',''); if (h.length === 3) h = h.split('').map(function(c){return c+c;}).join(''); var r = parseInt(h.slice(0,2),16), g = parseInt(h.slice(2,4),16), b = parseInt(h.slice(4,6),16); var t = amt > 0 ? 255 : 0, p = Math.abs(amt); r = Math.round((t - r) * p + r); g = Math.round((t - g) * p + g); b = Math.round((t - b) * p + b); return 'rgb(' + r + ',' + g + ',' + b + ')'; }
+function kitStud(ctx, x, y, r, color){
+    /* universal 3-layer stud: shadow + top + inner ring highlight (light top-left) */
+    ctx.save();
+    ctx.fillStyle = kitShade(color, -0.28); ctx.beginPath(); ctx.ellipse(x + r * 0.14, y + r * 0.16, r, r * 0.62, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = color; ctx.beginPath(); ctx.ellipse(x, y, r, r * 0.62, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = kitShade(color, 0.18); ctx.beginPath(); ctx.ellipse(x - r * 0.12, y - r * 0.16, r * 0.55, r * 0.34, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+}
+function kitBrick3(ctx, x, y, w, h, color, studs){
+    /* 2.5D ABS brick: hard shadow + dark side + lit top + stud grid */
+    var depth = Math.max(3, Math.min(8, h * 0.16));
+    ctx.save();
+    ctx.fillStyle = kitA(MK_INK, 0.16); ctx.beginPath(); ctx.roundRect(x + 3, y + depth + 3, w, h, 4); ctx.fill();
+    ctx.fillStyle = kitShade(color, -0.22); ctx.beginPath(); ctx.roundRect(x, y + depth, w, h - depth, 4); ctx.fill();
+    ctx.fillStyle = kitShade(color, 0.08); ctx.beginPath(); ctx.roundRect(x, y, w, h - depth, 4); ctx.fill();
+    ctx.strokeStyle = kitShade(color, 0.3); ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(x + 3, y + 1.5); ctx.lineTo(x + w - 3, y + 1.5); ctx.stroke();
+    var n = studs || Math.max(1, Math.floor(w / 26));
+    var gap = w / (n + 1);
+    for (var i = 1; i <= n; i++) kitStud(ctx, x + gap * i, y + (h - depth) * 0.5, Math.min(7, w * 0.09), kitShade(color, 0.10));
+    ctx.restore();
+}
+function kitChipBrick(ctx, text, x, y, accent, align){
+    var fs2 = 10; ctx.font = '600 ' + fs2 + 'px "IBM Plex Mono", monospace';
+    var tw = ctx.measureText(text).width + 22;
+    var cx = align === 'right' ? x - tw : x;
+    kitBrick3(ctx, cx, y, tw, fs2 + 10, accent || MK_INK, Math.max(2, Math.round(tw / 34)));
+    ctx.fillStyle = '#FFFFFF'; ctx.textAlign = 'left';
+    ctx.fillText(text, cx + 11, y + fs2 + 3);
+}
+/* R12 — baseplate: near-white fill + stud-step dot texture (canon, from 13 setupCanvas) */
+function plateBase(ctx, w, h){
+    ctx.fillStyle = '#FFFEFA';
+    ctx.fillRect(0, 0, w, h);
+    ctx.fillStyle = 'rgba(43,42,36,0.035)';
+    const studStep = 24;
+    for(let px = studStep/2; px < w; px += studStep){
+        for(let py = studStep/2; py < h; py += studStep){
+            ctx.beginPath(); ctx.arc(px, py, 2, 0, Math.PI * 2); ctx.fill();
+        }
+    }
+}
+/* R13 — horizontal scale legend for matrix canvases (mono, canon border) */
+function scaleLegend(ctx, x, y, label, color, maxVal){
+    const cw = 26, ch = 12, gap = 3, n = 6;
+    ctx.font = '600 10px "IBM Plex Mono", monospace';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    ctx.fillStyle = kitHexA(KIT_INK, 0.6);
+    ctx.fillText(label, x, y - 7);
+    for (let i = 0; i < n; i++){
+        const t = i / (n - 1);
+        ctx.fillStyle = kitHexA(color, 0.10 + t * 0.65);
+        ctx.fillRect(x + i * (cw + gap), y, cw, ch);
+        ctx.strokeStyle = kitHexA(KIT_INK, 0.3); ctx.lineWidth = 1;
+        ctx.strokeRect(x + i * (cw + gap), y, cw, ch);
+    }
+    ctx.fillStyle = kitHexA(KIT_INK, 0.5);
+    ctx.textAlign = 'left'; ctx.fillText('0', x, y + ch + 13);
+    ctx.textAlign = 'right'; ctx.fillText(String(maxVal), x + n * (cw + gap) - gap, y + ch + 13);
+}
+
+// ════════════════════════════════════════════════════════════════
+// HERO CONVEYOR — infinite belt: text → chars → tokens → IDs
+// ════════════════════════════════════════════════════════════════
+(function() {
+    const track = $('#hero-conveyor');
+    if (!track) return;
+    const word = 'tokenizer';
+    const chars = word.split('');
+    // BPE-ish merge for demo: te-ok-en-iz-er style groupings chosen for visual variety
+    const tokenGroups = [['t','o'],['k','e'],['n'],['i','z'],['e','r']];
+    const tokens = tokenGroups.map(g => g.join(''));
+    const ids = [3821, 5104, 291, 6650, 812];
+
+    function buildStage(items, xStart, xGap, yBase, colorOffset, kind) {
+        return items.map((it, i) => {
+            const el = document.createElement('div');
+            el.className = 'cv-item';
+            el.textContent = it;
+            const col = colorFor(i + colorOffset);
+            el.style.background = col.bg; el.style.color = col.d; el.style.borderColor = col.c;
+            el.style.left = (xStart + i*xGap) + 'px';
+            el.dataset.kind = kind;
+            return el;
+        });
+    }
+
+    let els = [];
+    function layout() {
+        track.innerHTML = '';
+        els = [];
+        const totalW = track.parentElement.clientWidth || 800;
+        const seg = totalW / 4;
+        buildStage(word.split(''), seg*0 + 14, 0, 0, 0, 'raw').forEach((el,i,arr) => {
+            if (i===0) { el.textContent = word; el.style.left = (seg*0+10) + 'px'; el.style.background=getCss('--surface-alt'); el.style.color=getCss('--ink'); el.style.borderColor=getCss('--ink'); }
+        });
+        // simpler: one chip for raw word
+        const rawChip = document.createElement('div');
+        rawChip.className = 'cv-item'; rawChip.textContent = word;
+        rawChip.style.left = (seg*0 + 6) + 'px'; rawChip.style.background = getCss('--surface-alt'); rawChip.style.color = getCss('--ink'); rawChip.style.borderColor = getCss('--ink');
+        track.appendChild(rawChip); els.push(rawChip);
+
+        chars.forEach((ch,i) => {
+            const col = colorFor(i);
+            const el = document.createElement('div');
+            el.className = 'cv-item'; el.textContent = ch;
+            el.style.width = '28px';
+            el.style.left = (seg*1 + 4 + i*24) + 'px';
+            el.style.background = col.bg; el.style.color = col.d; el.style.borderColor = col.c;
+            track.appendChild(el); els.push(el);
+        });
+        tokens.forEach((tk,i) => {
+            const col = colorFor(i*2);
+            const el = document.createElement('div');
+            el.className = 'cv-item'; el.textContent = tk;
+            el.style.left = (seg*2 + 4 + i*40) + 'px';
+            el.style.background = col.bg; el.style.color = col.d; el.style.borderColor = col.c;
+            track.appendChild(el); els.push(el);
+        });
+        ids.forEach((id,i) => {
+            const col = colorFor(i*2);
+            const el = document.createElement('div');
+            el.className = 'cv-item'; el.textContent = id;
+            el.style.left = (seg*3 + 4 + i*40) + 'px';
+            el.style.background = col.d; el.style.color = '#fff'; el.style.borderColor = getCss('--ink');
+            track.appendChild(el); els.push(el);
+        });
+    }
+    layout();
+    window.addEventListener('resize', () => { clearTimeout(window.__cvT); window.__cvT = setTimeout(layout, 200); });
+
+    // gentle ambient float, staggered
+    els.forEach((el,i) => { el.style.animation = `floatY ${2.6 + (i%5)*0.3}s ease-in-out ${(i%7)*0.15}s infinite`; });
+})();
+
+// ════════════════════════════════════════════════════════════════
+// 1.1 — ONE-HOT ORTHOGONAL SPACE: 4 words placed on a regular
+// tetrahedron, the one arrangement in 3-D with exactly equal
+// pairwise distances — a geometrically honest stand-in for the
+// N-dimensional one-hot property (every pair equidistant, always).
+// ════════════════════════════════════════════════════════════════
+(function() {
+    const canvas = $('#onehot-canvas');
+    if (!canvas) return;
+    // Four words shown on a REGULAR TETRAHEDRON — the one arrangement of
+    // 4 points in 3-D space where every pairwise distance is mathematically
+    // IDENTICAL (not approximate). This mirrors the true property of one-hot
+    // vectors in any dimension: every pair of distinct one-hot vectors sits
+    // at exactly the same distance, sqrt(2), from every other one.
+    const words = ['cat', 'dog', 'car', 'fridge'];
+    const N = words.length;
+    const dirs3D = [
+        [1,1,1], [1,-1,-1], [-1,1,-1], [-1,-1,1]
+    ].map(v => { const m = Math.sqrt(v[0]**2+v[1]**2+v[2]**2); return v.map(x=>x/m); });
+    let rotY = 0.5, rotX = -0.3, dragging = false, lastX=0, lastY=0, autoRotate = true;
+
+    function project(p, w, h) {
+        // rotate around Y then X
+        let [x,y,z] = p;
+        let cy = Math.cos(rotY), sy = Math.sin(rotY);
+        let x1 = x*cy + z*sy, z1 = -x*sy + z*cy;
+        let cx = Math.cos(rotX), sx = Math.sin(rotX);
+        let y1 = y*cx - z1*sx, z2 = y*sx + z1*cx;
+        const scale = Math.min(w,h) * 0.38;
+        const persp = 1 / (1 + (z2*0.35));
+        return { x: w/2 + x1*scale*persp, y: h/2 + y1*scale*persp, z: z2, s: persp };
+    }
+
+    function draw() {
+        const {ctx, w, h} = dpiCanvas(canvas);
+        ctx.clearRect(0,0,w,h);
+        plateBase(ctx, w, h);
+        kitFrame(ctx, w, h, 'ONE-HOT SPACE — FOUR EQUIDISTANT CORNERS');
+        kitChip(ctx, 'drag to rotate', w - 20, 16, 'right');
+        const origin = project([0,0,0], w, h);
+
+        const pts = dirs3D.map((d,i) => ({ p: project(d, w, h), i }));
+        // sort back-to-front for painter's algorithm
+        const order = [...pts].sort((a,b) => a.p.z - b.p.z);
+
+        // axes lines
+        order.forEach(({p,i}) => {
+            const col = colorFor(i);
+            ctx.strokeStyle = col.c; ctx.lineWidth = 2 * p.s;
+            ctx.beginPath(); ctx.moveTo(origin.x, origin.y); ctx.lineTo(p.x, p.y); ctx.stroke();
+        });
+        // origin dot
+        ctx.fillStyle = getCss('--ink'); ctx.beginPath(); ctx.arc(origin.x, origin.y, 4, 0, 7); ctx.fill();
+
+        // dim labels — each axis is one one-hot dimension (mono, faint, R13)
+        ctx.font = '600 9.5px ' + getCss('--font-mono');
+        ctx.fillStyle = getCss('--ink-faint');
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        pts.forEach(({p,i}) => {
+            const tx = origin.x + (p.x - origin.x) * 0.36;
+            const ty = origin.y + (p.y - origin.y) * 0.36;
+            ctx.fillText('dim' + (i+1), tx, ty);
+        });
+
+        // pairwise connecting web (faint) — visually proves equal spacing
+        ctx.strokeStyle = hexToRgba(getCss('--ink'), 0.08); ctx.lineWidth = 1;
+        for (let i=0;i<N;i++) for (let j=i+1;j<N;j++) {
+            const a = pts[i].p, b = pts[j].p;
+            ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
+        }
+
+        // word nodes on top
+        order.forEach(({p,i}) => {
+            const col = colorFor(i);
+            const r = 9.5 * p.s + 4;
+            ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, 7);
+            ctx.fillStyle = col.c; ctx.fill();
+            ctx.lineWidth = 2; ctx.strokeStyle = getCss('--ink'); ctx.stroke();
+            ctx.font = `700 ${13.5*Math.max(p.s,0.7)}px ${getCss('--font-mono')}`;
+            ctx.fillStyle = getCss('--ink');
+            ctx.textAlign = p.x > origin.x ? 'left' : 'right';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(words[i], p.x + (p.x>origin.x? r+6 : -(r+6)), p.y);
+        });
+        kitChip(ctx, '1 hot · 3 cold — every pair sits at distance √2', 16, h - 36);
+    }
+
+    function loop() {
+        if (autoRotate && !dragging) rotY += 0.0042;
+        draw();
+        requestAnimationFrame(loop);
+    }
+    requestAnimationFrame(loop);
+
+    canvas.addEventListener('pointerdown', e => { dragging = true; autoRotate = false; lastX = e.clientX; lastY = e.clientY; canvas.style.cursor = 'grabbing'; });
+    window.addEventListener('pointerup', () => { dragging = false; canvas.style.cursor = 'grab'; });
+    window.addEventListener('pointermove', e => {
+        if (!dragging) return;
+        rotY += (e.clientX - lastX) * 0.01;
+        rotX += (e.clientY - lastY) * 0.01;
+        rotX = Math.max(-1.3, Math.min(1.3, rotX));
+        lastX = e.clientX; lastY = e.clientY;
+    });
+    window.addEventListener('resize', () => { clearTimeout(window.__ohT); window.__ohT = setTimeout(draw, 150); });
+
+    const explain = $('#onehot-explain');
+    canvas.addEventListener('pointerdown', () => {
+        explain.textContent = 'Dragging — the four faint connecting lines never change length, from any angle. That is not a trick of this camera angle: it is the actual geometry. Real one-hot vectors have this same exact-equidistance property, just in hundreds of thousands of dimensions instead of three.';
+    });
+})();
+
+// ════════════════════════════════════════════════════════════════
+// 1.2 — BIGRAM TRANSITION GRAPH: characters as nodes on a ring,
+// edges = P(next|current), a walker dot hops live during sampling.
+// ════════════════════════════════════════════════════════════════
+(function() {
+    const canvas = $('#bigram-canvas');
+    if (!canvas) return;
+    let model = null; // { counts, totals, chars }
+    let nodePos = {};
+    let walker = null; // { char, x, y, targetX, targetY, t }
+    let pulseEdges = []; // recently traversed edges for glow fade
+
+    function layoutNodes(chars, w, h) {
+        const cx = w/2, cy = h/2 - 6, r = Math.min(w,h)*0.36;
+        nodePos = {};
+        chars.forEach((ch,i) => {
+            const a = -Math.PI/2 + (i/chars.length) * Math.PI*2;
+            nodePos[ch] = { x: cx + Math.cos(a)*r, y: cy + Math.sin(a)*r };
+        });
+    }
+
+    /* R12/R13 — at-rest seed preview: a seeded bigram matrix so the canvas
+       is complete before the first interaction (the live graph replaces it
+       on Train). Same mulberry32 seed family as the course engines. */
+    const PREVIEW_CHARS = ['e','t','a','o','i','n','s','h'];
+    const previewCells = (function(){
+        const rng = seededRng(0x01B16); // seed 6949 — deterministic preview
+        const cells = {};
+        PREVIEW_CHARS.forEach((r, i) => {
+            cells[r] = {};
+            PREVIEW_CHARS.forEach((c, j) => {
+                let v = rng();
+                if (i === j) v = 0.45 + v * 0.55;      // self-repeats are common in real corpora
+                cells[r][c] = { v, n: Math.max(1, Math.round(v * 36)) };
+            });
+        });
+        return cells;
+    })();
+    function drawSeedPreview(ctx, w, h) {
+        kitFrame(ctx, w, h, 'BIGRAM TRANSITION GRAPH — SEED PREVIEW');
+        const n = PREVIEW_CHARS.length;
+        const labelW = 46, headH = 34, pad = 26;
+        const areaW = w - labelW - pad * 2 - 60, areaH = h - headH - pad * 2 - 44;
+        const cell = Math.max(22, Math.min(areaW / n, areaH / n));
+        const gw = cell * n, gh = cell * n;
+        const gx = w / 2 - gw / 2 + (labelW - 60) / 2, gy = h / 2 - gh / 2 + 10;
+        // row / col token labels (mono, canon ink)
+        ctx.font = '600 11px "IBM Plex Mono", monospace';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        PREVIEW_CHARS.forEach((ch, i) => {
+            ctx.fillStyle = kitHexA(KIT_INK, 0.7);
+            ctx.fillText(ch, gx + i * cell + cell / 2, gy - 12);
+            ctx.fillText(ch, gx - 12, gy + i * cell + cell / 2);
+        });
+        // cells — seeded intensities, count labels
+        PREVIEW_CHARS.forEach((r, i) => {
+            PREVIEW_CHARS.forEach((c, j) => {
+                const d = previewCells[r][c];
+                const x = gx + j * cell, y = gy + i * cell;
+                ctx.fillStyle = kitHexA(getCss('--teal'), 0.10 + d.v * 0.62);
+                ctx.fillRect(x + 1, y + 1, cell - 2, cell - 2);
+                ctx.strokeStyle = kitHexA(KIT_INK, 0.16); ctx.lineWidth = 1;
+                ctx.strokeRect(x + 1, y + 1, cell - 2, cell - 2);
+                ctx.fillStyle = kitHexA(KIT_INK, d.v > 0.55 ? 0.85 : 0.45);
+                ctx.font = '600 ' + Math.max(9, Math.min(12, cell * 0.26)) + 'px "IBM Plex Mono", monospace';
+                ctx.fillText(d.n, x + cell / 2, y + cell / 2 + 1);
+            });
+        });
+        scaleLegend(ctx, gx, gy + gh + 16, 'pair count (seed)', getCss('--teal'), 36);
+        kitChip(ctx, 'seed preview — press TRAIN to build the real graph', w - 20, h - 30, 'right');
+    }
+
+    function draw() {
+        const {ctx, w, h} = dpiCanvas(canvas);
+        ctx.clearRect(0,0,w,h);
+        plateBase(ctx, w, h);
+        if (!model) {
+            drawSeedPreview(ctx, w, h);
+            return;
+        }
+        const { counts, totals, chars } = model;
+        // edges
+        chars.forEach(a => {
+            const dist = counts[a]; if (!dist) return;
+            const total = totals[a];
+            Object.entries(dist).forEach(([b, c]) => {
+                const p = c/total;
+                if (p < 0.06) return; // skip visual noise
+                const pa = nodePos[a], pb = nodePos[b];
+                if (!pa || !pb) return;
+                const isPulse = pulseEdges.some(e => e.a===a && e.b===b && e.life>0);
+                ctx.strokeStyle = isPulse ? getCss('--coral') : hexToRgba(getCss('--teal-dark'), 0.15 + p*0.55);
+                ctx.lineWidth = isPulse ? 3.5 : (0.6 + p*4.2);
+                ctx.beginPath();
+                if (a===b) {
+                    ctx.arc(pa.x, pa.y - 14, 10, 0, Math.PI*2);
+                } else {
+                    // slight curve for visual separation
+                    const mx = (pa.x+pb.x)/2, my = (pa.y+pb.y)/2;
+                    const dx = pb.x-pa.x, dy = pb.y-pa.y;
+                    const nx = -dy, ny = dx;
+                    const len = Math.hypot(nx,ny)||1;
+                    const bend = 10;
+                    ctx.moveTo(pa.x, pa.y);
+                    ctx.quadraticCurveTo(mx + nx/len*bend, my + ny/len*bend, pb.x, pb.y);
+                }
+                ctx.stroke();
+            });
+        });
+        // nodes
+        chars.forEach((ch,i) => {
+            const p = nodePos[ch]; if (!p) return;
+            const col = colorFor(i);
+            ctx.beginPath(); ctx.arc(p.x, p.y, 14, 0, 7);
+            ctx.fillStyle = col.bg; ctx.fill();
+            ctx.lineWidth = 2; ctx.strokeStyle = col.d; ctx.stroke();
+            ctx.font = `700 12px ${getCss('--font-mono')}`;
+            ctx.fillStyle = col.d; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText(ch === ' ' ? '␣' : ch, p.x, p.y+1);
+        });
+        // walker
+        if (walker) {
+            ctx.beginPath(); ctx.arc(walker.x, walker.y, 6, 0, 7);
+            ctx.fillStyle = getCss('--coral'); ctx.fill();
+            ctx.lineWidth = 2; ctx.strokeStyle = getCss('--ink'); ctx.stroke();
+        }
+        pulseEdges.forEach(e => e.life -= 0.04);
+        pulseEdges = pulseEdges.filter(e => e.life > 0);
+    }
+
+    let raf = null;
+    function loop() { draw(); raf = requestAnimationFrame(loop); }
+    loop();
+    window.addEventListener('resize', () => { clearTimeout(window.__bgT); window.__bgT = setTimeout(draw, 150); });
+
+    $('#btn-bigram-train').addEventListener('click', () => {
+        const text = $('#bigram-input').value.toLowerCase();
+        const counts = {}, totals = {};
+        for (let i = 0; i < text.length - 1; i++) {
+            const a = text[i], b = text[i+1];
+            counts[a] = counts[a] || {}; totals[a] = (totals[a]||0)+1;
+            counts[a][b] = (counts[a][b]||0)+1;
+        }
+        let logProb = 0, N = 0;
+        for (let i = 0; i < text.length - 1; i++) {
+            const a = text[i], b = text[i+1];
+            const p = (counts[a] && counts[a][b] ? counts[a][b] : 0.01) / (totals[a]||1);
+            logProb += Math.log(p); N++;
+        }
+        const ppl = Math.exp(-logProb/N);
+        const chars = Object.keys(totals).sort();
+        model = { counts, totals, chars };
+        const rect = canvas.getBoundingClientRect();
+        layoutNodes(chars, rect.width, rect.width * (canvas.height/canvas.width));
+        const vocabSize = chars.length;
+        $('#bigram-stats').innerHTML = `trained on ${text.length} chars · <strong>${vocabSize}</strong> unique chars (nodes) · <strong>perplexity = ${ppl.toFixed(2)}</strong>`;
+        $('#btn-bigram-sample').disabled = false;
+        $('#bigram-output').innerHTML = `Graph built — <strong>${vocabSize} nodes</strong>, edges drawn where P(next|current) &gt; 6%. Thicker edge = higher probability. Click <strong>Walk the graph</strong> to generate text by hopping node to node.`;
+    });
+
+    $('#btn-bigram-sample').addEventListener('click', () => {
+        if (!model) return;
+        const { counts, totals } = model;
+        let cur = ' ', out = '';
+        let steps = 0;
+        const maxSteps = 60;
+        const btn = $('#btn-bigram-sample'); btn.disabled = true;
+        const p0 = nodePos[cur] || {x:0,y:0};
+        walker = { x: p0.x, y: p0.y };
+
+        function step() {
+            const dist = counts[cur];
+            let next = ' ';
+            if (dist) {
+                const total = totals[cur];
+                let r = Math.random()*total;
+                for (const [ch, c] of Object.entries(dist)) { r -= c; if (r <= 0) { next = ch; break; } }
+            }
+            pulseEdges.push({ a: cur, b: next, life: 1 });
+            const target = nodePos[next] || nodePos[cur];
+            const start = { ...walker };
+            const t0 = performance.now();
+            function anim(now) {
+                const t = Math.min(1, (now - t0)/220);
+                walker.x = start.x + (target.x-start.x)*t;
+                walker.y = start.y + (target.y-start.y)*t;
+                if (t < 1) requestAnimationFrame(anim);
+                else {
+                    cur = next; out += next; steps++;
+                    $('#bigram-output').innerHTML = `<strong>Generated so far:</strong> <span class="mono">${out.replace(/</g,'&lt;')}</span>`;
+                    if (steps < maxSteps) setTimeout(step, 55);
+                    else btn.disabled = false;
+                }
+            }
+            requestAnimationFrame(anim);
+        }
+        step();
+    });
+})();
+
+// ════════════════════════════════════════════════════════════════
+// 1.3 — THE BRICK FORGE: BPE made physical. Characters are bricks.
+// The most frequent adjacent pair welds into one wider brick, live.
+// A heat-grid shows every pair's count so the "why" is visible
+// before the "what" happens.
+// ════════════════════════════════════════════════════════════════
+const Forge = (function() {
+    let seq = [];       // [{s, id, color}]
+    let vocab = new Map(); // s -> {s,id,color,firstSeenAt}
+    let nextId = 0;
+    let merges = 0;
+    let origLen = 0;
+    let mergeLog = [];
+    let colorIdx = 0;
+
+    function newColor() { return colorFor(colorIdx++); }
+    function getTok(s) {
+        if (!vocab.has(s)) vocab.set(s, { s, id: nextId++, color: newColor() });
+        return vocab.get(s);
+    }
+
+    function widthFor(str) {
+        return Math.max(30, 15 + str.length * 13);
+    }
+
+    function renderSeq(highlightPair) {
+        const track = $('#bpe-sequence');
+        track.innerHTML = '';
+        seq.forEach((t) => {
+            const el = document.createElement('div');
+            el.className = 'forge-brick';
+            el.textContent = t.s === ' ' ? '␣' : t.s;
+            el.style.width = widthFor(t.s) + 'px';
+            el.style.background = t.color.bg;
+            el.style.borderColor = t.color.d;
+            el.style.color = t.color.d;
+            track.appendChild(el);
+        });
+    }
+
+    function renderVocab() {
+        const shelf = $('#bpe-vocab');
+        shelf.innerHTML = '';
+        [...vocab.values()].sort((a,b)=>a.id-b.id).forEach(t => {
+            const el = document.createElement('span');
+            el.className = 'token-chip';
+            el.style.background = t.color.bg; el.style.color = t.color.d; el.style.borderColor = t.color.c;
+            el.innerHTML = `${t.s===' '?'␣':t.s}<span class="id">#${t.id}</span>`;
+            shelf.appendChild(el);
+        });
+    }
+
+    function pairCounts() {
+        const pairs = new Map();
+        for (let i = 0; i < seq.length - 1; i++) {
+            const key = seq[i].s + '␞' + seq[i+1].s;
+            pairs.set(key, (pairs.get(key)||0)+1);
+        }
+        return pairs;
+    }
+
+    function renderHeatgrid(pairs, winnerKey) {
+        // Build grid over unique tokens currently in seq (cap for readability)
+        const uniqueToks = [...new Set(seq.map(t=>t.s))];
+        const MAXN = 10;
+        const shown = uniqueToks.slice(0, MAXN);
+        const grid = $('#pair-heatgrid');
+        grid.style.gridTemplateColumns = `28px repeat(${shown.length}, 1fr)`;
+        grid.innerHTML = '';
+        let maxCount = 1;
+        pairs.forEach(c => { if (c>maxCount) maxCount = c; });
+
+        // corner
+        grid.appendChild(document.createElement('div'));
+        shown.forEach(colTok => {
+            const h = document.createElement('div');
+            h.className = 'mono'; h.style.fontSize = '0.6rem'; h.style.textAlign = 'center'; h.style.fontWeight = '700'; h.style.color = 'var(--ink-faint)';
+            h.textContent = colTok === ' ' ? '␣' : colTok;
+            grid.appendChild(h);
+        });
+        shown.forEach(rowTok => {
+            const rh = document.createElement('div');
+            rh.className = 'mono'; rh.style.fontSize = '0.6rem'; rh.style.display='flex'; rh.style.alignItems='center'; rh.style.justifyContent='flex-end'; rh.style.paddingRight='4px'; rh.style.fontWeight='700'; rh.style.color='var(--ink-faint)';
+            rh.textContent = rowTok === ' ' ? '␣' : rowTok;
+            grid.appendChild(rh);
+            shown.forEach(colTok => {
+                const key = rowTok + '␞' + colTok;
+                const count = pairs.get(key) || 0;
+                const cell = document.createElement('div');
+                cell.className = 'pair-cell';
+                if (count > 0) {
+                    const t = count / maxCount;
+                    cell.style.background = hexToRgba(getCss('--gold-dark'), 0.12 + t*0.78);
+                    cell.textContent = count;
+                    cell.title = `"${rowTok}"+"${colTok}" → appears ${count}×`;
+                    if (key === winnerKey) cell.classList.add('winner');
+                } else {
+                    cell.style.background = 'var(--surface-alt)';
+                }
+                grid.appendChild(cell);
+            });
+        });
+    }
+
+    function renderLog() {
+        const log = $('#forge-merge-log');
+        log.innerHTML = mergeLog.slice().reverse().map((m,ri) => {
+            const i = mergeLog.length - ri;
+            return `<div class="entry"><span class="n">#${i}</span><span>"${m.a===' '?'␣':m.a}" + "${m.b===' '?'␣':m.b}"</span><span style="color:var(--ink-faint);">→</span><strong>"${m.merged===' '?'␣':m.merged}"</strong><span style="color:var(--ink-faint); margin-left:auto;">×${m.count}</span></div>`;
+        }).join('') || '<div style="color:var(--ink-faint); font-style:italic;">No merges yet — welds will appear here.</div>';
+    }
+
+    function updateStats() {
+        $('#bpe-stats').innerHTML = seq.length ?
+            `merges: <strong>${merges}</strong> · vocab size: <strong>${vocab.size}</strong> · sequence: <strong>${seq.length}</strong> tokens (was ${origLen} chars) · compression: <strong>${(origLen/seq.length).toFixed(2)}×</strong>` : '';
+        $('#forge-step-badge').textContent = seq.length ? `STEP ${merges} · ${merges===0?'RAW CHARACTERS':'BRICKS FUSED'}` : 'STEP 0 · IDLE';
+    }
+
+    function updateLegend() {
+        const uniq = [...new Set(seq.map(t=>t.s))].slice(0,8);
+        $('#forge-legend').innerHTML = uniq.map(s => {
+            const t = vocab.get(s);
+            return `<span><span class="sw" style="background:${t.color.c};"></span>${s===' '?'␣':s}</span>`;
+        }).join('');
+    }
+
+    function init(text) {
+        vocab = new Map(); nextId = 0; colorIdx = 0; merges = 0; mergeLog = [];
+        seq = text.split('').map(ch => getTok(ch));
+        origLen = text.length;
+        renderSeq(); renderVocab(); renderHeatgrid(pairCounts(), null); renderLog(); updateStats(); updateLegend();
+        $('#forge-readout').innerHTML = `Corpus shattered into <strong>${origLen} character-bricks</strong> using <strong>${vocab.size}</strong> unique characters. Click <strong>Fuse the hottest pair</strong> — the heat grid shows which adjacent pair appears most; that's the one BPE always welds first.`;
+    }
+
+    function step(auto) {
+        if (seq.length < 2) return false;
+        const pairs = pairCounts();
+        let best = null, bestCount = 0;
+        for (const [k,c] of pairs) if (c > bestCount) { best = k; bestCount = c; }
+        if (!best || bestCount < 2) {
+            $('#forge-readout').textContent = 'No pair repeats more than once anymore — BPE has squeezed out all the free compression from this corpus.';
+            return false;
+        }
+        const [a, b] = best.split('␞');
+        const merged = a + b;
+        const newTok = getTok(merged);
+        // find first merge location index for animation targeting
+        let mergeIndex = -1;
+        const newSeq = [];
+        for (let i = 0; i < seq.length; i++) {
+            if (i < seq.length-1 && seq[i].s === a && seq[i+1].s === b) {
+                if (mergeIndex === -1) mergeIndex = newSeq.length;
+                newSeq.push(newTok); i++;
+            } else newSeq.push(seq[i]);
+        }
+        seq = newSeq; merges++;
+        mergeLog.push({a, b, merged, count: bestCount});
+
+        renderHeatgrid(pairs, best);
+        renderSeq();
+        // animate the merged bricks
+        const bricks = $('#bpe-sequence').children;
+        if (bricks[mergeIndex]) {
+            bricks[mergeIndex].classList.add('merging');
+        }
+        renderVocab();
+        renderLog();
+        updateStats();
+        updateLegend();
+        if (!auto) $('#forge-readout').innerHTML = `Welded <strong>"${a===' '?'␣':a}" + "${b===' '?'␣':b}"</strong> → <strong>"${merged===' '?'␣':merged}"</strong> (appeared ${bestCount} times). New brick <strong>#${newTok.id}</strong> added to the vocabulary shelf.`;
+        return true;
+    }
+
+    return { init, step, get merges(){ return merges; } };
+})();
+
+$('#btn-bpe-init').addEventListener('click', () => {
+    const text = $('#bpe-corpus').value;
+    if (!text.trim()) return;
+    Forge.init(text);
+    $('#btn-bpe-step').disabled = false;
+    $('#btn-bpe-auto').disabled = false;
+    $('#btn-bpe-reset').disabled = false;
+    $('#btn-bpe-init').disabled = true;
+});
+$('#btn-bpe-step').addEventListener('click', () => Forge.step(false));
+$('#btn-bpe-auto').addEventListener('click', () => {
+    const btn = $('#btn-bpe-auto'); btn.disabled = true;
+    let n = 0;
+    const iv = setInterval(() => {
+        const ok = Forge.step(true);
+        if (!ok || ++n >= 10) { clearInterval(iv); btn.disabled = false;
+            $('#forge-readout').innerHTML = `Auto-fused <strong>${n}</strong> more pairs. Total merges so far: <strong>${Forge.merges}</strong>. Keep going manually, or reset with a new corpus.`;
+        }
+    }, 480);
+});
+$('#btn-bpe-reset').addEventListener('click', () => {
+    $('#btn-bpe-step').disabled = true; $('#btn-bpe-auto').disabled = true; $('#btn-bpe-reset').disabled = true;
+    $('#btn-bpe-init').disabled = false;
+    $('#bpe-sequence').innerHTML = ''; $('#bpe-vocab').innerHTML = ''; $('#pair-heatgrid').innerHTML = '';
+    $('#forge-merge-log').innerHTML = ''; $('#bpe-stats').innerHTML = '';
+    $('#forge-step-badge').textContent = 'STEP 0 · IDLE'; $('#forge-legend').innerHTML = '';
+    $('#forge-readout').textContent = 'Reset. Click "Shatter into character-bricks" to begin again.';
+});
+
+// ════════════════════════════════════════════════════════════════
+// 1.5 STRAWBERRY TOKENS (kept, styled as bricks)
+// ════════════════════════════════════════════════════════════════
+(function() {
+    const tokens = [['str', colorFor(0)], ['aw', colorFor(1)], ['berry', colorFor(2)]];
+    let html = tokens.map(([s,col]) => `<span class="forge-brick" style="background:${col.bg};border-color:${col.d};color:${col.d};width:${34+s.length*13}px;">${s}</span>`).join(' ');
+    $('#strawberry-tokens').innerHTML = `<div class="forge-track" style="padding:8px 0;">${html}</div><div class="mono" style="font-size:0.72rem; margin-top:4px; color:var(--ink-soft);">GPT-2 sees 3 opaque bricks: [301, 1831, 8396] — no letters, just IDs</div>`;
+})();
+
+// ════════════════════════════════════════════════════════════════
+// 1.4a — FAMILY TREE: branching canvas diagram, clickable nodes
+// ════════════════════════════════════════════════════════════════
+(function() {
+    const canvas = $('#family-tree-canvas');
+    if (!canvas) return;
+    const explain = $('#family-tree-explain');
+    const nodes = [
+        { id:'compress', label:'Compression|(1994)', x:0.06, y:0.5, color: colorFor(4), note: "BPE was invented by Philip Gage in 1994 as a byte-level data compression trick, decades before anyone used it for language." },
+        { id:'bpe', label:'BPE', x:0.34, y:0.22, color: colorFor(2), note: "Frequency-greedy merging. Simple, fast, deterministic. Powers GPT-2, GPT-3, GPT-4, LLaMA, RoBERTa." },
+        { id:'wordpiece', label:'WordPiece', x:0.34, y:0.5, color: colorFor(6), note: "Merges by likelihood gain, not raw count. Googles tokenizer for BERT and its descendants." },
+        { id:'unigram', label:'Unigram', x:0.34, y:0.78, color: colorFor(3), note: "Starts with a huge candidate vocabulary and prunes tokens that hurt likelihood least. Used by T5, ALBERT, XLNet." },
+        { id:'gpt', label:'GPT-2/3/4|RoBERTa, LLaMA', x:0.66, y:0.14, color: colorFor(2), note: "All descend from raw BPE. GPT-3.5/4 use tiktoken, a Rust-optimized encoder with the same merge logic, 3 to 6 times faster." },
+        { id:'tiktoken', label:'tiktoken', x:0.66, y:0.3, color: colorFor(2), note: "OpenAIs speed-optimized BPE encoder. cl100k_base (GPT-3.5/4) and o200k_base (GPT-4o) are its two main vocabularies." },
+        { id:'bert', label:'BERT · DistilBERT', x:0.66, y:0.5, color: colorFor(6), note: "WordPieces main users. The ## prefix marks a continuation piece: playing becomes play + ##ing." },
+        { id:'sentencepiece', label:'SentencePiece', x:0.66, y:0.66, color: colorFor(3), note: "A toolkit, not an algorithm. Runs BPE or Unigram directly on raw Unicode text (no pre-split by whitespace), which is why it handles Japanese, Chinese, and Thai far better." },
+        { id:'t5', label:'T5 · mT5 · ALBERT', x:0.66, y:0.82, color: colorFor(3), note: "Use Unigrams probabilistic vocabulary, which supports sampling different valid segmentations of the same word for data augmentation." },
+        { id:'char', label:'Character-level|(MicroGPT 🧱)', x:0.92, y:0.5, color: colorFor(1), note: "The escape hatch from all of the above. No merges, no learned vocabulary, every character is its own token. Zero OOV, longer sequences." },
+    ];
+    const edges = [ ['compress','bpe'], ['compress','wordpiece'], ['compress','unigram'],
+        ['bpe','gpt'], ['bpe','tiktoken'], ['wordpiece','bert'], ['unigram','sentencepiece'], ['unigram','t5'],
+        ['tiktoken','char'], ['bert','char'], ['sentencepiece','char'] ];
+
+    let hitboxes = [];
+    function draw() {
+        const {ctx, w, h} = dpiCanvas(canvas);
+        ctx.clearRect(0,0,w,h);
+        plateBase(ctx, w, h);
+        const P = id => { const n = nodes.find(n=>n.id===id); return { x: n.x*w, y: n.y*h }; };
+        // edges
+        ctx.strokeStyle = hexToRgba(getCss('--ink'), 0.22); ctx.lineWidth = 1.6;
+        edges.forEach(([a,b]) => {
+            const pa = P(a), pb = P(b);
+            ctx.beginPath();
+            ctx.moveTo(pa.x, pa.y);
+            ctx.bezierCurveTo(pa.x + (pb.x-pa.x)*0.5, pa.y, pa.x + (pb.x-pa.x)*0.5, pb.y, pb.x, pb.y);
+            ctx.stroke();
+        });
+        hitboxes = [];
+        nodes.forEach(n => {
+            const x = n.x*w, y = n.y*h;
+            const lines = n.label.split('|');
+            const padX = 14, lineH = 15;
+            ctx.font = `700 12px ${getCss('--font-mono')}`;
+            const maxLineW = Math.max(...lines.map(l => ctx.measureText(l).width));
+            const bw = maxLineW + padX*2, bh = lines.length*lineH + 14;
+            ctx.fillStyle = n.color.bg;
+            ctx.strokeStyle = n.color.d; ctx.lineWidth = 2;
+            roundRect(ctx, x-bw/2, y-bh/2, bw, bh, 8);
+            ctx.fill(); ctx.stroke();
+            ctx.fillStyle = n.color.d; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            lines.forEach((l,i) => ctx.fillText(l, x, y - (lines.length-1)*lineH/2 + i*lineH));
+            hitboxes.push({ x0:x-bw/2, y0:y-bh/2, x1:x+bw/2, y1:y+bh/2, node:n });
+        });
+    }
+    function roundRect(ctx,x,y,w,h,r) {
+        ctx.beginPath();
+        ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
+        ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
+    }
+    draw();
+    window.addEventListener('resize', () => { clearTimeout(window.__ftT); window.__ftT = setTimeout(draw, 150); });
+    canvas.addEventListener('click', e => {
+        const rect = canvas.getBoundingClientRect();
+        const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+        const hit = hitboxes.find(b => mx>=b.x0 && mx<=b.x1 && my>=b.y0 && my<=b.y1);
+        if (hit) explain.innerHTML = `<strong>${hit.node.label.replace(/\|/g,' ')}:</strong> ${hit.node.note}`;
+    });
+    canvas.style.cursor = 'pointer';
+})();
+
+// ════════════════════════════════════════════════════════════════
+// 1.4b — BPE vs WordPiece RACE: same corpus, different scoring rule
+// ════════════════════════════════════════════════════════════════
+(function() {
+    const btn = $('#btn-race-run');
+    if (!btn) return;
+
+    function tokenizeChars(text) {
+        let id = 0; const vocab = new Map();
+        const getTok = s => { if (!vocab.has(s)) vocab.set(s, {s, id: id++}); return vocab.get(s); };
+        return text.split('').map(ch => getTok(ch));
+    }
+    function pairStats(seq) {
+        const pairCounts = new Map(), leftCounts = new Map(), rightCounts = new Map();
+        for (let i=0;i<seq.length-1;i++) {
+            const a = seq[i].s, b = seq[i+1].s;
+            const key = a+'␞'+b;
+            pairCounts.set(key,(pairCounts.get(key)||0)+1);
+        }
+        seq.forEach(t => { leftCounts.set(t.s,(leftCounts.get(t.s)||0)+1); });
+        return { pairCounts, leftCounts };
+    }
+    function mergeOnce(seq, a, b, idCounter) {
+        const merged = a+b;
+        const newSeq = [];
+        for (let i=0;i<seq.length;i++) {
+            if (i<seq.length-1 && seq[i].s===a && seq[i+1].s===b) { newSeq.push({s:merged, id: idCounter.v++}); i++; }
+            else newSeq.push(seq[i]);
+        }
+        return newSeq;
+    }
+    function runBPE(text, steps) {
+        let seq = tokenizeChars(text);
+        const idCounter = { v: 1000 };
+        const log = [];
+        for (let s=0;s<steps;s++) {
+            const { pairCounts } = pairStats(seq);
+            let best=null,bestC=0;
+            for (const [k,c] of pairCounts) if (c>bestC) { best=k; bestC=c; }
+            if (!best || bestC<2) break;
+            const [a,b] = best.split('␞');
+            seq = mergeOnce(seq, a, b, idCounter);
+            log.push(a+b);
+        }
+        return log;
+    }
+    function runWordPiece(text, steps) {
+        let seq = tokenizeChars(text);
+        const idCounter = { v: 2000 };
+        const log = [];
+        for (let s=0;s<steps;s++) {
+            const { pairCounts, leftCounts } = pairStats(seq);
+            let best=null,bestScore=-1,bestC=0;
+            for (const [k,c] of pairCounts) {
+                if (c<2) continue;
+                const [a,b] = k.split('␞');
+                // WordPiece score: freq(pair) / (freq(a) * freq(b))
+                const score = c / ((leftCounts.get(a)||1) * (leftCounts.get(b)||1));
+                if (score>bestScore) { bestScore=score; best=k; bestC=c; }
+            }
+            if (!best) break;
+            const [a,b] = best.split('␞');
+            seq = mergeOnce(seq, a, b, idCounter);
+            log.push(a+b);
+        }
+        return log;
+    }
+
+    function renderLane(trackId, tokens, colorSeed) {
+        const track = $(trackId);
+        track.innerHTML = '';
+        tokens.forEach((tk,i) => {
+            const col = colorFor(colorSeed+i);
+            const el = document.createElement('span');
+            el.className = 'forge-brick';
+            el.style.width = (30 + tk.length*11) + 'px';
+            el.style.background = col.bg; el.style.borderColor = col.d; el.style.color = col.d;
+            el.style.opacity = '0'; el.style.animation = `pop 350ms ${i*90}ms ease forwards`;
+            el.textContent = tk;
+            track.appendChild(el);
+        });
+    }
+
+    btn.addEventListener('click', () => {
+        const text = $('#race-corpus').value;
+        if (!text.trim()) return;
+        btn.disabled = true;
+        const bpeLog = runBPE(text, 6);
+        const wpLog = runWordPiece(text, 6);
+        renderLane('#race-bpe-track', bpeLog, 20);
+        renderLane('#race-wp-track', wpLog, 40);
+        const firstDiff = bpeLog.findIndex((t,i) => t !== wpLog[i]);
+        $('#race-readout').innerHTML = firstDiff === 0
+            ? `The very first merge already differs — BPE picked <strong>"${bpeLog[0]}"</strong> (most frequent), WordPiece picked <strong>"${wpLog[0]}"</strong> (highest likelihood gain). Same corpus, different values, different vocabulary from step one.`
+            : `First ${firstDiff < 0 ? bpeLog.length : firstDiff} merge(s) agree, then the algorithms diverge — proof that "frequent" and "high-likelihood" aren't the same thing once rarer combinations start competing.`;
+        setTimeout(() => btn.disabled = false, 900);
+    });
+})();
+
+// ════════════════════════════════════════════════════════════════
+// 1.5b — TOKENIZER TAX: byte-cost bar race across languages.
+// Uses actual UTF-8 byte length as a stand-in for BPE token count,
+// since English-centric BPE vocabularies roughly track byte count
+// for non-Latin scripts (multi-byte chars rarely get single tokens).
+// ════════════════════════════════════════════════════════════════
+(function() {
+    const wrap = $('#byte-race');
+    if (!wrap) return;
+    const rows = [
+        { lang: 'English', text: 'How are you today?', color: colorFor(1) },
+        { lang: 'Spanish', text: '¿Cómo estás hoy?', color: colorFor(2) },
+        { lang: 'Hindi', text: 'आज आप कैसे हैं?', color: colorFor(3) },
+        { lang: 'Chinese', text: '你今天好吗？', color: colorFor(5) },
+    ];
+    function approxTokens(text) {
+        // crude but honest proxy: English ~ 1 token per 4 chars via BPE;
+        // non-Latin scripts in an English-trained BPE vocab fall back
+        // toward byte-level (UTF-8 bytes), which is the real documented effect.
+        const bytes = new TextEncoder().encode(text).length;
+        const latinRatio = (text.match(/[\x00-\x7F]/g)||[]).length / text.length;
+        // more Latin chars = better BPE coverage = fewer tokens per byte
+        const tokensPerByte = 0.28 + (1-latinRatio) * 0.62;
+        return Math.max(1, Math.round(bytes * tokensPerByte));
+    }
+    const withCounts = rows.map(r => ({...r, tokens: approxTokens(r.text)}));
+    const maxT = Math.max(...withCounts.map(r=>r.tokens));
+
+    wrap.innerHTML = withCounts.map(r => `
+        <div class="bar-race-row">
+            <div class="bar-race-label">${r.lang}</div>
+            <div class="bar-race-track">
+                <div class="bar-race-fill" data-w="${(r.tokens/maxT*100).toFixed(0)}" style="width:0%; background:${r.color.c};">${r.tokens} tok</div>
+            </div>
+        </div>
+        <div style="margin:-4px 0 10px 118px; font-size:0.76rem; color:var(--ink-faint); font-family:var(--font-mono);">"${r.text}"</div>
+    `).join('');
+
+    // animate width after paint
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+        wrap.querySelectorAll('.bar-race-fill').forEach(el => { el.style.width = el.dataset.w + '%'; });
+    }));
+
+    // reveal on scroll
+    const obs = new IntersectionObserver(entries => {
+        entries.forEach(e => {
+            if (e.isIntersecting) {
+                wrap.querySelectorAll('.bar-race-fill').forEach(el => { el.style.width = '0%'; });
+                requestAnimationFrame(() => requestAnimationFrame(() => {
+                    wrap.querySelectorAll('.bar-race-fill').forEach(el => { el.style.width = el.dataset.w + '%'; });
+                }));
+                obs.disconnect();
+            }
+        });
+    }, { threshold: 0.4 });
+    obs.observe(wrap);
+})();
+
+// ════════════════════════════════════════════════════════════════
+// 1.6 — TRADEOFF DIAL: same sentence, three tokenization strategies
+// ════════════════════════════════════════════════════════════════
+(function() {
+    const tabs = $('#tradeoff-tabs');
+    if (!tabs) return;
+    const input = $('#tradeoff-text');
+    const track = $('#tradeoff-track');
+    const stats = $('#tradeoff-stats');
+    const readout = $('#tradeoff-readout');
+
+    // a small hard-coded "learned" BPE-ish merge set for demo purposes,
+    // applied greedily left-to-right so common clusters fuse (un, able, café-related accents, etc.)
+    const bpeMerges = ['un','be','lie','ve','ab','ly','th','er','ing','ed','ca','fe','日本','語','日本語'];
+
+    function tokenizeChar(text) { return text.split(''); }
+    function tokenizeByte(text) {
+        const bytes = new TextEncoder().encode(text);
+        return [...bytes].map(b => b.toString(16).padStart(2,'0').toUpperCase());
+    }
+    function tokenizeBPE(text) {
+        // greedy longest-match against our small demo merge vocabulary,
+        // falling back to characters — illustrative, not a full trained BPE.
+        const vocab = [...bpeMerges].sort((a,b)=>b.length-a.length);
+        let out = [], i = 0;
+        while (i < text.length) {
+            let matched = null;
+            for (const v of vocab) {
+                if (text.startsWith(v, i)) { matched = v; break; }
+            }
+            if (matched) { out.push(matched); i += matched.length; }
+            else { out.push(text[i]); i++; }
+        }
+        return out;
+    }
+
+    let mode = 'char';
+    function render() {
+        const text = input.value;
+        let toks;
+        if (mode === 'char') toks = tokenizeChar(text);
+        else if (mode === 'byte') toks = tokenizeByte(text);
+        else toks = tokenizeBPE(text);
+
+        track.innerHTML = '';
+        toks.forEach((t,i) => {
+            const col = colorFor(i);
+            const el = document.createElement('div');
+            el.className = 'forge-brick';
+            el.style.width = Math.max(28, 14 + t.length*13) + 'px';
+            el.style.background = col.bg; el.style.borderColor = col.d; el.style.color = col.d;
+            el.textContent = t === ' ' ? '␣' : t;
+            el.style.opacity = '0'; el.style.animation = `pop 260ms ${i*22}ms ease forwards`;
+            track.appendChild(el);
+        });
+
+        const charLen = text.length;
+        stats.innerHTML = `sequence length: <strong>${toks.length} tokens</strong> for ${charLen} characters · vocab needed: <strong>${mode==='char' ? '~90 (this alphabet)' : mode==='byte' ? '256 (fixed)' : '~14 demo merges → 32K+ real'}</strong>`;
+
+        if (mode === 'char') readout.innerHTML = 'Every character is its own token — including the accented "é" and every Japanese character. Longest sequence, but impossible to have an unknown token: any string of characters can always be represented.';
+        else if (mode === 'byte') readout.innerHTML = '"café" needs 5 bytes, not 4 characters — "é" is 2 bytes in UTF-8. Japanese characters need 3 bytes each. This is why byte-level models produce longer sequences for non-English text, and why a corrupted byte mid-character can produce invalid UTF-8 (mojibake).';
+        else readout.innerHTML = 'A trained subword vocabulary would fuse "unbelievably" toward 2-3 tokens (it is common enough), but "日本語" (Japanese) gets no help from an English-trained vocabulary and falls back toward character or byte pieces — this is the tokenizer tax from Section 1.5, made visible.';
+    }
+
+    tabs.addEventListener('click', e => {
+        const btn = e.target.closest('.pill');
+        if (!btn) return;
+        tabs.querySelectorAll('.pill').forEach(p=>p.classList.remove('active'));
+        btn.classList.add('active');
+        mode = btn.dataset.mode;
+        render();
+    });
+    input.addEventListener('input', render);
+    render();
+})();
+
+// ════════════════════════════════════════════════════════════════
+// CAPSTONE EXAM — 5 questions from this module's real content
+// ════════════════════════════════════════════════════════════════
+const EXAM_ANSWERS = { 1:'all3', 2:'freq', 3:'stick', 4:'opaque', 5:'merges' };
+let examSubmitted = false;
+$('#btn-submit-exam').addEventListener('click', () => {
+    if (examSubmitted) return;
+    let score = 0, total = 5;
+    for (let q = 1; q <= total; q++) {
+        const sel = $('input[name="q' + q + '"]:checked');
+        const qEl = $('[data-q="' + q + '"]');
+        if (!qEl) continue;
+        qEl.querySelectorAll('.exam-opt').forEach(o => {
+            const radio = o.querySelector('input');
+            if (radio.value === EXAM_ANSWERS[q]) { o.classList.add('right'); if (sel && sel.value === radio.value) score++; }
+            else if (sel && sel === radio) o.classList.add('wrong');
+            o.style.pointerEvents = 'none';
+        });
+    }
+    examSubmitted = true;
+    const result = $('#exam-result');
+    result.style.display = 'block';
+    const title = $('#exam-score-title');
+    const desc = $('#exam-score-desc');
+    title.textContent = 'Diagnostic Score: ' + score + '/' + total;
+    title.style.color = score >= 4 ? 'var(--mint-dark)' : score >= 2 ? 'var(--gold-dark)' : 'var(--coral-dark)';
+    /* ── BUILDER LEVEL SYSTEM (canonical tiers, additive — never touches score flow) ── */
+    const tier = score <= 2 ? 'BRICK COLLECTOR' : score === 3 ? 'APPRENTICE BUILDER' : score === 4 ? 'SKILLED BUILDER' : 'MASTER BUILDER';
+    try { localStorage.setItem('llmacademy.level.01', tier); } catch (e) {}
+    const levelLines = {
+        'BRICK COLLECTOR':    { color: 'var(--ink-faint)', line: 'You have picked up the first tokenizer bricks — one-hot, bigram, and BPE are named and on the shelf. Walk the labs again and the forge will light up.' },
+        'APPRENTICE BUILDER': { color: 'var(--sky)',       line: 'You can follow a merge and name a failure mode when you see one — one more lap and tokens read like a spec sheet.' },
+        'SKILLED BUILDER':    { color: 'var(--gold)',      line: 'You can read a vocabulary and know when a tokenizer is lying to you.' },
+        'MASTER BUILDER':     { color: 'var(--mint)',      line: 'You weld merges cold — the tokenizer is yours, and the next model is a design document away.' }
+    };
+    const lb = levelLines[tier];
+    $('#exam-level').innerHTML = '<div style="font-family:var(--font-mono); font-size:0.7rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:' + lb.color + ';">BUILDER LEVEL: ' + tier + '</div>' +
+        '<p style="margin:6px auto 0; font-size:0.85rem; color:var(--ink-soft); max-width:560px;">' + lb.line + '</p>';
+    if (score >= 4) {
+        desc.textContent = 'Outstanding. You welded ' + score + ' of ' + total + ' questions cold — including the one about what a merge list actually is. The machine is yours.';
+        try { localStorage.setItem('llmacademy.brick.01', 'The Token Smith'); } catch (e) {}
+        $('#exam-brick').innerHTML = '<div class="brick-card2x4">' +
+            '<div class="brick-2x4">' +
+                '<div class="stud-row"><span></span><span></span><span></span><span></span></div>' +
+                '<div class="stud-row"><span></span><span></span><span></span><span></span></div>' +
+            '</div>' +
+            '<div style="margin-top:14px;">' +
+                '<div style="font-family:var(--font-display); font-weight:800; font-size:1.05rem; color:var(--ink);">🧱 The Token Smith</div>' +
+                '<div style="font-family:var(--font-mono); font-size:0.68rem; color:var(--ink-faint); margin-top:4px;">No certificates here — this is the machine you built.</div>' +
+            '</div>' +
+        '</div>';
+        if (typeof SoundFX !== 'undefined' && SoundFX.complete) SoundFX.complete();
+    } else if (score >= 2) {
+        desc.textContent = score + '/' + total + ' — Review sections 1.1, 1.3, and 1.4 for the ideas you missed.';
+        if (typeof SoundFX !== 'undefined' && SoundFX.step) SoundFX.step();
+    } else {
+        desc.textContent = score + '/' + total + ' — Re-read the lab and try again. The tokenizer is worth knowing cold.';
+        if (typeof SoundFX !== 'undefined' && SoundFX.step) SoundFX.step();
+    }
+    result.scrollIntoView({ behavior: 'smooth', block: 'center' });
+});
+
+// ════════════════════════════════════════════════════════════════
+// INIT — KaTeX render
+// ════════════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+    if (typeof renderMathInElement !== 'undefined') {
+        renderMathInElement(document.body, { delimiters: [{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}] });
+    }
+});
+</script>
+</body>
+</html>

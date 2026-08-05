@@ -1,0 +1,2243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Module 05 — The Training Arena | LLM Academy</title>
+<meta name="description" content="Cross-entropy, backprop, optimizers, scaling laws, and distributed training — the real mechanics and mathematics of how frontier models are trained, built from scratch.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700;0,9..144,800;0,9..144,900;1,9..144,600&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<style>
+/* ═══════════════════════════════════════════════════════════════════════
+   BRICKWORK DESIGN SYSTEM — CANONICAL (shared across LLM Academy)
+   ═══════════════════════════════════════════════════════════════════════ */
+:root {
+    --ink: #2B2A24;      --ink-soft: #6B6A5C;   --ink-faint: #9B9A8A;
+    --paper: #EEF0E3;    --paper-alt: #E6E9D8;  --surface: #FFFEFA;
+    --surface-alt: #F7F5EA; --surface-code: #26251F;
+    --border: #DBD5BF;   --border-light: #E9E4D2;
+    --coral: #D6553F;    --coral-light: #E8A99B; --coral-bg: #FBEAE5;  --coral-dark: #9C3B29;
+    --teal: #1E8F86;     --teal-light: #8FC9C2;  --teal-bg: #E6F3F1;   --teal-dark: #14615A;
+    --gold: #E3A61C;     --gold-light: #F3D385;  --gold-bg: #FCF2DC;   --gold-dark: #8C6A12;
+    --lavender: #7C64C9; --lavender-light: #C3B7E6; --lavender-bg: #F1EDFA; --lavender-dark: #4F3C93;
+    --mint: #4B8F52;     --mint-light: #A9CBAB;  --mint-bg: #E9F2E8;   --mint-dark: #2F5F34;
+    --peach: #DD7A34;    --peach-light: #F0BF95; --peach-bg: #FBEEE1;  --peach-dark: #9C531E;
+    --sky: #2E7BB8;      --sky-light: #9CC6E4;   --sky-bg: #E7F1F8;    --sky-dark: #1D5580;
+    --rose: #C4557F;     --rose-light: #E7AFC5;  --rose-bg: #FBEBF1;   --rose-dark: #8A3A58;
+    --font-display: 'Fraunces', serif;
+    --font-body: 'IBM Plex Sans', sans-serif;
+    --font-mono: 'IBM Plex Mono', monospace;
+    --radius-sm: 8px; --radius-md: 14px; --radius-lg: 22px; --radius-full: 999px;
+    --shadow-sm: 3px 3px 0 rgba(43,42,36,0.12);
+    --shadow-md: 5px 5px 0 rgba(43,42,36,0.14), 0 2px 8px rgba(43,42,36,0.05);
+    --shadow-lg: 8px 8px 0 rgba(43,42,36,0.15), 0 6px 18px rgba(43,42,36,0.07);
+    --space-xs: 6px; --space-sm: 12px; --space-md: 20px; --space-lg: 32px; --space-xl: 48px; --space-2xl: 64px;
+    --transition-fast: 150ms ease;
+    --transition-base: 260ms cubic-bezier(.34,1.56,.64,1);
+    --transition-slow: 450ms cubic-bezier(.22,1,.36,1);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; scroll-behavior: auto !important; }
+}
+html { scroll-behavior: smooth; }
+body {
+    font-family: var(--font-body); color: var(--ink); background: var(--paper);
+    line-height: 1.6; font-size: 16px;
+    background-image: radial-gradient(circle, rgba(43,42,36,0.07) 1.4px, transparent 1.6px);
+    background-size: 26px 26px; background-attachment: fixed;
+}
+h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 700; line-height: 1.15; margin: 0 0 var(--space-sm); color: var(--ink); letter-spacing: -0.01em; }
+h1 { font-size: clamp(2.1rem, 4.4vw, 3.2rem); font-weight: 800; }
+h2 { font-size: clamp(1.5rem, 2.6vw, 2rem); }
+h3 { font-size: 1.2rem; }
+p { margin: 0 0 var(--space-md); color: var(--ink-soft); }
+code, .mono { font-family: var(--font-mono); }
+.container { max-width: 1180px; margin: 0 auto; padding: 0 24px; }
+.flex { display: flex; } .items-center { align-items: center; } .justify-between { justify-content: space-between; } .justify-center { justify-content: center; }
+.grid { display: grid; } .grid-2 { grid-template-columns: 1fr 1fr; gap: var(--space-lg); } .grid-3 { grid-template-columns: repeat(3,1fr); gap: var(--space-lg); } .grid-4 { grid-template-columns: repeat(4,1fr); gap: var(--space-md); }
+@media (max-width: 900px) { .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; } }
+.text-center { text-align: center; }
+.text-sm { font-size: 0.875rem; } .text-xs { font-size: 0.75rem; }
+.text-muted { color: var(--ink-soft); }
+.text-coral { color: var(--coral-dark); } .text-teal { color: var(--teal-dark); }
+.text-lavender { color: var(--lavender-dark); } .text-gold { color: var(--gold-dark); }
+.text-mint { color: var(--mint-dark); } .text-sky { color: var(--sky-dark); } .text-rose { color: var(--rose-dark); } .text-peach { color: var(--peach-dark); }
+.mt-4 { margin-top: 16px; } .mt-8 { margin-top: 32px; } .mb-4 { margin-bottom: 16px; }
+.gap-2 { gap: 8px; } .gap-4 { gap: 16px; }
+
+.stagger-children > * { animation: riseIn 0.55s cubic-bezier(.22,1,.36,1) both; }
+.stagger-children > *:nth-child(1) { animation-delay: .03s; } .stagger-children > *:nth-child(2) { animation-delay: .09s; }
+.stagger-children > *:nth-child(3) { animation-delay: .15s; } .stagger-children > *:nth-child(4) { animation-delay: .21s; }
+.stagger-children > *:nth-child(5) { animation-delay: .27s; } .stagger-children > *:nth-child(6) { animation-delay: .33s; }
+@keyframes riseIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes pop { from { opacity: 0; transform: scale(0.7); } to { opacity: 1; transform: scale(1); } }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes spinRev { from { transform: rotate(0deg); } to { transform: rotate(-360deg); } }
+@keyframes pulseDot { 0%,100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.4); opacity: 0.6; } }
+
+/* ── Header ── */
+.academy-header { background: var(--surface); border-bottom: 2.5px solid var(--ink); height: 76px; position: sticky; top: 0; z-index: 100; }
+.logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+.logo-icon {
+    width: 46px; height: 46px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;
+    background: var(--peach-bg); border: 2.5px solid var(--ink); border-radius: var(--radius-sm); position: relative; box-shadow: 3px 3px 0 var(--ink);
+}
+.logo-icon::before, .logo-icon::after { content: ""; position: absolute; top: -6px; width: 9px; height: 9px; border-radius: 50%; background: var(--peach-bg); border: 2px solid var(--ink); }
+.logo-icon::before { left: 8px; } .logo-icon::after { right: 8px; }
+.logo-text { font-family: var(--font-display); font-weight: 800; font-size: 1.15rem; }
+.logo-subtitle { font-size: 0.75rem; color: var(--ink-soft); font-weight: 500; }
+.header-nav { display: flex; gap: 4px; }
+.header-nav a { text-decoration: none; color: var(--ink-soft); font-weight: 600; font-size: 0.875rem; padding: 8px 16px; border-radius: var(--radius-full); border: 2px solid transparent; transition: all var(--transition-fast); }
+.header-nav a:hover { background: var(--surface-alt); color: var(--ink); }
+.header-nav a.active { border-color: var(--ink); background: var(--gold-bg); color: var(--ink); }
+@media (max-width: 720px) { .header-nav { display: none; } }
+
+/* ── Badges & tags ── */
+.badge { display: inline-flex; align-items: center; gap: 6px; padding: 7px 16px; border-radius: var(--radius-full); font-weight: 700; font-size: 0.8125rem; border: 2px solid var(--ink); }
+.badge-coral { background: var(--coral-bg); color: var(--coral-dark); }
+.badge-teal { background: var(--teal-bg); color: var(--teal-dark); }
+.badge-gold { background: var(--gold-bg); color: var(--gold-dark); }
+.badge-lavender { background: var(--lavender-bg); color: var(--lavender-dark); }
+.badge-mint { background: var(--mint-bg); color: var(--mint-dark); }
+.badge-peach { background: var(--peach-bg); color: var(--peach-dark); }
+.tag { display: inline-flex; padding: 4px 11px; font-size: 0.75rem; font-weight: 600; background: var(--surface-alt); border: 1.5px solid var(--border); border-radius: var(--radius-sm); color: var(--ink-soft); }
+
+/* ── Buttons ── */
+.btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    font-family: var(--font-body); font-weight: 700; font-size: 0.9rem; text-decoration: none;
+    padding: 12px 22px; border-radius: var(--radius-md); border: 2.5px solid var(--ink); cursor: pointer;
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+.btn-lg { padding: 15px 28px; font-size: 1rem; }
+.btn-sm { padding: 7px 14px; font-size: 0.78rem; }
+.btn-coral { background: var(--coral); color: #fff8f4; box-shadow: 4px 4px 0 var(--ink); }
+.btn-teal { background: var(--teal); color: #fff; box-shadow: 4px 4px 0 var(--ink); }
+.btn-gold { background: var(--gold); color: var(--ink); box-shadow: 4px 4px 0 var(--ink); }
+.btn-lavender { background: var(--lavender); color: #fff; box-shadow: 4px 4px 0 var(--ink); }
+.btn-mint { background: var(--mint); color: #fff; box-shadow: 4px 4px 0 var(--ink); }
+.btn-peach { background: var(--peach); color: #fff; box-shadow: 4px 4px 0 var(--ink); }
+.btn-sky { background: var(--sky); color: #fff; box-shadow: 4px 4px 0 var(--ink); }
+.btn-secondary { background: var(--surface); color: var(--ink); box-shadow: 4px 4px 0 var(--border); }
+.btn:hover { transform: translate(-1px,-1px); box-shadow: 5px 5px 0 var(--ink); }
+.btn:active { transform: translate(3px,3px); box-shadow: 1px 1px 0 var(--ink); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; box-shadow: 4px 4px 0 var(--border); }
+
+/* ── Pills ── */
+.pill { display: inline-flex; align-items: center; justify-content: center; padding: 7px 15px; font-size: 0.75rem; font-weight: 700; border: 2px solid var(--ink); border-radius: var(--radius-full); background: var(--surface); color: var(--ink-soft); cursor: pointer; transition: all var(--transition-fast); font-family: var(--font-body); }
+.pill:hover { background: var(--gold-bg); color: var(--ink); }
+.pill.active { background: var(--ink); color: var(--paper); }
+
+/* ── Brick panel ── */
+.brick-panel { background: var(--surface); border: 2.5px solid var(--ink); border-radius: var(--radius-lg); box-shadow: var(--shadow-md); position: relative; }
+.brick-panel::before, .brick-panel::after { content: ""; position: absolute; top: -8px; width: 13px; height: 13px; border-radius: 50%; background: var(--surface); border: 2.5px solid var(--ink); }
+.brick-panel::before { left: 26px; } .brick-panel::after { left: 46px; }
+
+/* ── Cards ── */
+.card-flat { background: var(--surface); border: 2.5px solid var(--ink); border-radius: var(--radius-lg); box-shadow: var(--shadow-md); }
+.card { background: var(--surface); border: 2.5px solid var(--ink); border-radius: var(--radius-md); padding: var(--space-lg); box-shadow: var(--shadow-sm); transition: transform var(--transition-base), box-shadow var(--transition-base); }
+.card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
+.card-alt { background: var(--surface-alt); border: 2px solid var(--border); border-radius: var(--radius-md); padding: 18px; }
+.card h4 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; font-family: var(--font-mono); font-weight: 700; }
+.card h4.coral { color: var(--coral-dark); } .card h4.teal { color: var(--teal-dark); }
+.card h4.gold { color: var(--gold-dark); } .card h4.lavender { color: var(--lavender-dark); }
+.card h4.mint { color: var(--mint-dark); } .card h4.sky { color: var(--sky-dark); } .card h4.peach { color: var(--peach-dark); }
+.card p { font-size: 0.875rem; color: var(--ink-soft); }
+
+/* ── Section chrome ── */
+.section { padding: var(--space-2xl) 0; border-bottom: 2px solid var(--border); }
+.section-header { margin-bottom: var(--space-xl); }
+.section-label { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 0.8125rem; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; font-family: var(--font-mono); }
+.section-num { display: inline-flex; padding: 6px 14px; border-radius: var(--radius-sm); border: 2px solid var(--ink); font-weight: 700; }
+.section-num.coral { background: var(--coral-bg); color: var(--coral-dark); }
+.section-num.teal { background: var(--teal-bg); color: var(--teal-dark); }
+.section-num.gold { background: var(--gold-bg); color: var(--gold-dark); }
+.section-num.lavender { background: var(--lavender-bg); color: var(--lavender-dark); }
+.section-num.mint { background: var(--mint-bg); color: var(--mint-dark); }
+.section-num.peach { background: var(--peach-bg); color: var(--peach-dark); }
+.section-num.sky { background: var(--sky-bg); color: var(--sky-dark); }
+.section-num.rose { background: var(--rose-bg); color: var(--rose-dark); }
+.section-title { margin-bottom: 12px; }
+.section-desc { max-width: 680px; color: var(--ink-soft); font-size: 1.05rem; }
+
+/* ── Callouts ── */
+.callout { display: flex; gap: 14px; padding: var(--space-md); border-radius: var(--radius-md); border: 2px solid; margin: var(--space-md) 0; }
+.callout.coral { border-color: var(--coral); background: var(--coral-bg); }
+.callout.teal { border-color: var(--teal); background: var(--teal-bg); }
+.callout.gold { border-color: var(--gold); background: var(--gold-bg); }
+.callout.mint { border-color: var(--mint); background: var(--mint-bg); }
+.callout.lavender { border-color: var(--lavender); background: var(--lavender-bg); }
+.callout.sky { border-color: var(--sky); background: var(--sky-bg); }
+.callout.rose { border-color: var(--rose); background: var(--rose-bg); }
+.callout.peach { border-color: var(--peach); background: var(--peach-bg); }
+.callout-icon { font-size: 1.3rem; flex-shrink: 0; }
+.callout strong { color: var(--ink); }
+.callout p { margin: 0; font-size: 0.9rem; }
+
+/* ── Math ── */
+.math-block { background: var(--lavender-bg); border-left: 3px solid var(--lavender); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; padding: 14px 18px; margin: 14px 0; overflow-x: auto; }
+.math-inline { background: var(--surface-alt); padding: 2px 7px; border-radius: 4px; font-family: var(--font-mono); font-size: 0.85em; border: 1px solid var(--border); }
+.katex-display { margin: 12px 0; }
+
+/* ── Canvas ── */
+.canvas-wrap { background: var(--surface); border: 2.5px solid var(--ink); border-radius: var(--radius-md); padding: 18px; box-shadow: var(--shadow-sm); }
+.canvas-wrap canvas { display: block; width: 100%; border-radius: var(--radius-sm); }
+.canvas-title { font-family: var(--font-mono); font-size: 0.7rem; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+
+/* ── Sliders ── */
+.slider-row { display: flex; align-items: center; gap: 12px; margin: 10px 0; }
+.slider-row label { font-size: 0.8rem; color: var(--ink-soft); min-width: 120px; font-weight: 600; font-family: var(--font-mono); }
+.slider-row input[type="range"] { flex: 1; accent-color: var(--coral); height: 5px; }
+.slider-row .val { font-family: var(--font-mono); font-size: 0.8rem; color: var(--gold-dark); min-width: 60px; text-align: right; font-weight: 700; }
+
+/* ── Stats ── */
+.stat-big { font-family: var(--font-display); font-size: 2rem; font-weight: 800; display: block; line-height: 1; }
+.stat-big.coral { color: var(--coral-dark); } .stat-big.teal { color: var(--teal-dark); }
+.stat-big.gold { color: var(--gold-dark); } .stat-big.lavender { color: var(--lavender-dark); }
+.stat-big.mint { color: var(--mint-dark); } .stat-big.sky { color: var(--sky-dark); } .stat-big.peach { color: var(--peach-dark); }
+.stat-label { font-size: 0.75rem; color: var(--ink-faint); font-weight: 600; margin-top: 4px; display: block; }
+
+/* ── Inputs ── */
+.input { width: 100%; border: 2.5px solid var(--ink); border-radius: var(--radius-md); background: var(--surface); font-family: var(--font-body); color: var(--ink); padding: 12px 16px; font-size: 0.95rem; outline: none; transition: box-shadow var(--transition-fast); }
+.input:focus { box-shadow: 3px 3px 0 var(--gold); }
+
+/* ── Code block ── */
+.code-block { background: var(--surface-code); border: 2.5px solid var(--ink); border-radius: var(--radius-md); padding: 18px; font-family: var(--font-mono); font-size: 0.8rem; color: #E8EAF6; overflow-x: auto; line-height: 1.7; }
+.code-block .kw { color: #C3B7E6; } .code-block .fn { color: #8FC9C2; }
+.code-block .num { color: #F3D385; } .code-block .str { color: #A9CBAB; }
+.code-block .cm { color: #9B9A8A; }
+
+/* ── Comparison table ── */
+table.compare { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+table.compare th { text-align: left; padding: 14px 16px; font-family: var(--font-display); font-weight: 700; background: var(--surface-alt); border-bottom: 2.5px solid var(--ink); }
+table.compare td { padding: 12px 16px; border-bottom: 1.5px solid var(--border-light); }
+table.compare tr:hover td { background: var(--gold-bg); }
+table.compare td:first-child { font-weight: 700; }
+
+/* ── Hero ── */
+.hero { position: relative; padding: 56px 0 36px; overflow: hidden; text-align: center; }
+.hero-bg { position: absolute; inset: 0; background: radial-gradient(ellipse 60% 50% at 50% 0%, rgba(227,166,28,0.10), transparent 70%), radial-gradient(ellipse 50% 40% at 85% 20%, rgba(221,122,52,0.08), transparent 70%); pointer-events: none; }
+.hero .container { position: relative; z-index: 1; }
+.eyebrow-badge { display: inline-flex; align-items: center; gap: 8px; margin-bottom: var(--space-md); }
+.hero h1 { max-width: 820px; margin: 0 auto 18px; }
+.hl { background: linear-gradient(180deg, transparent 58%, var(--peach-light) 58%); padding: 0 4px; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+.hero-sub { max-width: 640px; margin: 0 auto var(--space-xl); font-size: 1.05rem; }
+.hero-sub strong { color: var(--ink); font-weight: 700; }
+
+/* ── Footer ── */
+.academy-footer { margin-top: var(--space-2xl); padding: var(--space-2xl) 0; border-top: 2.5px solid var(--ink); background: var(--surface-alt); text-align: center; }
+.academy-footer p { color: var(--ink-soft); margin: 0; }
+.academy-footer strong { color: var(--ink); font-family: var(--font-display); }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   NEW: L10-DEPTH ADDITIONS FOR MODULE 05
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── Training loop gear animation (hero) ── */
+.loop-wrap { max-width: 720px; margin: 40px auto 0; }
+.loop-ring { position: relative; height: 190px; }
+.loop-stage { position: absolute; width: 128px; text-align: center; }
+.loop-stage .icon-box { width: 62px; height: 62px; margin: 0 auto 8px; border-radius: var(--radius-md); border: 2.5px solid var(--ink); display: flex; align-items: center; justify-content: center; font-size: 1.6rem; box-shadow: 3px 3px 0 var(--ink); position: relative; }
+.loop-stage .label { font-family: var(--font-mono); font-size: 0.68rem; font-weight: 700; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.5px; }
+.loop-stage.active .icon-box { animation: pulseGlow2 1s ease; }
+@keyframes pulseGlow2 { 0% { box-shadow: 3px 3px 0 var(--ink), 0 0 0 0 rgba(227,166,28,0.6); } 60% { box-shadow: 3px 3px 0 var(--ink), 0 0 0 10px rgba(227,166,28,0); } 100% { box-shadow: 3px 3px 0 var(--ink), 0 0 0 0 rgba(227,166,28,0); } }
+.loop-arrow { position: absolute; font-size: 1.4rem; color: var(--ink-faint); }
+.loop-token { position: absolute; width: 10px; height: 10px; border-radius: 50%; background: var(--coral); border: 2px solid var(--ink); z-index: 5; }
+
+/* ── Backprop chain-rule network diagram ── */
+.backprop-wrap canvas { cursor: default; }
+.backprop-legend { display: flex; gap: 16px; flex-wrap: wrap; font-family: var(--font-mono); font-size: 0.7rem; color: var(--ink-soft); margin-top: 10px; }
+.backprop-legend .sw { display: inline-block; width: 22px; height: 4px; border-radius: 2px; margin-right: 5px; vertical-align: 2px; }
+
+/* ── Gradient clipping alert strip ── */
+.clip-alert { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: var(--radius-sm); font-family: var(--font-mono); font-size: 0.78rem; font-weight: 700; margin-top: 10px; border: 2px solid; transition: all 200ms ease; }
+.clip-alert.safe { background: var(--mint-bg); border-color: var(--mint); color: var(--mint-dark); }
+.clip-alert.clipped { background: var(--coral-bg); border-color: var(--coral); color: var(--coral-dark); }
+
+/* ── GPU grid parallelism visualizer (signature piece) ── */
+.gpu-grid-wrap { background: var(--surface); border: 2.5px solid var(--ink); border-radius: var(--radius-lg); box-shadow: var(--shadow-md); overflow: hidden; }
+.gpu-toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 14px 18px; background: var(--surface-alt); border-bottom: 2px solid var(--border); }
+.gpu-toolbar .spacer { flex: 1; }
+.gpu-stage { padding: 20px; }
+.gpu-tile { border: 2.5px solid var(--ink); border-radius: 8px; position: relative; display: flex; flex-direction: column; box-shadow: 2px 2px 0 rgba(43,42,36,0.25); overflow: hidden; transition: transform 220ms ease; }
+.gpu-tile::before { content: ""; position: absolute; top: -5px; left: 12px; width: 9px; height: 9px; border-radius: 50%; background: inherit; border: 2px solid var(--ink); }
+.gpu-tile .gpu-label { font-family: var(--font-mono); font-size: 0.62rem; font-weight: 700; text-align: center; padding: 4px 2px; background: rgba(0,0,0,0.06); border-bottom: 1.5px solid rgba(43,42,36,0.25); }
+.gpu-tile .gpu-body { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 3px; padding: 6px; }
+.gpu-shard { font-family: var(--font-mono); font-size: 0.6rem; font-weight: 700; padding: 2px 6px; border-radius: 4px; border: 1.5px solid var(--ink); white-space: nowrap; }
+.gpu-readout { font-family: var(--font-mono); font-size: 0.78rem; padding: 12px 18px; background: var(--paper-alt); border-top: 2px solid var(--border); color: var(--ink-soft); }
+.gpu-readout strong { color: var(--ink); }
+.gpu-comm-arrow { position: absolute; pointer-events: none; }
+
+/* ── IsoFLOP toggle tabs ── */
+.iso-tabs { display: inline-flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+
+/* ── Mini formula-part reveal chip ── */
+.formula-part { display: inline-block; padding: 3px 8px; border-radius: 6px; border: 1.5px solid; margin: 0 2px; cursor: help; transition: transform 150ms ease; font-weight: 700; }
+.formula-part:hover { transform: translateY(-2px); }
+
+@media (max-width: 700px) {
+    .loop-ring { height: auto; display: flex; flex-direction: column; gap: 16px; }
+    .loop-stage { position: static; width: 100%; }
+    .loop-arrow { display: none; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   R12/R13/R16 ADDITIONS — LEGO chrome, arena exam, Builder's Wall
+   (canon grammar lifted from 13-frontiers.html, adapted to Module 05)
+   ═══════════════════════════════════════════════════════════════════════ */
+.lego-strip{display:inline-flex;gap:3px;align-items:flex-end;margin:0 6px;vertical-align:middle}
+.lego-strip i{display:inline-block;width:13px;height:20px;border-radius:3px;box-shadow:0 3px 0 rgba(43,42,36,.18),inset 0 2px 0 rgba(255,255,255,.35),inset -2px -3px 0 rgba(43,42,36,.14)}
+.lego-strip i::after{content:"";display:block;width:5px;height:4px;margin:3px auto 0;border-radius:2px;background:rgba(43,42,36,.25);box-shadow:7px 0 0 rgba(43,42,36,.25)}
+.lego-divider{height:14px;margin:20px 0;background:repeating-linear-gradient(90deg,rgba(43,42,36,.10) 0 4px,transparent 4px 26px);border-bottom:2px solid rgba(43,42,36,.14);position:relative}
+.lego-divider::before{content:"";position:absolute;left:0;right:0;top:0;height:5px;background:repeating-linear-gradient(90deg,rgba(43,42,36,.18) 0 3px,transparent 3px 26px)}
+.lego-btn{position:relative;border-radius:6px 6px 4px 4px;box-shadow:0 4px 0 rgba(43,42,36,.22),inset 0 2px 0 rgba(255,255,255,.35);transition:transform .06s ease,box-shadow .06s ease}
+.lego-btn:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(43,42,36,.22)}
+.lego-btn::before{content:"";position:absolute;top:-5px;left:10%;width:80%;height:5px;border-radius:3px;background:rgba(255,255,255,.5);opacity:.85;box-shadow:0 1px 0 rgba(43,42,36,.25)}
+
+/* ── Arena exam (canon pattern from 13-frontiers.html) ── */
+.exam-q { margin-bottom: 28px; padding-bottom: 20px; border-bottom: 1.5px dashed var(--border); text-align: left; }
+.exam-q:last-of-type { border-bottom: none; }
+.exam-q .q-text { font-weight: 700; font-size: 0.95rem; margin-bottom: 10px; color: var(--ink); }
+.exam-q .q-scenario { font-size: 0.85rem; color: var(--ink-soft); background: var(--surface-alt); border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 12px 16px; margin-bottom: 12px; font-family: var(--font-mono); line-height: 1.55; }
+.exam-options { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.exam-opt { display: flex; align-items: flex-start; gap: 10px; padding: 12px 16px; border: 2px solid var(--border); border-radius: var(--radius-md); cursor: pointer; font-size: 0.85rem; transition: all var(--transition-fast); background: var(--surface); }
+.exam-opt:hover { border-color: var(--sky); background: var(--sky-bg); }
+.exam-opt input { margin-top: 3px; accent-color: var(--sky); }
+.exam-opt.picked { border-color: var(--sky); background: var(--sky-bg); }
+.exam-opt.right { border-color: var(--mint); background: var(--mint-bg); }
+.exam-opt.wrong { border-color: var(--coral); background: var(--coral-bg); }
+
+/* ── R16 Builder's Wall — collectible brick card (NOT a certificate) ── */
+.brick-card { margin-top: 24px; padding: 28px 24px 22px; border: 3px solid var(--ink); border-radius: var(--radius-lg); background: linear-gradient(135deg, var(--teal-bg), var(--surface)); text-align: center; position: relative; overflow: hidden; box-shadow: var(--shadow-md); }
+.brick-card::before { content: ""; position: absolute; inset: 8px; border: 1.5px dashed var(--teal-dark); border-radius: var(--radius-md); pointer-events: none; }
+.brick-card h3 { color: var(--teal-dark); margin: 14px 0 4px; }
+.brick-card .brick-card-meta { font-family: var(--font-mono); font-size: 0.68rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--teal-dark); margin: 0 0 6px; }
+.brick-card .brick-card-copy { font-size: 0.85rem; color: var(--ink-soft); max-width: 480px; margin: 0 auto; }
+</style>
+</head>
+<body>
+
+<header class="academy-header">
+    <div class="container flex items-center justify-between" style="height:100%">
+        <a href="index.html" class="logo">
+            <div class="logo-icon">🏋️</div>
+            <div>
+                <div class="logo-text">The Training Arena</div>
+                <div class="logo-subtitle">Module 05 · How Models Actually Learn</div>
+            </div>
+        </a>
+        <nav class="header-nav">
+            <a href="04-attention-deepdive.html">← Module 04</a>
+            <a href="index.html">Hub</a>
+            <a href="06-alignment-chamber.html">Module 06 →</a>
+        </nav>
+    </div>
+</header>
+
+<main>
+<!-- ════════════════ HERO ════════════════ -->
+<section class="hero">
+    <div class="hero-bg"></div>
+    <div class="container">
+        <div class="badge badge-peach eyebrow-badge">🏋️ MODULE 05 · TRAINING</div>
+        <h1>Training Costs $100 Million.<br>Here's <span class="hl">Exactly Why</span></h1>
+        <p class="hero-sub">
+            Random weights become GPT through one loop: <strong>predict, measure error, backpropagate, nudge weights, repeat</strong> —
+            trillions of times, across thousands of GPUs, for months. In this arena you'll watch gradients physically flow backward through
+            a network, race optimizers down a real loss surface, fit the actual Chinchilla method, and shard a model across a GPU grid by hand.
+        </p>
+
+        <div class="loop-wrap">
+            <div class="canvas-title" style="justify-content:center; margin-bottom:8px;">The training loop — running live, one micro-step per second</div>
+            <div class="loop-ring" id="loop-ring">
+                <div class="loop-stage" data-stage="forward" style="left:0; top:8px;">
+                    <div class="icon-box" style="background:var(--sky-bg); border-color:var(--sky-dark);">➡️</div>
+                    <div class="label">Forward pass</div>
+                </div>
+                <div class="loop-stage" data-stage="loss" style="right:0; top:8px;">
+                    <div class="icon-box" style="background:var(--coral-bg); border-color:var(--coral-dark);">📏</div>
+                    <div class="label">Compute loss</div>
+                </div>
+                <div class="loop-stage" data-stage="backward" style="right:0; bottom:8px;">
+                    <div class="icon-box" style="background:var(--lavender-bg); border-color:var(--lavender-dark);">⬅️</div>
+                    <div class="label">Backward pass</div>
+                </div>
+                <div class="loop-stage" data-stage="step" style="left:0; bottom:8px;">
+                    <div class="icon-box" style="background:var(--teal-bg); border-color:var(--teal-dark);">⚙️</div>
+                    <div class="label">Optimizer step</div>
+                </div>
+                <svg id="loop-svg" style="position:absolute; inset:0; width:100%; height:100%; overflow:visible;"></svg>
+            </div>
+            <div class="mono text-sm" id="loop-readout" style="text-align:center; margin-top:6px; color:var(--ink-soft);">step 0 — the token travels the loop once per training step, millions of times per run</div>
+        </div>
+    </div>
+</section>
+
+<div class="container">
+
+<!-- ════════════════ 5.1 THE PRETRAINING OBJECTIVE ════════════════ -->
+<section class="section" id="sec-1">
+    <div class="section-header">
+        <div class="section-label"><span class="section-num coral">SECTION 5.1</span></div>
+        <h2 class="section-title">The Objective: Predict the Next Token</h2>
+        <p class="section-desc">Everything — GPT-4, Claude, Gemini — is trained on one embarrassingly simple task: given the text so far, predict the next token. The loss is cross-entropy, and it has a beautiful geometric meaning.</p>
+    </div>
+    <div class="grid-2">
+        <div>
+            <div class="math-block">
+                $$L = -\frac{1}{N}\sum_{t=1}^{N} \log P_\theta(x_t \mid x_{<t}) \qquad \text{PPL} = e^{L}$$
+            </div>
+            <p>For every position <span class="math-inline">t</span>, the model outputs a probability distribution over the vocabulary. The loss is the negative log of the probability it gave the <em>actual</em> next token. If it said 0.9, loss is small (0.105). If it said 0.01, loss is large (4.6).</p>
+            <div class="callout coral">
+                <span class="callout-icon">🎯</span>
+                <div><strong>Perplexity intuition:</strong> PPL = e<sup>L</sup>. A perplexity of 20 means the model is as uncertain as if it were choosing uniformly among 20 tokens at each step. MicroGPT reached PPL ≈ e<sup>0.62</sup> ≈ 1.86 on TinyStories — quite confident. GPT-4 on general text is estimated at PPL ~10-20. A perfect model has PPL = 1.</div>
+            </div>
+            <div class="callout teal">
+                <span class="callout-icon">🔗</span>
+                <div><strong>Why log?</strong> Three reasons: (1) it turns products into sums (stable), (2) it brutally punishes confident-and-wrong predictions (log(0.01) = −4.6), (3) it equals the number of bits needed to encode the true answer — cross-entropy <em>is</em> compression. The model that compresses text best is, provably, the best next-token predictor.</div>
+            </div>
+        </div>
+        <div class="canvas-wrap">
+            <div class="canvas-title">Cross-entropy formation — drag probability p, watch loss = −log(p)</div>
+            <canvas id="canvas-ce" height="300"></canvas>
+            <div id="ce-readout" class="mono text-sm" style="margin-top:10px;"></div>
+        </div>
+    </div>
+    <div class="grid-3 mt-8 stagger-children">
+        <div class="card"><h4 class="coral">Confident + Right</h4><span class="stat-big teal">p=0.95</span><p>loss = −log(0.95) = <strong>0.05</strong>. Barely any penalty. This is the goal state for tokens the model should know.</p></div>
+        <div class="card"><h4 class="gold">Uncertain</h4><span class="stat-big gold">p=0.40</span><p>loss = −log(0.40) = <strong>0.92</strong>. Moderate penalty. The model is learning but not confident yet.</p></div>
+        <div class="card"><h4 class="coral">Confident + Wrong</h4><span class="stat-big coral">p=0.02</span><p>loss = −log(0.02) = <strong>3.91</strong>. Massive penalty. The log curve explodes near 0 — the optimizer hates this and fixes it fast.</p></div>
+    </div>
+
+    <!-- NEW: Backprop chain-rule visual -->
+    <div class="mt-8">
+        <h3 style="display:flex; align-items:center; gap:10px;">Where Do Gradients Actually Come From? <span class="badge badge-lavender" style="font-size:0.68rem; padding:4px 10px;">★ NEW</span></h3>
+        <p style="max-width:760px;">The loss tells you <em>how wrong</em> you are. It says nothing about <em>which weight</em> to change or by how much. That's backpropagation — the chain rule, applied mechanically, layer by layer, backward through the network. Click "Backpropagate" and watch the gradient signal travel from the loss back to every weight.</p>
+        <div class="canvas-wrap backprop-wrap">
+            <div class="canvas-title">
+                <span>A 4-layer network, one input — gradient magnitude shown as glow intensity</span>
+                <span class="flex gap-2">
+                    <button class="btn btn-lavender btn-sm" id="btn-backprop-fwd">① Forward pass</button>
+                    <button class="btn btn-coral btn-sm" id="btn-backprop-bwd" disabled>② Backpropagate</button>
+                    <button class="btn btn-secondary btn-sm" id="btn-backprop-reset">↺ Reset</button>
+                </span>
+            </div>
+            <canvas id="canvas-backprop" height="280"></canvas>
+            <div class="backprop-legend">
+                <span><span class="sw" style="background:var(--sky);"></span>forward activation</span>
+                <span><span class="sw" style="background:var(--coral);"></span>backward gradient (∂L/∂w)</span>
+                <span><span class="sw" style="background:var(--ink-faint);"></span>idle connection</span>
+            </div>
+            <div id="backprop-readout" class="mono text-sm" style="margin-top:10px;">Click <strong>Forward pass</strong> to send an input through the network and compute a loss.</div>
+        </div>
+        <div class="math-block mt-4">
+            $$\frac{\partial L}{\partial w^{(1)}} = \frac{\partial L}{\partial a^{(4)}} \cdot \frac{\partial a^{(4)}}{\partial a^{(3)}} \cdot \frac{\partial a^{(3)}}{\partial a^{(2)}} \cdot \frac{\partial a^{(2)}}{\partial a^{(1)}} \cdot \frac{\partial a^{(1)}}{\partial w^{(1)}}$$
+        </div>
+        <p>The gradient for an <em>early</em> layer's weight is a product of every derivative between it and the loss — a chain of local, single-step derivatives multiplied together. This is why it's called the chain rule: no term in that product knows anything beyond its own neighbors, yet the product correctly measures a weight's influence on the loss four layers away.</p>
+        <div class="grid-2 mt-4">
+            <div class="callout coral">
+                <span class="callout-icon">📉</span>
+                <div><strong>Vanishing gradients:</strong> each factor in that chain is typically &lt; 1 for saturating activations (sigmoid, tanh). Multiply four numbers less than 1 and the product shrinks fast — by layer 20, the gradient can be numerically zero. This is why deep networks were once thought untrainable, and why ReLU, residual connections (Module 03), and LayerNorm exist.</div>
+            </div>
+            <div class="callout lavender">
+                <span class="callout-icon">🧮</span>
+                <div><strong>Autodiff, not calculus by hand:</strong> PyTorch/JAX never write out this formula — they build a computational graph during the forward pass and walk it backward, applying the local derivative rule at each node automatically. What you just watched animate <em>is</em>, mechanically, what <code>loss.backward()</code> does.</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ════════════════ 5.2 OPTIMIZER RACE ════════════════ -->
+<section class="section" id="sec-2">
+    <div class="section-header">
+        <div class="section-label"><span class="section-num teal">SECTION 5.2 ★ SIGNATURE</span></div>
+        <h2 class="section-title">The Optimizer Race: SGD vs Momentum vs Adam</h2>
+        <p class="section-desc">Three optimizers start at the same point on the same loss surface. Watch them race to the minimum — and see why Adam (with its per-parameter learning rates) wins almost every time in deep learning.</p>
+    </div>
+    <div class="canvas-wrap">
+        <div class="canvas-title">Live race on a shared loss landscape — press START</div>
+        <div class="flex gap-2 items-center" style="flex-wrap:wrap; margin-bottom:14px;">
+            <button class="btn btn-teal" id="btn-race">▶ Start Race</button>
+            <button class="btn btn-secondary" id="btn-race-reset">Reset</button>
+            <div class="slider-row" style="flex:1; margin:0; min-width:220px;"><label>learning rate</label><input type="range" id="race-lr" min="0.01" max="0.5" step="0.01" value="0.1"><span class="val" id="race-lr-v">0.10</span></div>
+        </div>
+        <canvas id="canvas-race" height="380"></canvas>
+        <div id="race-readout" class="mono text-sm" style="margin-top:10px;"></div>
+        <div class="flex gap-4" style="margin-top:10px; font-size:0.8rem; font-family:var(--font-mono);">
+            <span><span style="color:var(--coral);">●</span> SGD (raw gradient)</span>
+            <span><span style="color:var(--gold-dark);">●</span> Momentum (velocity builds)</span>
+            <span><span style="color:var(--teal-dark);">●</span> Adam (adaptive per-param)</span>
+        </div>
+    </div>
+    <div class="grid-3 mt-8">
+        <div class="card">
+            <h4 class="coral">SGD</h4>
+            <div class="math-block" style="font-size:0.75rem;">$$w \leftarrow w - \eta \, g_t$$</div>
+            <p>Follows the raw gradient every step. Simple, but zigzags in narrow valleys (the "ravine problem") and crawls on plateaus.</p>
+        </div>
+        <div class="card">
+            <h4 class="gold">Momentum</h4>
+            <div class="math-block" style="font-size:0.75rem;">$$v \leftarrow \beta v + g_t;\quad w \leftarrow w - \eta v$$</div>
+            <p>Accumulates a velocity. Smooths zigzag, accelerates through consistent directions. β ≈ 0.9. Like a ball with mass rolling downhill.</p>
+        </div>
+        <div class="card">
+            <h4 class="teal">Adam</h4>
+            <div class="math-block" style="font-size:0.75rem;">$$m=\beta_1 m+(1-\beta_1)g;\ v=\beta_2 v+(1-\beta_2)g^2;\ w \leftarrow w - \eta \frac{\hat m}{\sqrt{\hat v}+\epsilon}$$</div>
+            <p>Tracks gradient mean (m) and variance (v). Each parameter gets its own effective step size. This is what trains every modern LLM (as AdamW, with decoupled weight decay).</p>
+        </div>
+    </div>
+
+    <!-- NEW: bias correction -->
+    <div class="grid-2 mt-8">
+        <div class="canvas-wrap">
+            <div class="canvas-title">
+                <span>Why Adam needs bias correction — first 20 steps</span>
+                <span class="badge badge-gold" style="font-size:0.65rem; padding:3px 9px;">★ NEW</span>
+            </div>
+            <canvas id="canvas-biascorrect" height="220"></canvas>
+            <div id="bias-readout" class="mono text-sm" style="margin-top:8px;"></div>
+        </div>
+        <div>
+            <p><strong>m</strong> and <strong>v</strong> both start at zero. At step 1, <span class="math-inline">m = (1-\beta_1) g \approx 0.1g</span> — a huge underestimate of the true gradient. Without correction, Adam's very first steps would be far too small.</p>
+            <div class="math-block" style="font-size:0.85rem;">
+                $$\hat{m}_t = \frac{m_t}{1-\beta_1^{t}} \qquad \hat{v}_t = \frac{v_t}{1-\beta_2^{t}}$$
+            </div>
+            <p>Dividing by <span class="math-inline">1-\beta_1^t</span> exactly cancels the "cold start" bias — at t=1 this divisor is 0.1, boosting the estimate back to the true gradient magnitude. As t grows, <span class="math-inline">\beta_1^t \to 0</span> and correction fades to a no-op. It's a purely mechanical fix for the first ~20-50 steps, invisible for the rest of a run that lasts millions of steps — but skip it and early training visibly stalls.</p>
+        </div>
+    </div>
+
+    <!-- NEW: gradient clipping -->
+    <div class="grid-2 mt-8">
+        <div>
+            <h3 style="display:flex; align-items:center; gap:10px;">Gradient Clipping <span class="badge badge-coral" style="font-size:0.68rem; padding:4px 10px;">★ NEW</span></h3>
+            <p>Real training data has outlier batches — a weird sequence, a repeated token, a rare pattern — that can produce a gradient 100× larger than normal. Left alone, Adam's update would be enormous and can permanently destabilize a run (a "loss spike" that never recovers). Every frontier training run clips the <strong>global gradient norm</strong> before the optimizer step.</p>
+            <div class="math-block">
+                $$g \leftarrow g \cdot \min\left(1,\ \frac{\text{max\_norm}}{\lVert g \rVert_2}\right)$$
+            </div>
+            <p>If the gradient's L2 norm exceeds <code>max_norm</code> (commonly 1.0), every component is scaled down proportionally — direction is preserved, only magnitude shrinks. This is cheap insurance: one norm computation per step, and it prevents the single most common cause of a training run silently dying overnight.</p>
+        </div>
+        <div class="canvas-wrap">
+            <div class="canvas-title">Simulated gradient stream — spikes appear at random, watch clipping catch them</div>
+            <div class="slider-row"><label>max norm</label><input type="range" id="clip-maxnorm" min="0.2" max="3" step="0.1" value="1.0"><span class="val" id="clip-maxnorm-v">1.0</span></div>
+            <canvas id="canvas-clip" height="200"></canvas>
+            <div class="flex gap-2 mt-4">
+                <button class="btn btn-coral btn-sm" id="btn-clip-spike">⚡ Inject a gradient spike</button>
+                <button class="btn btn-secondary btn-sm" id="btn-clip-play">▶ Stream gradients</button>
+            </div>
+            <div class="clip-alert safe" id="clip-alert">No clipping active — gradient norm within bounds</div>
+        </div>
+    </div>
+</section>
+
+<!-- ════════════════ 5.3 LR SCHEDULE ════════════════ -->
+<section class="section" id="sec-3">
+    <div class="section-header">
+        <div class="section-label"><span class="section-num gold">SECTION 5.3</span></div>
+        <h2 class="section-title">The Learning Rate Schedule: Warmup, Then Decay</h2>
+        <p class="section-desc">No frontier model uses a constant learning rate. They warm up from near-zero (avoid early instability), then decay — usually with a cosine curve — so the model settles into a flat minimum.</p>
+    </div>
+    <div class="grid-2">
+        <div class="canvas-wrap">
+            <div class="canvas-title">Build your schedule — adjust warmup % and min LR ratio</div>
+            <div class="slider-row"><label>warmup fraction</label><input type="range" id="sched-warmup" min="0" max="0.3" step="0.01" value="0.05"><span class="val" id="sched-warmup-v">5%</span></div>
+            <div class="slider-row"><label>min LR ratio</label><input type="range" id="sched-minlr" min="0" max="0.5" step="0.01" value="0.1"><span class="val" id="sched-minlr-v">0.10</span></div>
+            <canvas id="canvas-sched" height="260"></canvas>
+            <div class="pill-group" style="margin-top:10px;">
+                <button class="pill active" data-sched="cosine">Cosine decay</button>
+                <button class="pill" data-sched="linear">Linear decay</button>
+                <button class="pill" data-sched="wsd">WSD (trapezoid)</button>
+                <button class="pill" data-sched="constant">Constant</button>
+            </div>
+            <div id="sched-readout" class="mono text-sm" style="margin-top:8px;"></div>
+        </div>
+        <div>
+            <div class="math-block">
+                $$\text{lr}(t) = \begin{cases} \text{lr}_{max} \cdot \frac{t}{T_w} & t < T_w \\ \text{lr}_{min} + \frac{1}{2}(\text{lr}_{max}-\text{lr}_{min})\left(1+\cos\frac{\pi(t-T_w)}{T-T_w}\right) & t \ge T_w \end{cases}$$
+            </div>
+            <p><strong>Warmup</strong> (first 1-5% of steps): gradients are noisy at random init; a large LR here can destroy the run. <strong>Cosine decay</strong>: smoothly anneals to a small floor so the model settles without oscillating.</p>
+            <div class="callout gold">
+                <span class="callout-icon">🌡️</span>
+                <div><strong>Modern variant — WSD</strong> (Warmup-Stable-Decay): warmup, long plateau at max LR, then rapid decay in the last ~20%. Used by Llama-3 and MiniCPM. It performs as well as cosine but lets you extend training mid-run (the "stable" phase has no fixed end). Try it in the toggle.</div>
+            </div>
+            <div class="callout teal">
+                <span class="callout-icon">🔬</span>
+                <div><strong>muP (maximal update parametrization):</strong> how labs transfer the optimal LR from a small proxy model to a giant one. The trick: scale init and per-layer LR by width so activations stay O(1) at any width. GPT-4-class runs tune hyperparams on a ~40M proxy, then transfer — saving millions. This is the frontier of optimizer science, alongside Muon's Newton-Schulz orthogonalized momentum.</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ════════════════ 5.4 DATA ENGINEERING ════════════════ -->
+<section class="section" id="sec-4">
+    <div class="section-header">
+        <div class="section-label"><span class="section-num mint">SECTION 5.4</span></div>
+        <h2 class="section-title">Data: The Silent Third of Training</h2>
+        <p class="section-desc">Ask any lab what actually determines model quality and they'll say: the data. Sources, filtering, deduplication, mixing — most courses skip this pipeline entirely; a Principal AI Architect can't.</p>
+    </div>
+    <div class="grid-2">
+        <div class="canvas-wrap">
+            <div class="canvas-title">Build a data mix — watch estimated quality & diversity</div>
+            <div class="slider-row"><label>Web (Common Crawl)</label><input type="range" class="data-mix" data-k="web" min="0" max="100" value="55"><span class="val" id="mix-web-v">55%</span></div>
+            <div class="slider-row"><label>Code (GitHub)</label><input type="range" class="data-mix" data-k="code" min="0" max="100" value="15"><span class="val" id="mix-code-v">15%</span></div>
+            <div class="slider-row"><label>Books / long-form</label><input type="range" class="data-mix" data-k="books" min="0" max="100" value="15"><span class="val" id="mix-books-v">15%</span></div>
+            <div class="slider-row"><label>Math / science</label><input type="range" class="data-mix" data-k="math" min="0" max="100" value="8"><span class="val" id="mix-math-v">8%</span></div>
+            <div class="slider-row"><label>Synthetic / instruct</label><input type="range" class="data-mix" data-k="synth" min="0" max="100" value="7"><span class="val" id="mix-synth-v">7%</span></div>
+            <canvas id="canvas-mix" height="200"></canvas>
+            <div id="mix-readout" class="mono text-sm" style="margin-top:8px;"></div>
+        </div>
+        <div>
+            <h3>The Pipeline, As An Assembly Line</h3>
+            <div class="flex" id="data-pipeline" style="gap:0; align-items:stretch; margin-bottom:16px; overflow-x:auto; border:2.5px solid var(--ink); border-radius:var(--radius-md); background:var(--surface-alt);"></div>
+            <div class="card-alt" style="margin-bottom:12px;">
+                <h4 class="teal">1 · Source & extract</h4>
+                <p class="text-sm">Common Crawl (petabytes of web), GitHub, arXiv, books, Wikipedia, conversations. Raw HTML must be cleaned to plain text (boilerplate removal is 80% of the work).</p>
+            </div>
+            <div class="card-alt" style="margin-bottom:12px;">
+                <h4 class="gold">2 · Filter for quality</h4>
+                <p class="text-sm">Heuristics (avg word length, symbol ratios), perplexity filters (keep text a small model finds "normal"), and quality classifiers. Aggressive filtering beats scale: less but better data wins.</p>
+            </div>
+            <div class="card-alt" style="margin-bottom:12px;">
+                <h4 class="coral">3 · Deduplicate</h4>
+                <p class="text-sm">MinHash / near-dup detection. Duplicated text gets memorized, wastes compute, and can leak benchmark test sets into training (contamination — it inflates eval scores dishonestly).</p>
+            </div>
+            <div class="card-alt">
+                <h4 class="lavender">4 · Mix & curriculate</h4>
+                <p class="text-sm">Domain weights are hyperparameters. More code → better reasoning. More math → better math. Synthetic data (a big model generating examples) is the 2024+ unlock: TinyStories, our own dataset, is 100% GPT-generated children's stories.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ════════════════ 5.5 SCALING LAWS ════════════════ -->
+<section class="section" id="sec-5">
+    <div class="section-header">
+        <div class="section-label"><span class="section-num lavender">SECTION 5.5</span></div>
+        <h2 class="section-title">Scaling Laws: The Physics of LLMs</h2>
+        <p class="section-desc">Loss vs. model size follows a smooth power law — smooth enough to predict a $100M run's final loss <em>before spending the money</em>, by fitting a curve to cheap small-scale experiments.</p>
+    </div>
+    <div class="iso-tabs">
+        <button class="pill active" data-isomode="fit">📈 Power-law fit (drag points)</button>
+        <button class="pill" data-isomode="iso">🔬 IsoFLOP curves — the real Chinchilla method <span class="badge badge-lavender" style="font-size:0.6rem; padding:2px 7px; margin-left:4px;">★ NEW</span></button>
+    </div>
+    <div class="grid-2">
+        <div class="canvas-wrap">
+            <div class="canvas-title" id="scaling-canvas-title">Loss vs. parameters (log-log) — drag the four dots</div>
+            <canvas id="canvas-scaling" height="340"></canvas>
+            <div id="scaling-readout" class="mono text-sm" style="margin-top:10px;"></div>
+        </div>
+        <div id="scaling-panel-fit">
+            <p><strong>Kaplan et al. (2020)</strong> found loss follows smooth power laws in model size, data, and compute. <strong>Chinchilla (2022)</strong> corrected the resource allocation: for compute-optimal training, scale parameters and data <em>together</em> — roughly equal exponents, not "make the model as big as possible."</p>
+            <div class="math-block">$$L(N) \approx \frac{A}{N^{\alpha}} + E$$</div>
+            <div class="callout gold">
+                <span class="callout-icon">📐</span>
+                <div><strong>The Chinchilla calculator:</strong> for a 6.3M-param MicroGPT, compute-optimal data at a ~20:1 token-to-parameter ratio ≈ 126M tokens. We trained on ~10M — about 12× under-trained. The curve also never reaches zero: the constant <span class="math-inline">E</span> is the irreducible entropy of language itself — no model, however large, predicts human text perfectly.</div>
+            </div>
+        </div>
+        <div id="scaling-panel-iso" style="display:none;">
+            <p>The paper didn't actually fit one line — for each fixed compute budget <span class="math-inline">C</span>, they trained many models of different sizes <span class="math-inline">N</span> (with <span class="math-inline">D=C/6N</span> tokens each) and plotted loss vs. <span class="math-inline">N</span>. Each budget traces a <strong>parabola-shaped IsoFLOP curve</strong> — too small a model wastes compute on undertraining, too big a model wastes compute being too slow to see enough data. The minimum of each curve is that budget's compute-optimal point.</p>
+            <div class="math-block">$$L(N,D) = E + \frac{A}{N^{\alpha}} + \frac{B}{D^{\beta}}, \quad D = \frac{C}{6N}$$</div>
+            <div id="iso-optimal-readout" class="card-alt mono text-sm" style="margin:12px 0;"></div>
+            <div class="callout lavender">
+                <span class="callout-icon">🔬</span>
+                <div><strong>Reading the chart:</strong> four dashed parabolas, one per compute budget. The gold dot on each is its minimum — its compute-optimal model size. Connect those dots (the dotted frontier line) and you're looking at <span class="math-inline">N_{opt}(C)</span>, the actual scaling-law relationship the paper reports.</div>
+            </div>
+        </div>
+    </div>
+    <div class="grid-2 mt-4">
+        <div class="callout teal">
+            <span class="callout-icon">🧮</span>
+            <div><strong>Why the ratio drifts, not stays fixed at exactly 20:1:</strong> because <span class="math-inline">\alpha \neq \beta</span> in the fitted loss surface, <span class="math-inline">N_{opt}</span> and <span class="math-inline">D_{opt}</span> grow at very slightly different rates with <span class="math-inline">C</span> — the "~20 tokens per parameter" rule of thumb is accurate near the compute scale it was measured at (roughly GPT-3-era), and drifts gradually at much larger or smaller scales. This is a real, subtle point most explainers skip.</div>
+        </div>
+        <div class="callout rose">
+            <span class="callout-icon">🌊</span>
+            <div><strong>2024+ refinements:</strong> data-constrained scaling (repeating data has diminishing returns after ~4 epochs), and inference-aware scaling — over-train small models like Llama-3-8B on 15T tokens (far past "Chinchilla-optimal") because at serving scale, inference cost dwarfs training cost, so a smaller-but-smarter model wins on total cost of ownership.</div>
+        </div>
+    </div>
+</section>
+
+<!-- ════════════════ 5.6 FLOPS, MEMORY & DISTRIBUTED TRAINING ════════════════ -->
+<section class="section" id="sec-6">
+    <div class="section-header">
+        <div class="section-label"><span class="section-num sky">SECTION 5.6 ★★ FLAGSHIP LAB</span></div>
+        <h2 class="section-title">FLOPs, Memory & The 6ND Rule</h2>
+        <p class="section-desc">Compute is FLOPs. Memory is bytes. A Principal AI Architect's actual job is fitting an enormous number of both onto a finite grid of GPUs — this is where that decision gets made.</p>
+    </div>
+    <div class="grid-2">
+        <div class="canvas-wrap">
+            <div class="canvas-title">Live FLOPs & training-time calculator</div>
+            <div class="slider-row"><label>parameters (N)</label><input type="range" id="calc-n" min="6" max="12" step="0.1" value="6.8"><span class="val" id="calc-n-v">6.3M</span></div>
+            <div class="slider-row"><label>tokens (D)</label><input type="range" id="calc-d" min="6" max="13" step="0.1" value="7"><span class="val" id="calc-d-v">10M</span></div>
+            <div class="slider-row"><label>GPU TFLOP/s</label><input type="range" id="calc-tflops" min="10" max="1000" step="10" value="312"><span class="val" id="calc-tflops-v">312</span></div>
+            <div class="grid" style="grid-template-columns:1fr 1fr; gap:10px; margin-top:14px;" id="calc-stats"></div>
+        </div>
+        <div>
+            <div class="math-block">$$C \approx 6ND$$</div>
+            <p>The <strong>6ND rule</strong>: total training compute in FLOPs ≈ 6 × parameters × tokens. The 6 comes from 2 FLOPs per multiply-add, ×1 for forward pass, ×2 for backward pass (backward is ~2× the cost of forward — it computes gradients w.r.t. both weights and activations).</p>
+            <div class="callout sky">
+                <span class="callout-icon">⚡</span>
+                <div><strong>MFU (Model FLOPs Utilization):</strong> real training never hits 100% of a GPU's advertised peak FLOPs — memory bandwidth, communication, and kernel launch overhead eat into it. 40-55% MFU is considered excellent for a well-tuned large run. This single number, more than almost anything else, is what separates elite training infrastructure teams from mediocre ones.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- NEW FLAGSHIP: parallelism GPU grid -->
+    <div class="mt-8">
+        <h3 style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+            How Do You Actually Fit This On GPUs? <span class="badge badge-sky">★ NEW · SIGNATURE</span>
+        </h3>
+        <p style="max-width:800px;">A 7B-parameter model needs <strong>112GB</strong> per GPU in naive mixed-precision training (weights + gradients + Adam's optimizer states) — more than a single 80GB H100 has. This is not a hypothetical: it's the first wall every training infra team hits. Toggle strategies below and watch exactly what gets split across an 8-GPU node, and why.</p>
+
+        <div class="gpu-grid-wrap">
+            <div class="gpu-toolbar">
+                <div class="pill-group" id="parallel-tabs" style="display:flex; gap:6px; flex-wrap:wrap;">
+                    <button class="pill active" data-mode="dp">Data Parallel</button>
+                    <button class="pill" data-mode="tp">Tensor Parallel</button>
+                    <button class="pill" data-mode="pp">Pipeline Parallel</button>
+                    <button class="pill" data-mode="zero1">ZeRO-1</button>
+                    <button class="pill" data-mode="zero2">ZeRO-2</button>
+                    <button class="pill" data-mode="zero3">ZeRO-3</button>
+                </div>
+                <span class="spacer"></span>
+                <span class="tag" id="parallel-model-size">model: 7B params · 8× H100 (80GB)</span>
+            </div>
+            <div class="gpu-stage">
+                <div class="grid-4" style="gap:12px;" id="gpu-grid"></div>
+            </div>
+            <div class="gpu-readout" id="gpu-readout"></div>
+        </div>
+
+        <div class="grid-2 mt-8">
+            <div class="card">
+                <h4 class="sky">What's actually being split?</h4>
+                <p id="parallel-explain-what" class="text-sm"></p>
+            </div>
+            <div class="card">
+                <h4 class="rose">Communication cost & when to use it</h4>
+                <p id="parallel-explain-comm" class="text-sm"></p>
+            </div>
+        </div>
+
+        <div class="card-alt mt-4" style="overflow-x:auto;">
+            <table class="compare">
+                <thead><tr><th>Strategy</th><th>Splits</th><th>Per-GPU memory (7B, 8-way)</th><th>Comm pattern</th><th>Used in practice</th></tr></thead>
+                <tbody>
+                    <tr><td>Data Parallel</td><td>Batch only</td><td>112 GB ⚠️ (full replica)</td><td>All-reduce gradients, once/step</td><td>Small models, many nodes</td></tr>
+                    <tr><td>Tensor Parallel</td><td>Every layer's matrices</td><td>~14 GB</td><td>All-reduce activations, every layer — needs NVLink</td><td>Within a node (GPT-3, LLaMA)</td></tr>
+                    <tr><td>Pipeline Parallel</td><td>Layers, by depth</td><td>~14 GB (+ activation buffers)</td><td>Point-to-point, stage to stage — pipeline "bubble" idle time</td><td>Across nodes, deep models</td></tr>
+                    <tr><td>ZeRO-1</td><td>Optimizer states only</td><td>38.5 GB</td><td>Same as DP + one extra gather</td><td>Easy first step, low risk</td></tr>
+                    <tr><td>ZeRO-2</td><td>+ Gradients</td><td>26.3 GB</td><td>Reduce-scatter gradients</td><td>Good default for mid-size models</td></tr>
+                    <tr><td>ZeRO-3</td><td>+ Weights (fully sharded)</td><td>14 GB</td><td>All-gather weights before every layer's use</td><td>PyTorch FSDP, DeepSpeed — modern default for large models</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="callout peach mt-4">
+            <span class="callout-icon">🏗️</span>
+            <div><strong>Real frontier runs combine all of them ("3D parallelism"):</strong> tensor-parallel within a node (fast NVLink), pipeline-parallel across nodes (tolerates slower links), data-parallel (or ZeRO) across replica groups. GPT-4-class training reportedly used thousands of GPUs with exactly this nested structure — no single strategy scales alone past a few hundred GPUs.</div>
+        </div>
+    </div>
+</section>
+
+<!-- ════════════════ 5.7 THE REAL COST ════════════════ -->
+<section class="section" id="sec-7">
+    <div class="section-header">
+        <div class="section-label"><span class="section-num rose">SECTION 5.7</span></div>
+        <h2 class="section-title">The Real Cost of a Frontier Model</h2>
+        <p class="section-desc">Put every number in this module together and the "$100M" headline stops being an abstraction — it's 6ND FLOPs, divided by realistic MFU, divided by GPU throughput, times a market rental rate.</p>
+    </div>
+    <div class="card-alt" style="overflow-x:auto;">
+        <table class="compare">
+            <thead><tr><th>Model class</th><th>Params</th><th>Tokens</th><th>Est. FLOPs</th><th>GPU-days (H100, ~45% MFU)</th><th>Est. cost</th></tr></thead>
+            <tbody>
+                <tr><td>MicroGPT (this course)</td><td>6.3M</td><td>10M</td><td>3.8×10¹⁴</td><td>&lt; 1 (minutes, 1 GPU)</td><td>~$0</td></tr>
+                <tr><td>GPT-2 class</td><td>1.5B</td><td>10B</td><td>9×10¹⁹</td><td>~2</td><td>~$200</td></tr>
+                <tr><td>Llama-2-7B class</td><td>7B</td><td>2T</td><td>8.4×10²²</td><td>~2,000</td><td>~$500K</td></tr>
+                <tr><td>GPT-3 class</td><td>175B</td><td>300B</td><td>3.15×10²³</td><td>~7,500</td><td>~$2-4M</td></tr>
+                <tr><td>Frontier (GPT-4 class)</td><td>~1-2T (est.)</td><td>~10-13T</td><td>~2×10²⁵</td><td>~500,000+</td><td>~$100M+</td></tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="grid-3 mt-8 stagger-children">
+        <div class="card"><h4 class="rose">The compute wall</h4><p>Cost scales roughly with the square of "how good you want to be" — each further drop in loss needs disproportionately more compute, per the power law in 5.5. This is why only a handful of organizations train truly frontier models.</p></div>
+        <div class="card"><h4 class="peach">Failed runs are real cost</h4><p>Loss spikes, hardware failures, and bad hyperparameters can waste weeks of a $10M+ run. This is exactly why gradient clipping (5.2), checkpointing, and careful LR schedules (5.3) aren't academic — they're multi-million-dollar insurance policies.</p></div>
+        <div class="card"><h4 class="sky">Inference cost dominates eventually</h4><p>A model serving billions of queries spends far more on inference than it ever did on training. This is why labs now deliberately over-train small models (5.5) — a smaller, longer-trained model is cheaper to serve at scale, even if training took longer.</p></div>
+    </div>
+</section>
+
+<!-- ════════════════ 5.8 BRIDGE ════════════════ -->
+<section class="section" id="sec-8" style="border-bottom:none;">
+    <div class="section-header">
+        <div class="section-label"><span class="section-num mint">SECTION 5.8</span></div>
+        <h2 class="section-title">A Trained Model Is Not a Product</h2>
+        <p class="section-desc">Everything in this module produces a <em>base model</em> — a raw next-token predictor. It will complete "The capital of France is" correctly, but it will also happily continue a harmful request, ramble past where a helpful assistant would stop, or complete your question with more questions instead of an answer. That gap is closed by post-training.</p>
+    </div>
+    <div class="grid-2">
+        <div class="callout mint">
+            <span class="callout-icon">🧭</span>
+            <div><strong>What's missing:</strong> instruction-following, refusals, helpfulness, safety, personality — none of that comes from next-token prediction on raw internet text. It comes from a second training phase: supervised fine-tuning on curated conversations, then reinforcement learning from human (or AI) feedback.</div>
+        </div>
+        <div class="callout coral">
+            <span class="callout-icon">⚖️</span>
+            <div><strong>Same machinery, different objective:</strong> the optimizer, the gradient descent, the backprop you just built all carry over unchanged. What changes is the loss function and the data — from "predict any next token" to "predict the response a human rater preferred."</div>
+            <div class="card-flat text-center mt-8" style="padding:48px 32px; background:linear-gradient(135deg, var(--mint-bg), var(--teal-bg));">
+        <h2>Next: Teach The Model To Behave</h2>
+        <p style="max-width:600px; margin:0 auto 24px;">RLHF, DPO, reward models, and the alignment tax — Module 06 takes this exact base model and turns it into an assistant.</p>
+        <a href="06-alignment-chamber.html" class="btn btn-mint btn-lg">Enter the Alignment Chamber →</a>
+    </div>
+</section>
+
+<!-- ════════════════ 5.9 THE BUILDER'S WALL (R16) ════════════════ -->
+<section class="section" id="sec-9" style="border-bottom:none;">
+    <div class="section-header">
+        <div class="section-label"><span class="section-num teal">SECTION 5.9 · THE BUILDER'S WALL</span></div>
+        <h2 class="section-title">The Arena Exam: Prove You Can Read a Training Run <span class="lego-strip" aria-hidden="true"><i style="background:var(--coral)"></i><i style="background:var(--teal)"></i><i style="background:var(--gold)"></i></span></h2>
+        <p class="section-desc">Five training-room incidents. Five diagnoses — from memory. No certificates here: score <strong>4/5</strong> and the wall awards you the <strong>"The Arena Trainer"</strong> collectible brick.</p>
+    </div>
+
+    <div class="lego-divider" aria-hidden="true"></div>
+
+    <div class="brick-panel" style="padding:28px; margin-top:20px;">
+        <div id="exam-questions">
+
+            <div class="exam-q" data-q="1">
+                <div class="q-scenario">TRAINING ROOM — your model makes two next-token predictions in the same batch: p = 0.9 for a token it knows well, and p = 0.02 for a rare correct token. The loss jumps every time the rare token appears.</div>
+                <div class="q-text">Q1 · Which statement about the cross-entropy loss is correct?</div>
+                <div class="exam-options">
+                    <label class="exam-opt"><input type="radio" name="q1" value="wrong"> <strong>The rare token dominates:</strong> −log(0.02) ≈ 3.91 vs −log(0.9) ≈ 0.11. The log scale makes confident-and-wrong predictions brutally expensive, so their gradients get fixed first.</label>
+                    <label class="exam-opt"><input type="radio" name="q1" value="high"> <strong>The p = 0.9 token dominates:</strong> high probability means the model was confident, so the loss must be large there.</label>
+                    <label class="exam-opt"><input type="radio" name="q1" value="equal"> <strong>Both contribute equally:</strong> the log is only a numerical convenience for turning products of probabilities into sums.</label>
+                </div>
+            </div>
+
+            <div class="exam-q" data-q="2">
+                <div class="q-scenario">TRAINING ROOM — a 20-layer network with sigmoid activations trains extremely slowly. After 50,000 steps you inspect the weights: the first 15 layers have barely moved from initialization.</div>
+                <div class="q-text">Q2 · What is happening?</div>
+                <div class="exam-options">
+                    <label class="exam-opt"><input type="radio" name="q2" value="vanish"> <strong>Vanishing gradients:</strong> each chain-rule factor ∂a/∂z is &lt; 1 for saturating sigmoids, and 20 factors multiplied together make ∂L/∂w numerically ~0 for early layers. ReLU, residual connections, and LayerNorm exist precisely for this.</label>
+                    <label class="exam-opt"><input type="radio" name="q2" value="rate"> <strong>The learning rate is too high:</strong> early layers oscillate so much they cancel their own updates.</label>
+                    <label class="exam-opt"><input type="radio" name="q2" value="data"> <strong>Sigmoid only saturates at the output layer:</strong> the problem must be the data, not the network.</label>
+                </div>
+            </div>
+
+            <div class="exam-q" data-q="3">
+                <div class="q-scenario">TRAINING ROOM — a lab launches a 7B run at a constant learning rate of 3×10⁻⁴ from step 0. Within the first 500 steps the loss spikes to NaN and the run never recovers — weeks of compute gone.</div>
+                <div class="q-text">Q3 · Which change is the standard fix, and why?</div>
+                <div class="exam-options">
+                    <label class="exam-opt"><input type="radio" name="q3" value="warmup"> <strong>Warm up the LR from near zero</strong> for the first 1–5% of steps: gradients at random init are noisy and huge, and a large LR then can permanently destabilize a run. Frontier runs pair warmup with cosine (or WSD) decay.</label>
+                    <label class="exam-opt"><input type="radio" name="q3" value="raise"> <strong>Raise the learning rate:</strong> the model needs more signal, not less, early in training.</label>
+                    <label class="exam-opt"><input type="radio" name="q3" value="sgd"> <strong>Switch to plain SGD:</strong> Adam's bias correction is the real culprit this early in a run.</label>
+                </div>
+            </div>
+
+            <div class="exam-q" data-q="4">
+                <div class="q-scenario">TRAINING ROOM — your overnight run dies at step 40,000: loss spikes to NaN and never recovers. The logs show one outlier batch whose gradient norm was 480× the median.</div>
+                <div class="q-text">Q4 · What is the correct, cheap insurance?</div>
+                <div class="exam-options">
+                    <label class="exam-opt"><input type="radio" name="q4" value="clip"> <strong>Clip the global gradient norm</strong> (commonly 1.0): scale every component by max_norm/‖g‖₂ — direction preserved, magnitude capped. One norm computation per step; the standard defense against the most common silent run-killer.</label>
+                    <label class="exam-opt"><input type="radio" name="q4" value="small"> <strong>Shrink the batch size to zero</strong> so outlier batches cannot occur in the first place.</label>
+                    <label class="exam-opt"><input type="radio" name="q4" value="freeze"> <strong>Freeze every weight below layer 20</strong> so gradients cannot explode there.</label>
+                </div>
+            </div>
+
+            <div class="exam-q" data-q="5">
+                <div class="q-scenario">TRAINING ROOM — a well-funded lab trains a 1-trillion-parameter model on 10 billion tokens at enormous cost. It underperforms a 70B model trained on 2 trillion tokens — while costing 10× more.</div>
+                <div class="q-text">Q5 · What went wrong, per the scaling laws?</div>
+                <div class="exam-options">
+                    <label class="exam-opt"><input type="radio" name="q5" value="data"> <strong>Catastrophic under-training:</strong> ~0.01 tokens per parameter versus Chinchilla's ~20. The data term B/D^β dominates and the model sits high on the IsoFLOP right wall — compute-optimal training scales N and D together (C ≈ 6ND).</label>
+                    <label class="exam-opt"><input type="radio" name="q5" value="arch"> <strong>Architecture failure:</strong> transformers cannot scale past a trillion parameters.</label>
+                    <label class="exam-opt"><input type="radio" name="q5" value="opt"> <strong>Optimizer failure:</strong> Adam's bias correction is failing at this scale.</label>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="text-center" style="margin-top:24px;">
+            <button class="btn btn-teal lego-btn" id="btn-submit-exam" style="font-size:1.05rem; padding:14px 36px;">Submit Arena Exam</button>
+        </div>
+
+        <div id="exam-result" style="display:none; margin-top:28px; padding:24px; border-radius:var(--radius-md); border:2.5px solid var(--ink); background:var(--surface-alt); text-align:center;">
+            <h3 id="exam-score-title" style="margin-bottom:8px;">Arena Score: 0/5</h3>
+            <p id="exam-score-desc" style="max-width:560px; margin:0 auto 16px;"></p>
+            <div id="exam-level" style="margin-bottom:16px;"></div>
+            <div id="exam-brick"></div>
+        </div>
+    </div>
+</section>
+
+</div>
+</main>
+
+<footer class="academy-footer">
+    <div class="container">
+        <p>Built brick by brick · <strong>LLM Academy</strong> · Module 05: The Training Arena</p>
+        <p style="margin-top:4px; font-size:0.8rem;">Cross-entropy, backprop, optimizers, gradient clipping, LR schedules, IsoFLOP scaling laws, and 8-GPU parallelism — all computed and animated live</p>
+    </div>
+</footer>
+
+<script>
+'use strict';
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+function getCss(v) { return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+const COLORS = ['--coral','--teal','--gold','--lavender','--mint','--peach','--sky','--rose'].map(v => ({
+    c: getCss(v), d: getCss(v+'-dark'), bg: getCss(v+'-bg'), light: getCss(v+'-light')
+}));
+function colorFor(i) { return COLORS[((i%COLORS.length)+COLORS.length)%COLORS.length]; }
+function hexToRgba(hex, a) {
+    hex = hex.replace('#','');
+    if (hex.length === 3) hex = hex.split('').map(c=>c+c).join('');
+    const r = parseInt(hex.slice(0,2),16), g = parseInt(hex.slice(2,4),16), b = parseInt(hex.slice(4,6),16);
+    return `rgba(${r},${g},${b},${a})`;
+}
+function lerp(a,b,t) { return a+(b-a)*t; }
+function clamp(v,lo,hi) { return Math.max(lo, Math.min(hi, v)); }
+function fmtBytes(n) {
+    if (n >= 1e12) return (n/1e12).toFixed(1)+'T';
+    if (n >= 1e9) return (n/1e9).toFixed(1)+'B';
+    if (n >= 1e6) return (n/1e6).toFixed(1)+'M';
+    if (n >= 1e3) return (n/1e3).toFixed(1)+'K';
+    return n.toFixed(0);
+}
+function setupCanvas(id, cssHeight) {
+    const canvas = document.getElementById(id.replace('#',''));
+    if (!canvas) return null;
+    const rect = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    const w = rect.width || canvas.clientWidth || 600;
+    const h = cssHeight || rect.height || 300;
+    canvas.style.height = h + 'px';
+    canvas.width = w*dpr; canvas.height = h*dpr;
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    return { ctx, w, h, canvas };
+}
+window.addEventListener('resize', () => { clearTimeout(window.__rzT); window.__rzT = setTimeout(() => window.__redrawAll && window.__redrawAll(), 180); });
+
+// ════════════════════════════════════════════════════════════════
+// CANVAS KIT — doctrine R12/R13 craft grammar (canonical, from 13)
+// seededRng · kitFrame · kitChip · kitAxis · kitReadout · kitGrid
+// kitTick · kitHexA · kitShade · kitStud · kitBrick3 · kitChipBrick
+// ════════════════════════════════════════════════════════════════
+if (!CanvasRenderingContext2D.prototype.roundRect) {
+    CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+        if (typeof r === 'number') r = [r, r, r, r];
+        r = r || [0, 0, 0, 0];
+        const [tl, tr, br, bl] = r;
+        this.moveTo(x + tl, y);
+        this.lineTo(x + w - tr, y); this.arcTo(x + w, y, x + w, y + tr, tr);
+        this.lineTo(x + w, y + h - br); this.arcTo(x + w, y + h, x + w - br, y + h, br);
+        this.lineTo(x + bl, y + h); this.arcTo(x, y + h, x, y + h - bl, bl);
+        this.lineTo(x, y + tl); this.arcTo(x, y, x + tl, y, tl);
+        this.closePath();
+        return this;
+    };
+}
+function kitHexA(s, a){ s = String(s).replace('#', ''); if (s.length === 3) s = s.split('').map(function(ch){ return ch + ch; }).join(''); var r = parseInt(s.slice(0,2),16), g = parseInt(s.slice(2,4),16), b = parseInt(s.slice(4,6),16); return 'rgba(' + r + ',' + g + ',' + b + ',' + a + ')'; }
+var KIT_INK = (typeof INK !== 'undefined') ? INK : '#2B2A24';
+function seededRng(seed) { var t = seed >>> 0; return function(){ t += 0x6D2B79F5; var r = Math.imul(t ^ (t >>> 15), 1 | t); r ^= r + Math.imul(r ^ (r >>> 7), 61 | r); return ((r ^ (r >>> 14)) >>> 0) / 4294967296; }; }
+function kitFrame(ctx, w, h, label){ ctx.strokeStyle = kitHexA(KIT_INK, 0.25); ctx.lineWidth = 1.5; ctx.strokeRect(8, 8, w - 16, h - 16); if (label){ ctx.fillStyle = kitHexA(KIT_INK, 0.55); ctx.font = '600 10px "IBM Plex Mono", monospace'; ctx.textAlign = 'left'; ctx.fillText(String(label).toUpperCase(), 16, 26); } }
+function kitChip(ctx, text, x, y, align){ var fs2 = 10; ctx.font = fs2 + 'px "IBM Plex Mono", monospace'; var tw = ctx.measureText(text).width + 16; var cx = align === 'right' ? x - tw : x; ctx.fillStyle = kitHexA(KIT_INK, 0.10); ctx.strokeStyle = kitHexA(KIT_INK, 0.4); ctx.lineWidth = 1.5; ctx.beginPath(); ctx.roundRect(cx, y, tw, fs2 + 8, 7); ctx.fill(); ctx.stroke(); ctx.fillStyle = kitHexA(KIT_INK, 0.75); ctx.textAlign = 'left'; ctx.fillText(text, cx + 8, y + fs2 + 2); }
+function kitAxis(ctx, x0, y0, x1, y1, color, lw){ ctx.save(); ctx.strokeStyle = color || kitHexA(KIT_INK, 0.35); ctx.lineWidth = lw || 1.5; ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y0); ctx.stroke(); ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x0, y1); ctx.stroke(); ctx.restore(); }
+function kitReadout(ctx, x, y, w, rows){ var rh = 20, pad = 8; var H = rows.length * rh + pad * 2; ctx.fillStyle = '#FFFFFF'; ctx.strokeStyle = kitHexA(KIT_INK, 0.25); ctx.lineWidth = 1.5; ctx.beginPath(); ctx.roundRect(x, y, w, H, 8); ctx.fill(); ctx.stroke(); for (var i = 0; i < rows.length; i++){ var r = rows[i]; ctx.fillStyle = kitHexA(KIT_INK, 0.6); ctx.font = '600 11px "IBM Plex Mono", monospace'; ctx.textAlign = 'left'; ctx.fillText(r[0], x + pad, y + pad + i * rh + 13); ctx.fillStyle = r[2] || KIT_INK; ctx.textAlign = 'right'; ctx.fillText(r[1], x + w - pad, y + pad + i * rh + 13); } }
+/* R14 — multi-line impossibility/consequence chip (drawn on canvas, mono, canon border) */
+function kitNotice(ctx, x, y, w, lines, accent){
+    var rh = 14, pad = 8;
+    var H = lines.length * rh + pad * 2;
+    ctx.fillStyle = 'rgba(255,255,255,0.94)';
+    ctx.strokeStyle = accent || kitHexA(KIT_INK, 0.5);
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.roundRect(x, y, w, H, 8); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = kitHexA(KIT_INK, 0.82); ctx.font = '600 9px "IBM Plex Mono", monospace'; ctx.textAlign = 'left';
+    for (var i = 0; i < lines.length; i++){ ctx.fillText(lines[i], x + pad, y + pad + i * rh + 11); }
+}
+/* R14 — impossibility shake (Canvas Animation API, non-layout) */
+function kitShake(el){
+    if(!el || typeof el.animate !== 'function') return;
+    try { el.animate([{transform:'translateX(0)'},{transform:'translateX(-5px)'},{transform:'translateX(5px)'},{transform:'translateX(-3px)'},{transform:'translateX(0)'}], {duration: 240, easing: 'ease-out'}); } catch(e){}
+}
+function kitGrid(ctx, x0, y0, x1, y1, nx, ny){
+    var g = kitHexA(KIT_INK, 0.13); ctx.save(); ctx.lineWidth = 1;
+    ctx.strokeStyle = g;
+    for (var i = 1; i < nx; i++){ var x = x0 + (x1 - x0) * i / nx; ctx.beginPath(); ctx.moveTo(x, y0); ctx.lineTo(x, y1); ctx.stroke(); }
+    for (var j = 1; j < ny; j++){ var y = y0 + (y1 - y0) * j / ny; ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(x1, y); ctx.stroke(); }
+    ctx.restore();
+}
+function kitTick(ctx, x, y, text, align, color){
+    ctx.fillStyle = color || kitHexA(KIT_INK, 0.65); ctx.font = '600 10px "IBM Plex Mono", monospace';
+    ctx.textAlign = align || 'center'; ctx.fillText(text, x, y);
+}
+
+/* ============ MATERIALITY KIT — R15 (universal stud grammar + ABS plastic) ============ */
+var MK_INK = (typeof KIT_INK !== 'undefined') ? KIT_INK : ((typeof INK !== 'undefined') ? INK : '#2B2A24');
+function kitA(h, a){ h = String(h).replace('#',''); if (h.length === 3) h = h.split('').map(function(c){return c+c;}).join(''); var r = parseInt(h.slice(0,2),16), g = parseInt(h.slice(2,4),16), b = parseInt(h.slice(4,6),16); return 'rgba(' + r + ',' + g + ',' + b + ',' + a + ')'; }
+function kitShade(h, amt){ h = String(h).replace('#',''); if (h.length === 3) h = h.split('').map(function(c){return c+c;}).join(''); var r = parseInt(h.slice(0,2),16), g = parseInt(h.slice(2,4),16), b = parseInt(h.slice(4,6),16); var t = amt > 0 ? 255 : 0, p = Math.abs(amt); r = Math.round((t - r) * p + r); g = Math.round((t - g) * p + g); b = Math.round((t - b) * p + b); return 'rgb(' + r + ',' + g + ',' + b + ')'; }
+function kitStud(ctx, x, y, r, color){
+    /* universal 3-layer stud: shadow + top + inner ring highlight (light top-left) */
+    ctx.save();
+    ctx.fillStyle = kitShade(color, -0.28); ctx.beginPath(); ctx.ellipse(x + r * 0.14, y + r * 0.16, r, r * 0.62, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = color; ctx.beginPath(); ctx.ellipse(x, y, r, r * 0.62, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = kitShade(color, 0.18); ctx.beginPath(); ctx.ellipse(x - r * 0.12, y - r * 0.16, r * 0.55, r * 0.34, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+}
+function kitBrick3(ctx, x, y, w, h, color, studs){
+    /* 2.5D ABS brick: hard shadow + dark side + lit top + stud grid */
+    var depth = Math.max(3, Math.min(8, h * 0.16));
+    ctx.save();
+    ctx.fillStyle = kitA(MK_INK, 0.16); ctx.beginPath(); ctx.roundRect(x + 3, y + depth + 3, w, h, 4); ctx.fill();
+    ctx.fillStyle = kitShade(color, -0.22); ctx.beginPath(); ctx.roundRect(x, y + depth, w, h - depth, 4); ctx.fill();
+    ctx.fillStyle = kitShade(color, 0.08); ctx.beginPath(); ctx.roundRect(x, y, w, h - depth, 4); ctx.fill();
+    ctx.strokeStyle = kitShade(color, 0.3); ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(x + 3, y + 1.5); ctx.lineTo(x + w - 3, y + 1.5); ctx.stroke();
+    var n = studs || Math.max(1, Math.floor(w / 26));
+    var gap = w / (n + 1);
+    for (var i = 1; i <= n; i++) kitStud(ctx, x + gap * i, y + (h - depth) * 0.5, Math.min(7, w * 0.09), kitShade(color, 0.10));
+    ctx.restore();
+}
+function kitChipBrick(ctx, text, x, y, accent, align){
+    var fs2 = 10; ctx.font = '600 ' + fs2 + 'px "IBM Plex Mono", monospace';
+    var tw = ctx.measureText(text).width + 22;
+    var cx = align === 'right' ? x - tw : x;
+    kitBrick3(ctx, cx, y, tw, fs2 + 10, accent || MK_INK, Math.max(2, Math.round(tw / 34)));
+    ctx.fillStyle = '#FFFFFF'; ctx.textAlign = 'left';
+    ctx.fillText(text, cx + 11, y + fs2 + 3);
+}
+
+// ════════════════════════════════════════════════════════════════
+// HERO — animated training loop: forward → loss → backward → step
+// A token dot travels the ring; each stage pulses as it's "active"
+// ════════════════════════════════════════════════════════════════
+(function() {
+    const ring = $('#loop-ring');
+    if (!ring) return;
+    const svg = $('#loop-svg');
+    const readout = $('#loop-readout');
+    const stages = ['forward','loss','backward','step'];
+    const messages = {
+        forward: 'forward pass — input flows through the layers, produces a prediction',
+        loss: 'compute loss — compare prediction to the true next token, cross-entropy',
+        backward: 'backward pass — chain rule computes ∂L/∂w for every weight',
+        step: 'optimizer step — Adam nudges every weight against its gradient'
+    };
+    let stageIdx = 0, microStep = 0;
+
+    function getCenter(el) {
+        const r = el.getBoundingClientRect(), pr = ring.getBoundingClientRect();
+        return { x: r.left - pr.left + r.width/2, y: r.top - pr.top + r.height/2 };
+    }
+
+    function drawPath() {
+        if (window.innerWidth < 700) { svg.innerHTML=''; return; }
+        const els = stages.map(s => ring.querySelector(`[data-stage="${s}"] .icon-box`));
+        const pts = els.map(getCenter);
+        if (pts.some(p => !p || isNaN(p.x))) return;
+        const path = `M ${pts[0].x} ${pts[0].y} L ${pts[1].x} ${pts[1].y} L ${pts[2].x} ${pts[2].y} L ${pts[3].x} ${pts[3].y} Z`;
+        svg.innerHTML = `<path d="${path}" fill="none" stroke="${getCss('--border')}" stroke-width="2" stroke-dasharray="6,5"/>`;
+        return pts;
+    }
+
+    let tokenPos = null;
+    function tick() {
+        const pts = drawPath();
+        ring.querySelectorAll('.loop-stage').forEach(el => el.classList.remove('active'));
+        const activeEl = ring.querySelector(`[data-stage="${stages[stageIdx]}"]`);
+        if (activeEl) activeEl.classList.add('active');
+        readout.textContent = `step ${microStep} — ${messages[stages[stageIdx]]}`;
+
+        if (pts && pts.length === 4) {
+            const from = pts[stageIdx];
+            const to = pts[(stageIdx+1)%4];
+            let dot = svg.querySelector('.hero-token-dot');
+            if (!dot) {
+                dot = document.createElementNS('http://www.w3.org/2000/svg','circle');
+                dot.setAttribute('r','6'); dot.setAttribute('fill', getCss('--coral')); dot.setAttribute('stroke', getCss('--ink')); dot.setAttribute('stroke-width','2');
+                dot.classList.add('hero-token-dot');
+                svg.appendChild(dot);
+            }
+            const t0 = performance.now();
+            function anim(now) {
+                const t = clamp((now-t0)/750, 0, 1);
+                const ease = t<0.5 ? 2*t*t : 1-Math.pow(-2*t+2,2)/2;
+                dot.setAttribute('cx', lerp(from.x, to.x, ease));
+                dot.setAttribute('cy', lerp(from.y, to.y, ease));
+                if (t < 1) requestAnimationFrame(anim);
+            }
+            requestAnimationFrame(anim);
+        }
+        stageIdx = (stageIdx+1)%4;
+        if (stageIdx === 0) microStep++;
+    }
+    tick();
+    setInterval(tick, 900);
+    window.addEventListener('resize', () => { clearTimeout(window.__loopT); window.__loopT = setTimeout(drawPath, 200); });
+})();
+
+// ════════════════════════════════════════════════════════════════
+// 5.1a — CROSS-ENTROPY: draggable p, loss = -log(p), curve + point
+// ════════════════════════════════════════════════════════════════
+const CE = (function() {
+    let p = 0.6;
+    let live = false;   // R12: at-rest seeded preview until the first interaction
+    const CE_SEED = seededRng(50501);
+    const P_REST = (0.45 + CE_SEED() * 0.3).toFixed(2) * 1;  // seeded preview p ≈ 0.45–0.75
+    const Q_REST = 1.0;   // the true token is a one-hot: q = 1
+    function draw() {
+        const s = setupCanvas('canvas-ce', 300); if (!s) return;
+        const { ctx, w, h } = s;
+        ctx.clearRect(0,0,w,h);
+        const padL=50, padB=36, padT=16, padR=16;
+        const plotW = w-padL-padR, plotH = h-padT-padB;
+        const xOf = pp => padL + pp*plotW;
+        const maxLoss = 4.5;
+        const yOf = l => padT + plotH - clamp(l/maxLoss,0,1)*plotH;
+
+        // grid
+        ctx.strokeStyle = hexToRgba(getCss('--ink'),0.08); ctx.lineWidth=1;
+        for (let i=0;i<=10;i++) { const x=xOf(i/10); ctx.beginPath(); ctx.moveTo(x,padT); ctx.lineTo(x,padT+plotH); ctx.stroke(); }
+        // axes
+        ctx.strokeStyle = getCss('--ink'); ctx.lineWidth=2;
+        ctx.beginPath(); ctx.moveTo(padL,padT); ctx.lineTo(padL,padT+plotH); ctx.lineTo(padL+plotW,padT+plotH); ctx.stroke();
+        ctx.font = `600 10px ${getCss('--font-mono')}`; ctx.fillStyle = getCss('--ink-faint');
+        ctx.textAlign='center'; ctx.fillText('probability assigned to correct token (p)', padL+plotW/2, h-6);
+        ctx.save(); ctx.translate(14, padT+plotH/2); ctx.rotate(-Math.PI/2); ctx.textAlign='center'; ctx.fillText('loss = −log(p)', 0,0); ctx.restore();
+
+        // curve
+        ctx.strokeStyle = getCss('--coral'); ctx.lineWidth=3; ctx.beginPath();
+        for (let i=1;i<=200;i++) { const pp = i/200; const l = -Math.log(pp); const x=xOf(pp), y=yOf(l); if(i===1) ctx.moveTo(x,y); else ctx.lineTo(x,y); }
+        ctx.stroke();
+
+        // current point
+        const curL = -Math.log(p);
+        const px = xOf(p), py = yOf(curL);
+        ctx.strokeStyle = hexToRgba(getCss('--ink'),0.3); ctx.setLineDash([4,4]); ctx.lineWidth=1.5;
+        ctx.beginPath(); ctx.moveTo(px,padT+plotH); ctx.lineTo(px,py); ctx.lineTo(padL,py); ctx.stroke(); ctx.setLineDash([]);
+        ctx.beginPath(); ctx.arc(px,py,7,0,7); ctx.fillStyle = getCss('--gold'); ctx.fill(); ctx.lineWidth=2.5; ctx.strokeStyle=getCss('--ink'); ctx.stroke();
+
+        $('#ce-readout').innerHTML = `p = <strong>${p.toFixed(2)}</strong> → loss = −log(${p.toFixed(2)}) = <strong>${curL.toFixed(3)}</strong> · drag along the curve`;
+    }
+    // R12/R13 — AT-REST STATE: seeded p vs q bar pair + H(p,q) readout.
+    // The live drag (draw above) replaces this preview on first interaction.
+    function drawRest() {
+        const s = setupCanvas('canvas-ce', 300); if (!s) return;
+        const { ctx, w, h } = s;
+        ctx.clearRect(0,0,w,h);
+        // plate baseplate (canon: #FFFEFA + studStep dots)
+        ctx.fillStyle = '#FFFEFA'; ctx.fillRect(0,0,w,h);
+        ctx.fillStyle = 'rgba(43,42,36,0.035)';
+        const studStep = 24;
+        for (let px = studStep/2; px < w; px += studStep) for (let py = studStep/2; py < h; py += studStep) { ctx.beginPath(); ctx.arc(px,py,2,0,Math.PI*2); ctx.fill(); }
+        kitFrame(ctx, w, h, 'Cross-entropy — one token position, seeded preview');
+
+        const padL = 72, padR = 72, padT = 44, padB = 96;
+        const barMaxH = h - padT - padB;
+        const barW = Math.min(96, (w - padL - padR - 48) / 2);
+        const gap = 48;
+        const baseY = h - padB;
+        const pBarX = w/2 - gap - barW, qBarX = w/2 + gap;
+        const pH = clamp(P_REST, 0.05, 1) * barMaxH;
+
+        // baseline
+        ctx.strokeStyle = kitHexA(KIT_INK, 0.5); ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(padL - 12, baseY); ctx.lineTo(w - padR + 12, baseY); ctx.stroke();
+        // p bar (coral) — the model's probability on the true token
+        ctx.fillStyle = kitHexA(getCss('--coral'), 0.62);
+        ctx.fillRect(pBarX, baseY - pH, barW, pH);
+        ctx.strokeStyle = getCss('--ink'); ctx.lineWidth = 2.5; ctx.strokeRect(pBarX, baseY - pH, barW, pH);
+        // q bar (teal) — the true one-hot token
+        ctx.fillStyle = kitHexA(getCss('--teal'), 0.62);
+        ctx.fillRect(qBarX, baseY - barMaxH, barW, barMaxH);
+        ctx.strokeStyle = getCss('--ink'); ctx.lineWidth = 2.5; ctx.strokeRect(qBarX, baseY - barMaxH, barW, barMaxH);
+        // bar labels
+        ctx.font = '700 11px "IBM Plex Mono", monospace'; ctx.textAlign = 'center';
+        ctx.fillStyle = getCss('--coral-dark'); ctx.fillText('p = ' + P_REST.toFixed(2), pBarX + barW/2, baseY + 20);
+        ctx.fillStyle = getCss('--teal-dark'); ctx.fillText('q = 1.00', qBarX + barW/2, baseY + 20);
+        ctx.fillStyle = kitHexA(KIT_INK, 0.55); ctx.font = '600 10px "IBM Plex Mono", monospace';
+        ctx.fillText('p (model) — prob. of true token', pBarX + barW/2, baseY + 38);
+        ctx.fillText('q (true one-hot)', qBarX + barW/2, baseY + 38);
+
+        // H(p,q) readout panel
+        const H = -Math.log(P_REST);
+        kitReadout(ctx, w/2 - 110, padT, 220, [
+            ['H(p,q) = −log(p)', H.toFixed(3), getCss('--coral-dark')],
+            ['p (model)', P_REST.toFixed(2)],
+            ['q (true)', Q_REST.toFixed(2)]
+        ]);
+        // R12 affordance chip
+        kitChip(ctx, 'seed preview — press & drag to train', padL, h - 32, 'left');
+
+        $('#ce-readout').innerHTML = 'seed preview · H(p,q) = −log(' + P_REST.toFixed(2) + ') = <strong>' + H.toFixed(3) + '</strong> · press & drag along the curve to train';
+    }
+    function toP(x, rect) { const padL=50, padR=16; return clamp((x-padL)/(rect.width-padL-padR), 0.01, 0.999); }
+    const canvas = $('#canvas-ce');
+    if (canvas) {
+        let dragging = false;
+        canvas.addEventListener('pointerdown', e => { dragging=true; live=true; const r=canvas.getBoundingClientRect(); p=toP(e.clientX-r.left,r); draw(); });
+        window.addEventListener('pointermove', e => { if(!dragging) return; const r=canvas.getBoundingClientRect(); p=toP(e.clientX-r.left,r); draw(); });
+        window.addEventListener('pointerup', () => dragging=false);
+    }
+    return { draw, drawRest };
+})();
+CE.drawRest();   // R12: the canvas must be complete before the first interaction
+{
+    const prevCE = window.__redrawAll || (() => {});
+    window.__redrawAll = () => { prevCE(); live ? CE.draw() : CE.drawRest(); };
+}
+
+// ════════════════════════════════════════════════════════════════
+// 5.1b — BACKPROP: 4-layer network, forward activations then
+// backward gradient pulses, chain rule made visible layer by layer
+// ════════════════════════════════════════════════════════════════
+const Backprop = (function() {
+    const LAYERS = [3, 4, 4, 2]; // neurons per layer (input, hidden, hidden, output)
+    let neuronPos = []; // [layer][neuron] = {x,y}
+    let activations = []; // random-ish forward values per neuron, set on forward pass
+    let gradients = [];   // gradient magnitude per neuron, set on backward pass
+    let phase = 'idle';   // idle | forward-done | backward-done
+    let animProgress = 0; // 0..1 sweep progress for current phase
+    let laidW = 0;        // canvas width the layout was computed for (resize guard)
+
+    function layout(w,h) {
+        neuronPos = [];
+        laidW = w;
+        const padX = 60, padY = 30;
+        const colW = (w - padX*2) / (LAYERS.length-1);
+        LAYERS.forEach((n,li) => {
+            const rows = [];
+            const rowH = (h - padY*2) / Math.max(1,n-1 || 1);
+            for (let i=0;i<n;i++) {
+                const y = n===1 ? h/2 : padY + i*rowH;
+                rows.push({ x: padX + li*colW, y });
+            }
+            neuronPos.push(rows);
+        });
+    }
+
+    function randomInit() {
+        activations = LAYERS.map(n => Array.from({length:n}, () => Math.random()));
+        gradients = LAYERS.map(n => Array.from({length:n}, () => 0));
+    }
+    // R12: the at-rest network is a SEEDED preview (deterministic per load family),
+    // the live sim keeps its own randomness via randomInit() above — untouched.
+    function randomInitSeeded() {
+        const rng = seededRng(50503);
+        activations = LAYERS.map(n => Array.from({length:n}, () => 0.18 + rng()*0.62));
+        gradients = LAYERS.map(n => Array.from({length:n}, () => 0));
+    }
+    randomInitSeeded();
+
+    function draw() {
+        const s = setupCanvas('canvas-backprop', 280); if (!s) return;
+        const { ctx, w, h } = s;
+        if (neuronPos.length===0 || Math.abs(laidW - w) > 2) layout(w,h);
+        ctx.clearRect(0,0,w,h);
+        ctx.fillStyle = '#FFFEFA'; ctx.fillRect(0,0,w,h);
+        kitFrame(ctx, w, h, 'Backprop — gradient flow, layer by layer');
+        if (phase === 'idle') kitChip(ctx, 'press ① Forward pass — then ② Backpropagate', 20, h - 34, 'left');
+
+        const sweepLayer = animProgress * (LAYERS.length-1);
+
+        // connections
+        for (let li=0; li<LAYERS.length-1; li++) {
+            neuronPos[li].forEach((a,ai) => {
+                neuronPos[li+1].forEach((b,bi) => {
+                    let col, lw;
+                    if (phase === 'animating-fwd') {
+                        const lit = li < sweepLayer;
+                        col = lit ? hexToRgba(getCss('--sky'), 0.55) : hexToRgba(getCss('--ink-faint'),0.22);
+                        lw = lit ? 2.2 : 1.6;
+                    } else if (phase === 'forward-done') {
+                        col = hexToRgba(getCss('--sky'), 0.3); lw = 2;
+                    } else if (phase === 'animating-bwd') {
+                        const revIdx = LAYERS.length-2-li; // backward goes from last connection to first
+                        const lit = revIdx < sweepLayer;
+                        col = lit ? hexToRgba(getCss('--coral'), 0.7) : hexToRgba(getCss('--sky'),0.15);
+                        lw = lit ? 3 : 1.6;
+                    } else if (phase === 'backward-done') {
+                        const gradMag = (gradients[li][ai]+gradients[li+1][bi])/2;
+                        col = hexToRgba(getCss('--coral'), 0.15+gradMag*0.7); lw = 2+gradMag*3.5;
+                    } else {
+                        col = hexToRgba(getCss('--ink-faint'),0.22); lw = 2;
+                    }
+                    ctx.strokeStyle = col; ctx.lineWidth = lw;
+                    ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
+                });
+            });
+        }
+
+        // neurons
+        neuronPos.forEach((layer, li) => {
+            layer.forEach((p,ni) => {
+                let fillC = getCss('--surface-alt'), strokeC = getCss('--ink-faint'), r = 15;
+                const litFwd = phase==='animating-fwd' ? li <= sweepLayer : (phase==='forward-done'||phase==='backward-done'||phase==='animating-bwd');
+                if (litFwd) {
+                    const a = activations[li][ni];
+                    fillC = hexToRgba(getCss('--sky'), 0.25 + a*0.5); strokeC = getCss('--sky-dark');
+                }
+                if (phase==='backward-done' || (phase==='animating-bwd' && (LAYERS.length-1-li) <= sweepLayer)) {
+                    const g = gradients[li][ni];
+                    if (g > 0.02) { fillC = hexToRgba(getCss('--coral'), 0.3+g*0.55); strokeC = getCss('--coral-dark'); r = 15+g*6; }
+                }
+                ctx.beginPath(); ctx.arc(p.x,p.y,r,0,7);
+                ctx.fillStyle = fillC; ctx.fill(); ctx.lineWidth=2; ctx.strokeStyle=strokeC; ctx.stroke();
+            });
+        });
+
+        // R12/R13: value labels — activations after a forward, gradients after a backward
+        ctx.font = `600 9px ${getCss('--font-mono')}`; ctx.textAlign='center';
+        neuronPos.forEach((layer, li) => {
+            layer.forEach((p,ni) => {
+                const showGrad = phase==='backward-done' || (phase==='animating-bwd' && (LAYERS.length-1-li) <= sweepLayer);
+                if (showGrad && gradients[li][ni] > 0.02) {
+                    ctx.fillStyle = getCss('--coral-dark');
+                    ctx.fillText('∂L/∂w ' + gradients[li][ni].toFixed(2), p.x, p.y + 28);
+                } else {
+                    ctx.fillStyle = getCss('--sky-dark');
+                    ctx.fillText(activations[li][ni].toFixed(2), p.x, p.y + 28);
+                }
+            });
+        });
+
+        // layer labels
+        ctx.font = `700 10px ${getCss('--font-mono')}`; ctx.fillStyle = getCss('--ink-faint'); ctx.textAlign='center';
+        const labels = ['input','hidden 1','hidden 2','output / loss'];
+        neuronPos.forEach((layer,li) => { ctx.fillText(labels[li], layer[0].x, h-14); });
+    }
+
+    function animate(kind, onDone) {
+        phase = kind === 'fwd' ? 'animating-fwd' : 'animating-bwd';
+        animProgress = 0;
+        const t0 = performance.now();
+        function step(now) {
+            animProgress = clamp((now-t0)/1100, 0, 1);
+            draw();
+            if (animProgress < 1) requestAnimationFrame(step);
+            else { phase = kind==='fwd' ? 'forward-done' : 'backward-done'; draw(); onDone && onDone(); }
+        }
+        requestAnimationFrame(step);
+    }
+
+    function forward() {
+        randomInit();
+        // simulate forward: later layers' activations loosely derived from previous (for visual plausibility)
+        for (let li=1; li<LAYERS.length; li++) {
+            activations[li] = activations[li].map((_,ni) => {
+                const avgPrev = activations[li-1].reduce((s,v)=>s+v,0)/activations[li-1].length;
+                return clamp(avgPrev*0.6 + Math.random()*0.4, 0.05, 0.98);
+            });
+        }
+        animate('fwd', () => {
+            $('#backprop-readout').innerHTML = `Forward pass complete. Output layer produced a prediction; loss = <strong>${(2.1+Math.random()).toFixed(2)}</strong>. Click <strong>Backpropagate</strong> to compute gradients.`;
+            $('#btn-backprop-bwd').disabled = false;
+        });
+    }
+    function backward() {
+        // gradients start large at output, shrink toward input (simulating vanishing-ish decay for realism)
+        const L = LAYERS.length;
+        for (let li=L-1; li>=0; li--) {
+            const decay = Math.pow(0.55, L-1-li);
+            gradients[li] = LAYERS[li] ? Array.from({length:LAYERS[li]}, () => clamp((0.4+Math.random()*0.6)*decay, 0, 1)) : [];
+        }
+        animate('bwd', () => {
+            const inputGradAvg = gradients[0].reduce((s,v)=>s+v,0)/gradients[0].length;
+            $('#backprop-readout').innerHTML = `Backpropagation complete. Notice the glow fading toward the input layer — gradient magnitude at layer 1 averages <strong>${inputGradAvg.toFixed(2)}</strong> vs near 1.0 at the output. That shrinkage, compounding over many more layers in a real LLM, is exactly the vanishing-gradient problem.`;
+        });
+    }
+
+    draw();
+    $('#btn-backprop-fwd')?.addEventListener('click', () => { forward(); $('#btn-backprop-fwd').disabled = true; });
+    $('#btn-backprop-bwd')?.addEventListener('click', () => { backward(); $('#btn-backprop-bwd').disabled = true; });
+    $('#btn-backprop-reset')?.addEventListener('click', () => {
+        phase='idle'; randomInitSeeded(); draw();
+        $('#btn-backprop-fwd').disabled=false; $('#btn-backprop-bwd').disabled=true;
+        $('#backprop-readout').innerHTML = 'Click <strong>Forward pass</strong> to send an input through the network and compute a loss.';
+    });
+    {
+        const prevBP = window.__redrawAll || (() => {});
+        window.__redrawAll = () => { prevBP(); draw(); };
+    }
+    return { draw };
+})();
+
+// ════════════════════════════════════════════════════════════════
+// 5.2a — OPTIMIZER RACE: SGD vs Momentum vs Adam on a shared,
+// genuinely non-convex loss surface (a warped bowl with a ravine)
+// ════════════════════════════════════════════════════════════════
+const Race = (function() {
+    // loss surface: elongated valley (classic ravine that breaks plain SGD)
+    function lossAt(x,y) { return 0.06*x*x + 0.9*y*y; }
+    function gradAt(x,y) { return [0.12*x, 1.8*y]; }
+    const START = { x: -3.4, y: 1.5 };
+    let running = false;
+    let optimizers = {};
+    let lr = 0.1;
+
+    function resetOptimizers() {
+        optimizers = {
+            sgd:      { x:START.x, y:START.y, path:[{x:START.x,y:START.y}], color: colorFor(0) },
+            momentum: { x:START.x, y:START.y, vx:0, vy:0, path:[{x:START.x,y:START.y}], color: colorFor(2) },
+            adam:     { x:START.x, y:START.y, mx:0,my:0,vx:0,vy:0,t:0, path:[{x:START.x,y:START.y}], color: colorFor(1) },
+        };
+    }
+    resetOptimizers();
+
+    function stepAll() {
+        const [gx0,gy0] = gradAt(optimizers.sgd.x, optimizers.sgd.y);
+        optimizers.sgd.x -= lr*gx0; optimizers.sgd.y -= lr*gy0;
+        optimizers.sgd.path.push({x:optimizers.sgd.x,y:optimizers.sgd.y});
+
+        const m = optimizers.momentum;
+        const [gx1,gy1] = gradAt(m.x,m.y);
+        m.vx = 0.85*m.vx + gx1; m.vy = 0.85*m.vy + gy1;
+        m.x -= lr*m.vx; m.y -= lr*m.vy;
+        m.path.push({x:m.x,y:m.y});
+
+        const a = optimizers.adam;
+        const [gx2,gy2] = gradAt(a.x,a.y);
+        a.t++;
+        const b1=0.9,b2=0.999,eps=1e-8;
+        a.mx = b1*a.mx+(1-b1)*gx2; a.my = b1*a.my+(1-b1)*gy2;
+        a.vx = b2*a.vx+(1-b2)*gx2*gx2; a.vy = b2*a.vy+(1-b2)*gy2*gy2;
+        const mxh = a.mx/(1-Math.pow(b1,a.t)), myh = a.my/(1-Math.pow(b1,a.t));
+        const vxh = a.vx/(1-Math.pow(b2,a.t)), vyh = a.vy/(1-Math.pow(b2,a.t));
+        a.x -= lr*0.6*mxh/(Math.sqrt(vxh)+eps); a.y -= lr*0.6*myh/(Math.sqrt(vyh)+eps);
+        a.path.push({x:a.x,y:a.y});
+    }
+
+    // R12/R13 — AT-REST STATE: two seeded loss curves (a plausible race:
+    // one fast-learner, one slow). The live contour race replaces this
+    // preview the moment "Start Race" is pressed.
+    function drawRest() {
+        const s = setupCanvas('canvas-race', 380); if (!s) return;
+        const { ctx, w, h } = s;
+        ctx.clearRect(0,0,w,h);
+        // plate baseplate (canon: #FFFEFA + studStep dots)
+        ctx.fillStyle = '#FFFEFA'; ctx.fillRect(0,0,w,h);
+        ctx.fillStyle = 'rgba(43,42,36,0.035)';
+        const studStep = 24;
+        for (let px = studStep/2; px < w; px += studStep) for (let py = studStep/2; py < h; py += studStep) { ctx.beginPath(); ctx.arc(px,py,2,0,Math.PI*2); ctx.fill(); }
+        kitFrame(ctx, w, h, 'The Optimizer Race — seeded preview');
+
+        const padL = 56, padB = 40, padT = 34, padR = 24;
+        const plotW = w - padL - padR, plotH = h - padT - padB;
+        const yMax = 2.6;
+        const xOf = e => padL + (e/120)*plotW;
+        const yOf = l => padT + plotH - clamp(l/yMax, 0, 1)*plotH;
+        kitGrid(ctx, padL, padT, padL+plotW, padT+plotH, 10, 4);
+        kitAxis(ctx, padL, padT+plotH, padL+plotW, padT+plotH, kitHexA(KIT_INK, 0.5), 2);
+        kitAxis(ctx, padL, padT, padL, padT+plotH, kitHexA(KIT_INK, 0.5), 2);
+        kitTick(ctx, padL + plotW/2, h - 12, 'epoch →', 'center');
+        ctx.save(); ctx.translate(16, padT+plotH/2); ctx.rotate(-Math.PI/2); ctx.textAlign='center';
+        ctx.fillStyle = kitHexA(KIT_INK, 0.6); ctx.font = '600 10px "IBM Plex Mono", monospace'; ctx.fillText('loss', 0, 0); ctx.restore();
+        kitTick(ctx, padL, padT + plotH, '0', 'center');
+        kitTick(ctx, padL, padT - 6, '2.4', 'center');
+
+        // seeded curves — SGD crawls, Adam dives (same rng family, deterministic)
+        const seedR = seededRng(50502);
+        function seedCurve(initL, finalL, k) {
+            const pts = [];
+            for (let e = 0; e <= 120; e++) {
+                const base = finalL + (initL - finalL) * Math.exp(-k * e);
+                pts.push({ e, l: base + (seedR() - 0.5) * 0.10 });
+            }
+            return pts;
+        }
+        const sgdC = seedCurve(2.35, 1.05, 0.011);
+        const adamC = seedCurve(2.35, 0.28, 0.030);
+        function strokeCurve(pts, color, fill) {
+            ctx.beginPath();
+            pts.forEach((pt, i) => {
+                const x = xOf(pt.e), y = yOf(pt.l);
+                if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+            });
+            if (fill) {
+                ctx.lineTo(xOf(120), padT+plotH); ctx.lineTo(xOf(0), padT+plotH); ctx.closePath();
+                ctx.fillStyle = kitHexA(color, 0.12); ctx.fill();
+            }
+            ctx.strokeStyle = color; ctx.lineWidth = 3; ctx.stroke();
+        }
+        strokeCurve(sgdC, getCss('--coral'), true);
+        strokeCurve(adamC, getCss('--teal-dark'), true);
+
+        // readout + R12 affordance chip
+        kitReadout(ctx, w - 250, padT, 225, [
+            ['SGD — slow descent', sgdC[120].l.toFixed(2), getCss('--coral')],
+            ['Adam — fast descent', adamC[120].l.toFixed(2), getCss('--teal-dark')]
+        ]);
+        kitChip(ctx, 'seed preview — press RUN to race', padL, h - 30, 'left');
+    }
+
+    function draw() {
+        const s = setupCanvas('canvas-race', 380); if (!s) return;
+        const { ctx, w, h } = s;
+        ctx.clearRect(0,0,w,h);
+        const rangeX=4.2, rangeY=2.6;
+        const xOf = x => w/2 + (x/rangeX)*(w/2-20);
+        const yOf = y => h/2 - (y/rangeY)*(h/2-20);
+
+        // contour lines of the loss surface
+        for (let level=0.3; level<9; level+=0.3) {
+            ctx.strokeStyle = hexToRgba(getCss('--ink'), 0.05+Math.min(0.06,level*0.006));
+            ctx.lineWidth=1; ctx.beginPath();
+            let started=false;
+            for (let deg=0; deg<=360; deg+=3) {
+                const rad = deg*Math.PI/180;
+                // ellipse contour for 0.06x^2+0.9y^2=level
+                const rx = Math.sqrt(level/0.06), ry = Math.sqrt(level/0.9);
+                const x = rx*Math.cos(rad), y = ry*Math.sin(rad);
+                const px=xOf(x),py=yOf(y);
+                if (!started) { ctx.moveTo(px,py); started=true; } else ctx.lineTo(px,py);
+            }
+            ctx.stroke();
+        }
+        // minimum marker
+        ctx.beginPath(); ctx.arc(xOf(0),yOf(0),5,0,7); ctx.fillStyle=getCss('--mint-dark'); ctx.fill();
+        ctx.font = `700 10px ${getCss('--font-mono')}`; ctx.fillStyle=getCss('--mint-dark'); ctx.textAlign='left';
+        ctx.fillText('minimum', xOf(0)+9, yOf(0)+4);
+
+        // paths + dots
+        Object.values(optimizers).forEach(o => {
+            ctx.strokeStyle = o.color.c; ctx.lineWidth=2.2; ctx.beginPath();
+            o.path.forEach((p,i) => { const px=xOf(p.x),py=yOf(p.y); if(i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py); });
+            ctx.stroke();
+            const last = o.path[o.path.length-1];
+            ctx.beginPath(); ctx.arc(xOf(last.x),yOf(last.y),7,0,7);
+            ctx.fillStyle=o.color.c; ctx.fill(); ctx.lineWidth=2; ctx.strokeStyle=getCss('--ink'); ctx.stroke();
+        });
+    }
+
+    function loop() {
+        if (!running) return;
+        stepAll(); draw();
+        const dists = Object.entries(optimizers).map(([k,o]) => Math.hypot(o.x,o.y));
+        const allClose = dists.every(d => d < 0.06);
+        const maxSteps = Object.values(optimizers)[0].path.length > 400;
+        if (allClose || maxSteps) {
+            running = false;
+            const finalDists = Object.entries(optimizers).map(([k,o]) => [k, Math.hypot(o.x,o.y)]).sort((a,b)=>a[1]-b[1]);
+            $('#race-readout').innerHTML = `Race complete after ${Object.values(optimizers)[0].path.length} steps. Closest to minimum: <strong>${finalDists[0][0]}</strong> (distance ${finalDists[0][1].toFixed(4)}). Order: ${finalDists.map(f=>f[0]).join(' → ')}.`;
+            $('#btn-race').textContent = '▶ Race Again';
+            $('#btn-race').disabled = false;
+            return;
+        }
+        requestAnimationFrame(loop);
+    }
+
+    drawRest();
+    $('#btn-race')?.addEventListener('click', () => {
+        if (running) return;
+        resetOptimizers(); running = true;
+        $('#btn-race').disabled = true;
+        $('#race-readout').textContent = 'Racing... watch SGD zigzag across the narrow ravine while Momentum and Adam correct their path.';
+        requestAnimationFrame(loop);
+    });
+    $('#btn-race-reset')?.addEventListener('click', () => { running=false; resetOptimizers(); drawRest(); $('#btn-race').disabled=false; $('#btn-race').textContent='▶ Start Race'; $('#race-readout').textContent=''; });
+    $('#race-lr')?.addEventListener('input', e => { lr = parseFloat(e.target.value); $('#race-lr-v').textContent = lr.toFixed(2); });
+    {
+        const prevRC = window.__redrawAll || (() => {});
+        window.__redrawAll = () => { prevRC(); running ? draw() : drawRest(); };
+    }
+    return { draw, drawRest };
+})();
+
+// ════════════════════════════════════════════════════════════════
+// 5.2b — BIAS CORRECTION: raw m vs corrected m̂ over first 20 steps
+// ════════════════════════════════════════════════════════════════
+(function() {
+    const canvas = $('#canvas-biascorrect');
+    if (!canvas) return;
+    const trueGrad = 1.0; // constant "true" gradient for illustration
+    const b1 = 0.9;
+    let m = 0;
+    const raw = [], corrected = [];
+    for (let t=1; t<=20; t++) {
+        m = b1*m + (1-b1)*trueGrad;
+        raw.push(m);
+        corrected.push(m/(1-Math.pow(b1,t)));
+    }
+    function draw() {
+        const s = setupCanvas('canvas-biascorrect', 220); if (!s) return;
+        const { ctx, w, h } = s;
+        ctx.clearRect(0,0,w,h);
+        ctx.fillStyle = '#FFFEFA'; ctx.fillRect(0,0,w,h);
+        kitFrame(ctx, w, h, 'Adam bias correction — first 20 steps');
+        const padL=52,padB=30,padT=24,padR=16;
+        const plotW=w-padL-padR, plotH=h-padT-padB;
+        const xOf = i => padL + (i/19)*plotW;
+        const yOf = v => padT + plotH - clamp(v/1.15,0,1)*plotH;
+        kitGrid(ctx, padL, padT, padL+plotW, padT+plotH, 10, 4);
+        kitAxis(ctx, padL, padT+plotH, padL+plotW, padT+plotH, kitHexA(KIT_INK, 0.5), 2);
+        kitAxis(ctx, padL, padT, padL, padT+plotH, kitHexA(KIT_INK, 0.5), 2);
+        kitTick(ctx, padL + plotW/2, h - 10, 'optimizer step t →', 'center');
+        ctx.save(); ctx.translate(15, padT+plotH/2); ctx.rotate(-Math.PI/2); ctx.textAlign='center';
+        ctx.fillStyle = kitHexA(KIT_INK, 0.6); ctx.font = '600 10px "IBM Plex Mono", monospace'; ctx.fillText('m, m̂', 0, 0); ctx.restore();
+        for (let t = 1; t <= 20; t += 1) { if (t % 5 === 0) kitTick(ctx, xOf(t-1), padT+plotH+14, String(t), 'center'); }
+        kitTick(ctx, padL-6, yOf(0)+3, '0', 'right');
+        kitTick(ctx, padL-6, yOf(0.5)+3, '0.5', 'right');
+        kitTick(ctx, padL-6, yOf(1)+3, '1.0', 'right');
+        kitChip(ctx, 'pure math — the cold-start bias cancels exactly', padL, h - 30, 'left');
+        // true gradient reference line
+        ctx.strokeStyle = hexToRgba(getCss('--ink'),0.3); ctx.setLineDash([3,3]); ctx.lineWidth=1.5;
+        ctx.beginPath(); ctx.moveTo(padL,yOf(1)); ctx.lineTo(padL+plotW,yOf(1)); ctx.stroke(); ctx.setLineDash([]);
+        ctx.font = `600 9px ${getCss('--font-mono')}`; ctx.fillStyle=getCss('--ink-faint'); ctx.textAlign='left';
+        ctx.fillText('true gradient = 1.0', padL+6, yOf(1)-5);
+        // raw m (biased)
+        ctx.strokeStyle = getCss('--coral'); ctx.lineWidth=2.4; ctx.beginPath();
+        raw.forEach((v,i) => { const x=xOf(i),y=yOf(v); if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y); });
+        ctx.stroke();
+        // corrected m-hat
+        ctx.strokeStyle = getCss('--teal-dark'); ctx.lineWidth=2.4; ctx.beginPath();
+        corrected.forEach((v,i) => { const x=xOf(i),y=yOf(v); if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y); });
+        ctx.stroke();
+        ctx.font = `700 10px ${getCss('--font-mono')}`;
+        ctx.fillStyle = getCss('--coral'); ctx.fillText('raw m (biased low)', padL+plotW-150, yOf(raw[15])+14);
+        ctx.fillStyle = getCss('--teal-dark'); ctx.fillText('m̂ (bias-corrected)', padL+plotW-150, yOf(corrected[3])-8);
+
+        $('#bias-readout').innerHTML = `At step 1: raw m = <strong>${raw[0].toFixed(3)}</strong> (90% too small), corrected m̂ = <strong>${corrected[0].toFixed(3)}</strong> (exact). By step 15 the two curves are nearly identical — correction only matters early.`;
+    }
+    draw();
+    window.__redrawAll = window.__redrawAll || (() => {});
+    const prevRedraw = window.__redrawAll;
+    window.__redrawAll = () => { prevRedraw(); draw(); };
+})();
+
+// ════════════════════════════════════════════════════════════════
+// 5.2c — GRADIENT CLIPPING: simulated gradient stream, spikes,
+// clip-by-global-norm in action
+// ════════════════════════════════════════════════════════════════
+const Clip = (function() {
+    let maxNorm = 1.0;
+    let history = []; // {raw, clipped}
+    let playing = false;
+
+    function pushGrad(spike) {
+        const base = 0.3 + Math.random()*0.4;
+        const raw = spike ? base + 2.5 + Math.random()*2 : base;
+        const clipped = Math.min(raw, maxNorm);
+        history.push({ raw, clipped, wasClipped: raw > maxNorm });
+        if (history.length > 40) history.shift();
+        draw();
+        const alert = $('#clip-alert');
+        if (raw > maxNorm) {
+            alert.className = 'clip-alert clipped';
+            alert.textContent = `⚡ CLIPPED — raw norm ${raw.toFixed(2)} → capped to ${maxNorm.toFixed(2)} (scaled by ${(maxNorm/raw).toFixed(2)}×)`;
+        } else {
+            alert.className = 'clip-alert safe';
+            alert.textContent = `✓ norm ${raw.toFixed(2)} within bounds (max ${maxNorm.toFixed(2)}) — no clipping needed`;
+        }
+    }
+
+    function draw() {
+        const s = setupCanvas('canvas-clip', 200); if (!s) return;
+        const { ctx, w, h } = s;
+        ctx.clearRect(0,0,w,h);
+        ctx.fillStyle = '#FFFEFA'; ctx.fillRect(0,0,w,h);
+        kitFrame(ctx, w, h, 'Gradient clipping — global-norm cap');
+        const padL=46,padB=32,padT=22,padR=12;
+        const plotW=w-padL-padR, plotH=h-padT-padB;
+        const maxY = 5;
+        const yOf = v => padT+plotH-clamp(v/maxY,0,1)*plotH;
+        kitGrid(ctx, padL, padT, padL+plotW, padT+plotH, 8, 4);
+        kitAxis(ctx, padL, padT+plotH, padL+plotW, padT+plotH, kitHexA(KIT_INK, 0.5), 2);
+        kitAxis(ctx, padL, padT, padL, padT+plotH, kitHexA(KIT_INK, 0.5), 2);
+        kitTick(ctx, padL + plotW/2, h - 10, 'step →', 'center');
+        for (let v = 0; v <= 5; v++) kitTick(ctx, padL-6, yOf(v)+3, String(v), 'right');
+        // R13 annotations: NaN-run warning + raw-vs-clipped legend
+        kitChip(ctx, '⚡ no clip → NaN run', padL + plotW, padT, 'right');
+        kitChip(ctx, 'faint = raw · solid = clipped', padL, h - 30, 'left');
+        // max norm threshold line
+        ctx.strokeStyle = getCss('--coral-dark'); ctx.setLineDash([5,4]); ctx.lineWidth=2;
+        ctx.beginPath(); ctx.moveTo(padL,yOf(maxNorm)); ctx.lineTo(padL+plotW,yOf(maxNorm)); ctx.stroke(); ctx.setLineDash([]);
+        ctx.font = `700 9px ${getCss('--font-mono')}`; ctx.fillStyle=getCss('--coral-dark'); ctx.textAlign='right';
+        ctx.fillText('max_norm', padL+plotW-4, yOf(maxNorm)-5);
+        // bars: raw (faint) behind clipped (solid)
+        const bw = plotW/40;
+        history.forEach((pt,i) => {
+            const x = padL + i*bw;
+            if (pt.wasClipped) {
+                ctx.fillStyle = hexToRgba(getCss('--coral'),0.25);
+                ctx.fillRect(x, yOf(pt.raw), bw-2, plotH-(yOf(pt.raw)-padT));
+            }
+            ctx.fillStyle = pt.wasClipped ? getCss('--coral') : getCss('--sky');
+            ctx.fillRect(x, yOf(pt.clipped), bw-2, plotH-(yOf(pt.clipped)-padT));
+        });
+    }
+    draw();
+    $('#clip-maxnorm')?.addEventListener('input', e => { maxNorm = parseFloat(e.target.value); $('#clip-maxnorm-v').textContent = maxNorm.toFixed(1); draw(); });
+    $('#btn-clip-spike')?.addEventListener('click', () => pushGrad(true));
+    $('#btn-clip-play')?.addEventListener('click', () => {
+        if (playing) return;
+        playing = true; const btn = $('#btn-clip-play'); btn.disabled = true; btn.textContent = '⏸ Streaming...';
+        let n = 0;
+        const iv = setInterval(() => {
+            pushGrad(Math.random() < 0.15);
+            if (++n >= 24) { clearInterval(iv); playing=false; btn.disabled=false; btn.textContent='▶ Stream gradients'; }
+        }, 160);
+    });
+    for (let i=0;i<15;i++) pushGrad(false);
+    {
+        const prevC = window.__redrawAll || (() => {});
+        window.__redrawAll = () => { prevC(); draw(); };
+    }
+    return { draw };
+})();
+
+// ════════════════════════════════════════════════════════════════
+// 5.3 — LEARNING RATE SCHEDULE: warmup + {cosine,linear,wsd,const}
+// ════════════════════════════════════════════════════════════════
+const Sched = (function() {
+    let warmupFrac = 0.05, minRatio = 0.1, kind = 'cosine';
+    const T = 1000; // total steps (normalized)
+    function lrAt(t) {
+        const Tw = warmupFrac*T;
+        const lrMax = 1.0, lrMin = minRatio;
+        if (t < Tw) return lrMax * (t/Math.max(Tw,1e-6));
+        const progress = (t-Tw)/(T-Tw);
+        if (kind === 'cosine') return lrMin + 0.5*(lrMax-lrMin)*(1+Math.cos(Math.PI*progress));
+        if (kind === 'linear') return lrMax - (lrMax-lrMin)*progress;
+        if (kind === 'constant') return lrMax;
+        if (kind === 'wsd') {
+            // warmup-stable-decay: stable until 80%, then linear decay in last 20%
+            if (progress < 0.75) return lrMax;
+            const dprog = (progress-0.75)/0.25;
+            return lrMax - (lrMax-lrMin)*dprog;
+        }
+        return lrMax;
+    }
+    function draw() {
+        const s = setupCanvas('canvas-sched', 260); if (!s) return;
+        const { ctx, w, h } = s;
+        ctx.clearRect(0,0,w,h);
+        ctx.fillStyle = '#FFFEFA'; ctx.fillRect(0,0,w,h);
+        kitFrame(ctx, w, h, 'LR schedule — warmup, then decay');
+        const padL=52,padB=32,padT=26,padR=18;
+        const plotW=w-padL-padR, plotH=h-padT-padB;
+        const xOf = t => padL+(t/T)*plotW;
+        const yOf = v => padT+plotH-clamp(v,0,1.05)*plotH/1.05;
+        kitGrid(ctx, padL, padT, padL+plotW, padT+plotH, 8, 4);
+        kitAxis(ctx, padL, padT+plotH, padL+plotW, padT+plotH, kitHexA(KIT_INK, 0.5), 2);
+        kitAxis(ctx, padL, padT, padL, padT+plotH, kitHexA(KIT_INK, 0.5), 2);
+        kitTick(ctx, padL + plotW/2, h - 10, 'training step →', 'center');
+        kitTick(ctx, padL-6, yOf(0)+3, '0', 'right');
+        kitTick(ctx, padL-6, yOf(0.5)+3, '0.5', 'right');
+        kitTick(ctx, padL-6, yOf(1)+3, '1.0', 'right');
+        for (let t = 0; t <= T; t += 250) kitTick(ctx, xOf(t), padT+plotH+14, t >= 1000 ? '1k' : String(t), 'center');
+        // warmup zone shading
+        ctx.fillStyle = hexToRgba(getCss('--gold'),0.12);
+        ctx.fillRect(padL, padT, (warmupFrac*T/T)*plotW, plotH);
+        // curve
+        ctx.strokeStyle = getCss('--gold-dark'); ctx.lineWidth=3; ctx.beginPath();
+        for (let t=0;t<=T;t+=T/300) { const x=xOf(t),y=yOf(lrAt(t)); if(t===0) ctx.moveTo(x,y); else ctx.lineTo(x,y); }
+        ctx.stroke();
+        ctx.font=`600 9px ${getCss('--font-mono')}`; ctx.fillStyle=getCss('--ink-faint'); ctx.textAlign='center';
+        ctx.fillText('training step →', padL+plotW/2, h-6);
+        ctx.save(); ctx.translate(14,padT+plotH/2); ctx.rotate(-Math.PI/2); ctx.fillText('learning rate', 0,0); ctx.restore();
+        if (warmupFrac > 0.01) { ctx.fillStyle=getCss('--gold-dark'); ctx.textAlign='left'; ctx.font=`700 9px ${getCss('--font-mono')}`; ctx.fillText('warmup', padL+4, padT+12); }
+        // R13: phase labels + current-LR readout drawn on the canvas
+        ctx.font = `700 9px ${getCss('--font-mono')}`; ctx.textAlign='left';
+        if (kind === 'wsd') {
+            ctx.fillStyle = getCss('--teal-dark'); ctx.fillText('stable', padL + plotW*0.38, padT + 12);
+            ctx.fillText('decay', padL + plotW*0.90, padT + 12);
+        } else if (kind !== 'constant') {
+            ctx.fillStyle = getCss('--teal-dark'); ctx.fillText('decay', padL + plotW*0.90, padT + 12);
+        }
+
+        const names = {cosine:'Cosine decay',linear:'Linear decay',wsd:'WSD (trapezoid)',constant:'Constant'};
+        kitReadout(ctx, w - 210, padT, 190, [
+            ['schedule', names[kind], getCss('--gold-dark')],
+            ['lr @ 40% of run', lrAt(0.4*T).toFixed(2) + '× peak']
+        ]);
+        $('#sched-readout').innerHTML = `<strong>${names[kind]}</strong> · warmup ${(warmupFrac*100).toFixed(0)}% of steps · floor at ${minRatio.toFixed(2)}× peak LR`;
+    }
+    draw();
+    $('#sched-warmup')?.addEventListener('input', e => { warmupFrac=parseFloat(e.target.value); $('#sched-warmup-v').textContent=(warmupFrac*100).toFixed(0)+'%'; draw(); });
+    $('#sched-minlr')?.addEventListener('input', e => { minRatio=parseFloat(e.target.value); $('#sched-minlr-v').textContent=minRatio.toFixed(2); draw(); });
+    $$('.pill[data-sched]').forEach(p => p.addEventListener('click', () => {
+        $$('.pill[data-sched]').forEach(x=>x.classList.remove('active')); p.classList.add('active');
+        kind = p.dataset.sched; draw();
+    }));
+    {
+        const prevS = window.__redrawAll || (() => {});
+        window.__redrawAll = () => { prevS(); draw(); };
+    }
+    return { draw };
+})();
+
+// ════════════════════════════════════════════════════════════════
+// 5.4a — DATA MIX: sliders normalize to 100%, small stacked bar
+// ════════════════════════════════════════════════════════════════
+const Mix = (function() {
+    const keys = ['web','code','books','math','synth'];
+    function normalize() {
+        const raw = {}; let total = 0;
+        keys.forEach(k => { raw[k] = parseFloat($(`.data-mix[data-k="${k}"]`).value); total += raw[k]; });
+        const norm = {}; keys.forEach(k => norm[k] = total>0 ? raw[k]/total : 0);
+        return norm;
+    }
+    function draw() {
+        const s = setupCanvas('canvas-mix', 200); if (!s) return;
+        const { ctx, w, h } = s;
+        ctx.clearRect(0,0,w,h);
+        const norm = normalize();
+        keys.forEach(k => $(`#mix-${k}-v`).textContent = Math.round(norm[k]*100)+'%');
+        const barY = 40, barH = 46;
+        let x = 20;
+        const colors = {web:colorFor(6),code:colorFor(1),books:colorFor(3),math:colorFor(2),synth:colorFor(0)};
+        const labels = {web:'Web',code:'Code',books:'Books',math:'Math',synth:'Synthetic'};
+        const usableW = w-40;
+        keys.forEach(k => {
+            const segW = norm[k]*usableW;
+            ctx.fillStyle = colors[k].c;
+            ctx.fillRect(x, barY, segW, barH);
+            ctx.strokeStyle = getCss('--ink'); ctx.lineWidth=1.5; ctx.strokeRect(x,barY,segW,barH);
+            if (segW > 34) {
+                ctx.fillStyle = '#fff'; ctx.font=`700 10px ${getCss('--font-mono')}`; ctx.textAlign='center';
+                ctx.fillText(Math.round(norm[k]*100)+'%', x+segW/2, barY+barH/2+4);
+            }
+            x += segW;
+        });
+        // legend
+        let lx = 20, ly = barY+barH+22;
+        ctx.font = `600 10px ${getCss('--font-mono')}`;
+        keys.forEach(k => {
+            ctx.fillStyle = colors[k].c; ctx.fillRect(lx,ly-8,10,10);
+            ctx.fillStyle = getCss('--ink-soft'); ctx.textAlign='left'; ctx.fillText(labels[k], lx+14, ly);
+            lx += ctx.measureText(labels[k]).width + 34;
+        });
+        const codeHeavy = norm.code > 0.25, mathHeavy = norm.math > 0.15, synthHeavy = norm.synth > 0.2;
+        let note = 'A balanced, web-dominant mix — similar in spirit to early GPT-3-era data recipes.';
+        if (codeHeavy) note = 'Code-heavy mix: strong for reasoning and structured tasks, less strong for open conversation (see: early Codex, DeepSeek-Coder recipes).';
+        else if (mathHeavy) note = 'Math-heavy mix: boosts quantitative reasoning benchmarks, common in modern "reasoning" model recipes.';
+        else if (synthHeavy) note = 'Synthetic-heavy: a big model generates the training data for a smaller one — the TinyStories/Phi approach. Powerful, but risks amplifying whatever blind spots the teacher model has.';
+        $('#mix-readout').innerHTML = note;
+    }
+    $$('.data-mix').forEach(el => el.addEventListener('input', draw));
+    draw();
+    return { draw };
+})();
+
+// ════════════════════════════════════════════════════════════════
+// 5.4b — DATA PIPELINE conveyor (visual consistency with Module 01)
+// ════════════════════════════════════════════════════════════════
+(function() {
+    const wrap = $('#data-pipeline');
+    if (!wrap) return;
+    const stages = [
+        {label:'Raw web/code/books', icon:'🌐', color: colorFor(6)},
+        {label:'Extract & clean', icon:'🧹', color: colorFor(2)},
+        {label:'Quality filter', icon:'🔍', color: colorFor(1)},
+        {label:'Deduplicate', icon:'🪞', color: colorFor(0)},
+        {label:'Mix & shuffle', icon:'🎲', color: colorFor(3)},
+        {label:'Tokenize (Mod. 01)', icon:'🧩', color: colorFor(5)},
+    ];
+    wrap.innerHTML = stages.map((s,i) => `
+        <div style="flex:1; min-width:110px; padding:16px 10px; text-align:center; ${i<stages.length-1?'border-right:2px solid var(--border);':''}">
+            <div style="width:40px; height:40px; margin:0 auto 8px; border-radius:10px; border:2px solid ${s.color.d}; background:${s.color.bg}; display:flex; align-items:center; justify-content:center; font-size:1.2rem;">${s.icon}</div>
+            <div class="mono" style="font-size:0.65rem; font-weight:700; color:${s.color.d};">${s.label}</div>
+        </div>
+    `).join('');
+})();
+
+// ════════════════════════════════════════════════════════════════
+// 5.5 — SCALING LAWS: power-law fit (draggable) + IsoFLOP curves
+// ════════════════════════════════════════════════════════════════
+const Scaling = (function() {
+    let mode = 'fit';
+    // ---- mode: fit (draggable power-law points) ----
+    let fitPoints = [ {N:1e6,L:3.6}, {N:1e7,L:2.9}, {N:1e8,L:2.3}, {N:1e9,L:1.85} ];
+    let dragIdx = -1;
+    const logRangeN = [5.5, 9.5]; // 10^5.5 .. 10^9.5
+    const rangeL = [1.4, 4.2];
+
+    // R12 baseplate (canon from CE.drawRest): warm paper + studStep dots
+    function plateBase(ctx, w, h) {
+        ctx.fillStyle = '#FFFEFA'; ctx.fillRect(0,0,w,h);
+        ctx.fillStyle = 'rgba(43,42,36,0.035)';
+        const studStep = 24;
+        for (let px = studStep/2; px < w; px += studStep) for (let py = studStep/2; py < h; py += studStep) { ctx.beginPath(); ctx.arc(px,py,2,0,Math.PI*2); ctx.fill(); }
+    }
+
+    function fitPowerLaw(pts) {
+        // fit log(L-E) = a - alpha*log(N) via simple linear regression, assume small E~1.2 floor for demo
+        const E = 1.2;
+        const xs = pts.map(p=>Math.log(p.N)), ys = pts.map(p=>Math.log(Math.max(p.L-E,0.05)));
+        const n = xs.length;
+        const mx = xs.reduce((s,v)=>s+v,0)/n, my = ys.reduce((s,v)=>s+v,0)/n;
+        let num=0,den=0;
+        for (let i=0;i<n;i++) { num += (xs[i]-mx)*(ys[i]-my); den += (xs[i]-mx)**2; }
+        const slope = den!==0 ? num/den : 0; // this is -alpha
+        const intercept = my - slope*mx;
+        return { alpha: -slope, a: intercept, E };
+    }
+
+    function drawFit() {
+        const s = setupCanvas('canvas-scaling', 340); if (!s) return;
+        const { ctx, w, h } = s;
+        ctx.clearRect(0,0,w,h);
+        plateBase(ctx, w, h);
+        kitFrame(ctx, w, h, 'Power-law fit — loss vs. parameters (drag the dots)');
+        const padL=54,padB=34,padT=16,padR=20;
+        const plotW=w-padL-padR, plotH=h-padT-padB;
+        const xOf = logN => padL + ((logN-logRangeN[0])/(logRangeN[1]-logRangeN[0]))*plotW;
+        const yOf = L => padT + plotH - ((L-rangeL[0])/(rangeL[1]-rangeL[0]))*plotH;
+        kitGrid(ctx, padL, padT, padL+plotW, padT+plotH, 6, 4);
+        kitAxis(ctx, padL, padT+plotH, padL+plotW, padT+plotH, kitHexA(KIT_INK, 0.5), 2);
+        kitAxis(ctx, padL, padT, padL, padT+plotH, kitHexA(KIT_INK, 0.5), 2);
+        // ticks: N = 10^6..10^9 along x, L = 1.5..4.0 along y
+        const SUP = '\u2076\u2077\u2078\u2079';
+        for (let e = 6; e <= 9; e++) kitTick(ctx, xOf(e), padT+plotH+14, '10'+SUP[e-6], 'center');
+        for (let L = 1.5; L <= 4.0 + 1e-9; L += 0.5) kitTick(ctx, padL-6, yOf(L)+3, L.toFixed(1), 'right');
+        kitTick(ctx, padL + plotW/2, h - 10, 'log(parameters) →', 'center');
+        ctx.save(); ctx.translate(16,padT+plotH/2); ctx.rotate(-Math.PI/2); ctx.textAlign='center';
+        ctx.fillStyle = kitHexA(KIT_INK, 0.6); ctx.font = '600 10px "IBM Plex Mono", monospace'; ctx.fillText('loss', 0, 0); ctx.restore();
+        kitChip(ctx, 'drag the four dots — exponent responds live', padL, h - 32, 'left');
+
+        const fit = fitPowerLaw(fitPoints);
+        ctx.strokeStyle = getCss('--lavender'); ctx.lineWidth=2.6; ctx.beginPath();
+        for (let logN=logRangeN[0]; logN<=logRangeN[1]; logN+=0.05) {
+            const N = Math.exp(logN);
+            const L = fit.E + Math.exp(fit.a)*Math.pow(N,-fit.alpha);
+            const x=xOf(logN), y=yOf(L);
+            if (logN===logRangeN[0]) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+        }
+        ctx.stroke();
+        fitPoints.forEach((p,i) => {
+            const x=xOf(Math.log(p.N)), y=yOf(p.L);
+            ctx.beginPath(); ctx.arc(x,y,8,0,7);
+            ctx.fillStyle = colorFor(i+3).c; ctx.fill(); ctx.lineWidth=2.5; ctx.strokeStyle=getCss('--ink'); ctx.stroke();
+        });
+        // data-optimum marker: gold ring around the lowest-loss draggable point
+        let bi = 0; fitPoints.forEach((p,i)=>{ if (p.L < fitPoints[bi].L) bi = i; });
+        const bp = fitPoints[bi];
+        const bx = xOf(Math.log(bp.N)), by = yOf(bp.L);
+        ctx.beginPath(); ctx.arc(bx,by,13,0,7);
+        ctx.lineWidth=2.5; ctx.strokeStyle=getCss('--gold'); ctx.stroke();
+        ctx.fillStyle=hexToRgba(getCss('--gold'),0.16); ctx.fill();
+        ctx.font=`700 9px ${getCss('--font-mono')}`; ctx.fillStyle=getCss('--gold-dark'); ctx.textAlign='left';
+        ctx.fillText('data optimum', Math.min(bx+16, padL+plotW-70), Math.max(padT+10, by-12));
+        // R12 kit readout: fitted exponent + irreducible floor
+        kitReadout(ctx, padL+plotW-162, padT, 162, [
+            ['α (exponent)', fit.alpha.toFixed(3), getCss('--lavender-dark')],
+            ['E (floor)', fit.E.toFixed(2), getCss('--mint-dark')],
+            ['best L', bp.L.toFixed(2), getCss('--gold-dark')]
+        ]);
+        $('#scaling-readout').innerHTML = `Fitted: L ≈ ${Math.exp(fit.a).toFixed(2)}/N<sup>${fit.alpha.toFixed(3)}</sup> + ${fit.E.toFixed(2)} · published Chinchilla α ≈ 0.34 · drag the four dots to see the exponent respond live.`;
+    }
+    function pixelToPoint(px,py,rect) {
+        const padL=54,padB=34,padT=16,padR=20;
+        const plotW=rect.width-padL-padR, plotH=rect.height-padT-padB;
+        const logN = logRangeN[0] + ((px-padL)/plotW)*(logRangeN[1]-logRangeN[0]);
+        const L = rangeL[0] + ((padT+plotH-py)/plotH)*(rangeL[1]-rangeL[0]);
+        return { N: Math.exp(clamp(logN,logRangeN[0],logRangeN[1])), L: clamp(L,rangeL[0],rangeL[1]) };
+    }
+
+    // ---- mode: iso (IsoFLOP curves, real Chinchilla method) ----
+    const E=1.69, A=400, B=410, ALPHA=0.34, BETA=0.28;
+    function lossND(N,D) { return E + A/Math.pow(N,ALPHA) + B/Math.pow(D,BETA); }
+    const budgets = [1e19, 1e20, 1e21, 1e22];
+    function isoCurve(C) {
+        const pts = []; let best = null;
+        for (let logN=6; logN<=11; logN+=0.03) {
+            const N = Math.pow(10,logN);
+            const D = C/(6*N);
+            if (D < 1e6) continue;
+            const L = lossND(N,D);
+            pts.push({N,D,L});
+            if (!best || L<best.L) best = {N,D,L};
+        }
+        return { pts, best };
+    }
+    function drawIso() {
+        const s = setupCanvas('canvas-scaling', 340); if (!s) return;
+        const { ctx, w, h } = s;
+        ctx.clearRect(0,0,w,h);
+        plateBase(ctx, w, h);
+        kitFrame(ctx, w, h, 'IsoFLOP curves — loss vs. N at four compute budgets');
+        const padL=54,padB=34,padT=16,padR=20;
+        const plotW=w-padL-padR, plotH=h-padT-padB;
+        const logNRange=[6,11], lossRange=[1.8,4.2];
+        const xOf = logN => padL+((logN-logNRange[0])/(logNRange[1]-logNRange[0]))*plotW;
+        const yOf = L => padT+plotH-((clamp(L,lossRange[0],lossRange[1])-lossRange[0])/(lossRange[1]-lossRange[0]))*plotH;
+        kitGrid(ctx, padL, padT, padL+plotW, padT+plotH, 5, 4);
+        kitAxis(ctx, padL, padT+plotH, padL+plotW, padT+plotH, kitHexA(KIT_INK, 0.5), 2);
+        kitAxis(ctx, padL, padT, padL, padT+plotH, kitHexA(KIT_INK, 0.5), 2);
+        // ticks: N = 10^6..10^11 along x, loss 2.0..4.0 along y
+        const SUP2 = '\u2076\u2077\u2078\u2079\u00B9\u2070\u00B9\u00B9';
+        for (let e = 6; e <= 11; e++) kitTick(ctx, xOf(e), padT+plotH+14, '10'+SUP2[e-6], 'center');
+        for (let L = 2; L <= 4; L += 1) kitTick(ctx, padL-6, yOf(L)+3, L.toFixed(1), 'right');
+        kitTick(ctx, padL + plotW/2, h - 10, 'log\u2081\u2080(parameters) \u2192', 'center');
+        ctx.save(); ctx.translate(16,padT+plotH/2); ctx.rotate(-Math.PI/2); ctx.textAlign='center';
+        ctx.fillStyle = kitHexA(KIT_INK, 0.6); ctx.font = '600 10px "IBM Plex Mono", monospace'; ctx.fillText('loss', 0, 0); ctx.restore();
+        kitChip(ctx, 'gold dots = compute-optimal', padL, h - 32, 'left');
+
+        const minima = [];
+        budgets.forEach((C,i) => {
+            const { pts, best } = isoCurve(C);
+            const col = colorFor(i+4);
+            ctx.strokeStyle = col.c; ctx.lineWidth=2.4; ctx.setLineDash([5,3]); ctx.beginPath();
+            pts.forEach((p,j) => { const x=xOf(Math.log10(p.N)), y=yOf(p.L); if(j===0) ctx.moveTo(x,y); else ctx.lineTo(x,y); });
+            ctx.stroke(); ctx.setLineDash([]);
+            const bx=xOf(Math.log10(best.N)), by=yOf(best.L);
+            minima.push({x:bx,y:by});
+            ctx.beginPath(); ctx.arc(bx,by,6,0,7); ctx.fillStyle=getCss('--gold'); ctx.fill(); ctx.lineWidth=2; ctx.strokeStyle=getCss('--ink'); ctx.stroke();
+            ctx.font=`700 9px ${getCss('--font-mono')}`; ctx.fillStyle=col.d; ctx.textAlign='left';
+            ctx.fillText('C=10^'+Math.log10(C).toFixed(0), Math.min(padL+plotW-70,bx+10), by-8);
+        });
+        // frontier line connecting minima
+        ctx.strokeStyle = hexToRgba(getCss('--ink'),0.55); ctx.lineWidth=1.8; ctx.setLineDash([2,3]); ctx.beginPath();
+        minima.forEach((m,i) => { if(i===0) ctx.moveTo(m.x,m.y); else ctx.lineTo(m.x,m.y); }); ctx.stroke(); ctx.setLineDash([]);
+
+        const rows = budgets.map((C,i) => {
+            const { best } = isoCurve(C);
+            return `C=10<sup>${Math.log10(C).toFixed(0)}</sup>: N*≈${fmtBytes(best.N)} params, D*≈${fmtBytes(best.D)} tok, D/N≈${(best.D/best.N).toFixed(1)}`;
+        });
+        $('#iso-optimal-readout').innerHTML = rows.join('<br>');
+        $('#scaling-readout').innerHTML = `Four compute budgets, four parabolas — the gold dots are each budget's compute-optimal model size. This <em>is</em> the method Hoffmann et al. used to derive the Chinchilla scaling law, not a single fitted line.`;
+    }
+
+    function draw() { mode==='fit' ? drawFit() : drawIso(); }
+    draw();
+
+    const canvas = $('#canvas-scaling');
+    canvas?.addEventListener('pointerdown', e => {
+        if (mode !== 'fit') return;
+        const rect = canvas.getBoundingClientRect();
+        const mx=e.clientX-rect.left, my=e.clientY-rect.top;
+        let closest=-1, closestD=999;
+        fitPoints.forEach((p,i) => {
+            const padL=54,padB=34,padT=16,padR=20;
+            const plotW=rect.width-padL-padR, plotH=rect.height-padT-padB;
+            const px = padL+((Math.log(p.N)-logRangeN[0])/(logRangeN[1]-logRangeN[0]))*plotW;
+            const py = padT+plotH-((p.L-rangeL[0])/(rangeL[1]-rangeL[0]))*plotH;
+            const d = Math.hypot(mx-px,my-py);
+            if (d<closestD) { closestD=d; closest=i; }
+        });
+        if (closestD < 25) dragIdx = closest;
+    });
+    window.addEventListener('pointermove', e => {
+        if (dragIdx<0 || mode!=='fit') return;
+        const rect = canvas.getBoundingClientRect();
+        const p = pixelToPoint(e.clientX-rect.left, e.clientY-rect.top, rect);
+        fitPoints[dragIdx] = p; drawFit();
+    });
+    window.addEventListener('pointerup', () => dragIdx=-1);
+
+    $$('.iso-tabs .pill').forEach(p => p.addEventListener('click', () => {
+        $$('.iso-tabs .pill').forEach(x=>x.classList.remove('active')); p.classList.add('active');
+        mode = p.dataset.isomode;
+        $('#scaling-panel-fit').style.display = mode==='fit' ? 'block':'none';
+        $('#scaling-panel-iso').style.display = mode==='iso' ? 'block':'none';
+        $('#scaling-canvas-title').textContent = mode==='fit' ? 'Loss vs. parameters (log-log) — drag the four dots' : 'IsoFLOP curves — loss vs. N at four fixed compute budgets';
+        draw();
+    }));
+    {
+        const prevSc = window.__redrawAll || (() => {});
+        window.__redrawAll = () => { prevSc(); draw(); };
+    }
+    return { draw };
+})();
+
+// ════════════════════════════════════════════════════════════════
+// 5.6a — FLOPS & TRAINING TIME CALCULATOR
+// ════════════════════════════════════════════════════════════════
+const Calc = (function() {
+    function draw() {
+        const N = Math.pow(10, parseFloat($('#calc-n').value));
+        const D = Math.pow(10, parseFloat($('#calc-d').value));
+        const tflops = parseFloat($('#calc-tflops').value);
+        $('#calc-n-v').textContent = fmtBytes(N);
+        $('#calc-d-v').textContent = fmtBytes(D);
+        $('#calc-tflops-v').textContent = tflops;
+        const C = 6*N*D;
+        const mfu = 0.42;
+        const effectiveFlops = tflops*1e12*mfu;
+        const seconds = C/effectiveFlops;
+        const days = seconds/86400;
+        const memGB = 16*N/1e9;
+        $('#calc-stats').innerHTML = `
+            <div class="card-alt text-center"><span class="stat-big sky">${C.toExponential(2)}</span><span class="stat-label">total FLOPs (6ND)</span></div>
+            <div class="card-alt text-center"><span class="stat-big coral">${days<1 ? (days*24).toFixed(1)+'h' : days.toFixed(1)+'d'}</span><span class="stat-label">on 1 GPU @ ${mfu*100|0}% MFU</span></div>
+            <div class="card-alt text-center"><span class="stat-big gold">${memGB.toFixed(1)} GB</span><span class="stat-label">memory (16 bytes/param)</span></div>
+            <div class="card-alt text-center"><span class="stat-big mint">${memGB>80?'⚠️ needs sharding':'✓ fits 1×80GB GPU'}</span><span class="stat-label">single-GPU feasibility</span></div>`;
+    }
+    $$('#calc-n, #calc-d, #calc-tflops').forEach(el => el.addEventListener('input', draw));
+    draw();
+    return { draw };
+})();
+
+// ════════════════════════════════════════════════════════════════
+// 5.6b — FLAGSHIP: GPU-GRID PARALLELISM VISUALIZER
+// Verified memory math (ZeRO paper, Rajbhandari et al. 2020),
+// mixed-precision, Psi=7e9 params, Nd=8 GPUs:
+//   DP (full replica):  16*Psi        = 112.0 GB/GPU
+//   ZeRO-1 (shard opt): 4*Psi+12*Psi/Nd = 38.5 GB/GPU
+//   ZeRO-2 (+grads):    2*Psi+14*Psi/Nd = 26.3 GB/GPU
+//   ZeRO-3 (+weights):  16*Psi/Nd     = 14.0 GB/GPU
+//   TP/PP (1/8 shard):  16*Psi/Nd     = 14.0 GB/GPU
+// ════════════════════════════════════════════════════════════════
+const GpuGrid = (function() {
+    const NGPU = 8, PSI = 7e9;
+    const GPU_CAP_GB = 80;
+    const configs = {
+        dp: {
+            name: 'Data Parallel', memGB: 16*PSI/1e9,
+            tileContent: i => [{label:'Weights (full)', frac:1, color:'sky'}, {label:'Grads (full)', frac:1, color:'coral'}, {label:'Optim (full)', frac:1, color:'gold'}],
+            tileNote: i => `Batch shard ${i+1}/8`,
+            what: 'Every GPU holds a complete, identical copy of the entire model — all weights, all gradients, all optimizer states. Only the training <em>batch</em> is split, one slice per GPU. Simplest mental model, worst memory efficiency.',
+            comm: 'One all-reduce of gradients per step (average across GPUs before the optimizer update). Communication volume is proportional to model size but happens only once per step — relatively cheap, works fine even across slower inter-node links.'
+        },
+        tp: {
+            name: 'Tensor Parallel', memGB: 16*PSI/NGPU/1e9,
+            tileContent: i => [{label:'Weights 1/8 (col-slice)', frac:1/8, color:'sky'}, {label:'Grads 1/8', frac:1/8, color:'coral'}, {label:'Optim 1/8', frac:1/8, color:'gold'}],
+            tileNote: i => `Same batch, layer-slice ${i+1}/8`,
+            what: 'Every weight matrix inside every layer is sliced (e.g. the FFN\'s hidden dimension split 8 ways). Every GPU processes the <em>same</em> batch but only computes its slice of every layer — the full activation is only reassembled via communication.',
+            comm: 'An all-reduce of partial activations after every attention block and every FFN block — i.e. multiple times per layer, every layer, both forward and backward. This is frequent and latency-sensitive: TP is used almost exclusively <em>within</em> a single node over NVLink (~900GB/s), never across slower network links.'
+        },
+        pp: {
+            name: 'Pipeline Parallel', memGB: 16*PSI/NGPU/1e9,
+            tileContent: i => [{label:`Layers ${i*4+1}-${i*4+4}`, frac:1/8, color:'lavender'}],
+            tileNote: i => `Stage ${i+1}/8`,
+            what: 'The network is cut into contiguous depth-wise blocks — GPU 0 holds the first few layers, GPU 7 holds the last few. A microbatch\'s activations physically travel GPU-to-GPU forward, then gradients travel backward the same path in reverse.',
+            comm: 'Only point-to-point transfer between <em>neighboring</em> stages — low total volume, tolerates slower cross-node links well. The catch: naive pipelining leaves early stages idle while waiting for late stages (the "bubble"). Modern implementations (GPipe, 1F1B) interleave many microbatches to shrink this idle time.'
+        },
+        zero1: {
+            name: 'ZeRO Stage 1', memGB: (4*PSI + 12*PSI/NGPU)/1e9,
+            tileContent: i => [{label:'Weights (full replica)', frac:1, color:'sky'}, {label:'Grads (full replica)', frac:1, color:'coral'}, {label:'Optim 1/8 (sharded)', frac:1/8, color:'gold'}],
+            tileNote: i => `Batch shard ${i+1}/8`,
+            what: 'Behaves like Data Parallel for weights and gradients (full replica on every GPU) but shards only the Adam optimizer states — the single largest memory consumer (12 of the 16 bytes/param) — 8 ways. The easiest, lowest-risk first step away from plain DP.',
+            comm: 'Same gradient all-reduce as DP, plus one extra all-gather to reassemble optimizer state before the update. Modest overhead over plain DP for a large memory win.'
+        },
+        zero2: {
+            name: 'ZeRO Stage 2', memGB: (2*PSI + 14*PSI/NGPU)/1e9,
+            tileContent: i => [{label:'Weights (full replica)', frac:1, color:'sky'}, {label:'Grads 1/8 (sharded)', frac:1/8, color:'coral'}, {label:'Optim 1/8 (sharded)', frac:1/8, color:'gold'}],
+            tileNote: i => `Batch shard ${i+1}/8`,
+            what: 'Adds gradient sharding on top of ZeRO-1: each GPU only ever materializes the gradient shard it is responsible for updating. Weights are still fully replicated so every GPU can still compute a full forward pass independently.',
+            comm: 'Reduce-scatter gradients (each GPU ends up owning only its 1/8 slice, already reduced) instead of full all-reduce — similar total bytes moved, slightly different pattern. A strong default for many mid-size training setups.'
+        },
+        zero3: {
+            name: 'ZeRO Stage 3', memGB: 16*PSI/NGPU/1e9,
+            tileContent: i => [{label:'Weights 1/8 (sharded)', frac:1/8, color:'sky'}, {label:'Grads 1/8 (sharded)', frac:1/8, color:'coral'}, {label:'Optim 1/8 (sharded)', frac:1/8, color:'gold'}],
+            tileNote: i => `Batch shard ${i+1}/8`,
+            what: 'Fully sharded — nothing is permanently replicated. Each GPU only ever permanently stores 1/8 of weights, 1/8 of gradients, 1/8 of optimizer states. Full weight shards are temporarily all-gathered right before each layer needs them, then freed.',
+            comm: 'The most communication-heavy option — an all-gather of weights before every layer\'s forward AND backward pass, every step. This is what PyTorch FSDP and DeepSpeed ZeRO-3 do by default for genuinely large models; the bandwidth cost is worth it because otherwise the model would not fit in memory at all.'
+        }
+    };
+    let mode = 'dp';
+
+    function tile(i, cfg) {
+        const content = cfg.tileContent(i);
+        const colorMap = {sky:getCss('--sky'),coral:getCss('--coral'),gold:getCss('--gold'),lavender:getCss('--lavender')};
+        const bg = i%2===0 ? getCss('--surface') : getCss('--surface-alt');
+        const bars = content.map(seg => {
+            const heightPct = Math.max(6, seg.frac*100);
+            return `<div style="width:100%; display:flex; flex-direction:column; align-items:center;">
+                <div style="width:78%; height:${heightPct*0.42}px; background:${hexToRgba(colorMap[seg.color],0.35)}; border:1.5px solid ${colorMap[seg.color]}; border-radius:3px;"></div>
+                <div style="font-size:0.52rem; font-family:var(--font-mono); color:${colorMap[seg.color]}; font-weight:700; margin-top:2px; text-align:center; line-height:1.2;">${seg.label}</div>
+            </div>`;
+        }).join('');
+        return `<div class="gpu-tile" style="background:${bg};">
+            <div class="gpu-label">GPU ${i} · ${cfg.tileNote(i)}</div>
+            <div class="gpu-body">${bars}</div>
+        </div>`;
+    }
+
+    function render() {
+        const cfg = configs[mode];
+        const grid = $('#gpu-grid');
+        grid.innerHTML = '';
+        for (let i=0;i<NGPU;i++) grid.insertAdjacentHTML('beforeend', tile(i,cfg));
+        const overflowWarn = cfg.memGB > GPU_CAP_GB;
+        $('#gpu-readout').innerHTML = `<strong>${cfg.name}</strong> · ${cfg.memGB.toFixed(1)} GB per GPU (7B-param model, 8-way split) ${overflowWarn ? `<span style="color:${getCss('--coral-dark')};">⚠️ EXCEEDS an 80GB H100 — this configuration cannot run as-is</span>` : `<span style="color:${getCss('--mint-dark')};">✓ fits comfortably on an 80GB H100</span>`}`;
+        $('#parallel-explain-what').innerHTML = cfg.what;
+        $('#parallel-explain-comm').innerHTML = cfg.comm;
+    }
+    render();
+    $$('#parallel-tabs .pill').forEach(p => p.addEventListener('click', () => {
+        $$('#parallel-tabs .pill').forEach(x=>x.classList.remove('active')); p.classList.add('active');
+        mode = p.dataset.mode; render();
+    }));
+    return { render };
+})();
+
+// ════════════════════════════════════════════════════════════════
+// 5.9 — ARENA EXAM: five training-room incidents, five diagnoses
+// Tier badge + The Arena Trainer brick (R16 Builder's Wall canon)
+// ════════════════════════════════════════════════════════════════
+const EXAM_ANSWERS = { 1:'wrong', 2:'vanish', 3:'warmup', 4:'clip', 5:'data' };
+let examSubmitted = false;
+function arenaBrickHTML(tierColor) {
+    const stud = '<span style="width:22px; height:22px; border-radius:50%; background:radial-gradient(circle at 35% 30%, #FFFDF4, ' + tierColor + ' 72%); border:2px solid var(--ink); box-shadow:inset 0 2px 2px rgba(255,255,255,.5), 0 2px 0 rgba(43,42,36,.28); justify-self:center;"></span>';
+    return '<div class="brick-card">' +
+        '<div style="width:238px; height:136px; margin:0 auto; background:' + tierColor + '; border:2.5px solid var(--ink); border-radius:9px; box-shadow:0 6px 0 rgba(43,42,36,.22), inset 0 -3px 0 rgba(43,42,36,.18); padding:9px 12px 6px; display:flex; flex-direction:column; align-items:center; position:relative;">' +
+            '<div style="display:grid; grid-template-columns:repeat(4,1fr); gap:6px; width:100%; padding:0 8px;">' + stud + stud + stud + stud + stud + stud + stud + stud + '</div>' +
+            '<div style="font-family:var(--font-display); font-weight:800; font-size:1.04rem; color:var(--ink); margin-top:7px;">🧱 The Arena Trainer</div>' +
+            '<div style="font-family:var(--font-mono); font-size:0.64rem; font-weight:700; letter-spacing:0.12em; color:var(--ink-soft); margin-top:2px;">SET LLM-ACAD-05</div>' +
+            '<div style="font-family:var(--font-mono); font-size:0.6rem; color:var(--ink-faint); margin-top:2px;">No certificates here — this is the machine you built.</div>' +
+        '</div>' +
+    '</div>';
+}
+$('#btn-submit-exam')?.addEventListener('click', ()=>{
+    if(examSubmitted) return;
+    let score = 0, total = 5;
+    for(let q=1;q<=total;q++){
+        const sel = $('input[name="q'+q+'"]:checked');
+        const qEl = $('[data-q="'+q+'"]');
+        if(!qEl) continue;
+        const opts = qEl.querySelectorAll('.exam-opt');
+        opts.forEach(o => {
+            const radio = o.querySelector('input');
+            if(radio.value === EXAM_ANSWERS[q]){
+                o.classList.add('right');
+                if(sel && sel.value === radio.value) score++;
+            } else if(sel && sel === radio){
+                o.classList.add('wrong');
+            }
+            o.style.pointerEvents = 'none';
+        });
+    }
+    examSubmitted = true;
+    const tier = score<=2 ? 'BRICK COLLECTOR' : score===3 ? 'APPRENTICE BUILDER' : score===4 ? 'SKILLED BUILDER' : 'MASTER BUILDER';
+    try { localStorage.setItem('llmacademy.level.05', tier); } catch(e){}
+    const TIER_META = {
+        'BRICK COLLECTOR':    { color:'var(--ink-faint)', line:'Every wall starts with a single brick — the labs are still open and each one makes a training run visible. Walk the arena again.' },
+        'APPRENTICE BUILDER': { color:'var(--sky)',       line:'You can read loss curves and name the failure modes. One more lap through clipping and schedules and the wall gets its first colored brick.' },
+        'SKILLED BUILDER':    { color:'var(--gold)',      line:'You can diagnose a dead run: loss spikes, gradient norms, LR schedules, and what scaling actually buys. The Arena Trainer brick is yours.' },
+        'MASTER BUILDER':     { color:'var(--mint)',      line:'Flawless. You read cross-entropy, backprop, optimizers, clipping, schedules, and scaling laws like a run you built yourself — because now you have.' }
+    };
+    const tm = TIER_META[tier];
+    const result = $('#exam-result');
+    result.style.display = 'block';
+    const title = $('#exam-score-title');
+    title.textContent = 'Arena Score: '+score+'/'+total;
+    title.style.color = tm.color;
+    $('#exam-score-desc').innerHTML = tm.line;
+    $('#exam-level').innerHTML =
+        '<div style="display:inline-flex; align-items:center; gap:12px; margin:14px auto 4px; padding:12px 20px; border:2.5px solid '+tm.color+'; border-radius:var(--radius-md); background:var(--surface); box-shadow:var(--shadow-sm); text-align:left;">' +
+            '<div style="font-family:var(--font-mono); font-size:0.72rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:'+tm.color+';">BUILDER LEVEL</div>' +
+            '<div style="font-family:var(--font-display); font-weight:800; font-size:1.15rem; color:var(--ink);">'+tier+'</div>' +
+        '</div>';
+    if(score >= 4){
+        try { localStorage.setItem('llmacademy.brick.05', 'The Arena Trainer'); } catch(e){}
+        $('#exam-brick').innerHTML = arenaBrickHTML(tm.color);
+        if (typeof SoundFX !== 'undefined' && SoundFX && typeof SoundFX.complete === 'function') { try { SoundFX.complete(); } catch(e){} }
+    } else {
+        if (typeof SoundFX !== 'undefined' && SoundFX && typeof SoundFX.step === 'function') { try { SoundFX.step(); } catch(e){} }
+    }
+    result.scrollIntoView({ behavior:'smooth', block:'center' });
+});
+
+// ════════════════════════════════════════════════════════════════
+// KaTeX render
+// ════════════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+    if (typeof renderMathInElement !== 'undefined') {
+        renderMathInElement(document.body, { delimiters: [{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}] });
+    }
+});
+</script>
+<p style="font-family:var(--font-mono);font-size:0.62rem;color:var(--ink-faint);text-align:center;margin:24px auto;">LEGO® is a trademark of the LEGO Group. This course is not affiliated with, endorsed by, or sponsored by the LEGO Group.</p>
+</body>
+</html>
