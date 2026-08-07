@@ -276,6 +276,116 @@ code, .mono { font-family: var(--font-mono); }
 .notebook-nav button:hover { background: var(--gold-bg); transform: translateY(-1px); }
 .notebook-nav button:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
 
+/* ════════════ THE FOUNDRY MANUAL — LEGO instruction booklet (R15 redesign) ════════════ */
+.notebook-spread {
+    position: relative;
+    background: linear-gradient(180deg, #F6F3E7, #EDEADD);
+    border: 3px solid var(--ink);
+    border-radius: 4px 14px 14px 4px;
+    box-shadow: 8px 8px 0 rgba(43,42,36,.16), inset 0 0 0 5px rgba(43,42,36,.06);
+}
+.notebook-spine {
+    position: relative;
+    display: flex; align-items: center; gap: 10px; padding: 12px 18px;
+    background: linear-gradient(180deg, #3A382F, var(--ink));
+    color: var(--paper); font-family: var(--font-mono);
+    font-size: 0.74rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+    border-bottom: 3px solid var(--ink);
+}
+.notebook-spine .spine-studs span { background: var(--gold); box-shadow: inset 0 1px 0 rgba(255,255,255,.45), inset 0 -1px 0 rgba(43,42,36,.35); }
+.notebook-pages-container {
+    position: relative; padding: 4px 14px 4px 4px;
+    background: #FFFEFA;
+}
+.notebook-pages-container::before { /* stacked page edges — a real bound book */
+    content: ""; position: absolute; top: 8px; right: -8px; bottom: 8px; width: 12px;
+    background: repeating-linear-gradient(90deg, #FFFEFA 0 3px, #D8D4C2 3px 4px);
+    border: 2px solid var(--ink); border-radius: 0 8px 8px 0; pointer-events: none;
+}
+.notebook-pages-container::after { /* spine shadow — the hinge */
+    content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 14px;
+    background: linear-gradient(90deg, rgba(43,42,36,.14), transparent); pointer-events: none;
+}
+.notebook-page {
+    position: relative; padding: 26px 34px 34px;
+    background: #FFFEFA;
+    background-image:
+        radial-gradient(circle at 20px 20px, rgba(43,42,36,.05) 1.6px, transparent 2px),
+        linear-gradient(to right, rgba(43,42,36,.035) 1px, transparent 1px);
+    background-size: 24px 24px, 28px 28px;
+    min-height: 210px; display: none;
+}
+.notebook-page.active {
+    display: block;
+    animation: nb-flip-in .55s cubic-bezier(.22,.9,.3,1.12) both;
+    transform-origin: left center;
+}
+@keyframes nb-flip-in {
+    0% { transform: perspective(900px) rotateY(34deg); opacity: 0; }
+    100% { transform: perspective(900px) rotateY(0deg); opacity: 1; }
+}
+.notebook-page h3 { position: relative; z-index: 1; }
+.nb-step {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--font-mono); font-size: 0.64rem; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint);
+    margin-bottom: 10px;
+}
+.nb-step .nb-brick {
+    position: relative; display: inline-flex; align-items: center; justify-content: center;
+    width: 30px; height: 22px; border-radius: 4px; background: var(--coral); color: #fff;
+    font-weight: 800; font-size: 0.8rem; letter-spacing: 0;
+    border: 2px solid var(--ink);
+    box-shadow: inset 0 2px 0 rgba(255,255,255,.35), inset 0 -3px 0 rgba(43,42,36,.2), 0 3px 0 rgba(43,42,36,.22);
+}
+.nb-step .nb-brick::after {
+    content: ""; position: absolute; top: -4px; left: 6px; width: 5px; height: 4px;
+    border-radius: 2px; background: rgba(255,255,255,.4);
+    box-shadow: 9px 0 0 rgba(255,255,255,.4);
+}
+.nb-parts {
+    display: flex; flex-wrap: wrap; gap: 6px; margin-top: 16px; padding-top: 12px;
+    border-top: 2px dashed var(--border);
+}
+.nb-part {
+    font-family: var(--font-mono); font-size: 0.64rem; font-weight: 600;
+    color: var(--ink-soft); background: var(--surface-alt);
+    border: 1.5px solid var(--border); border-radius: 5px; padding: 3px 8px;
+}
+.nb-part b { color: var(--coral); margin-right: 5px; font-weight: 800; }
+.nb-pageno {
+    position: absolute; bottom: 10px; right: 16px; z-index: 1;
+    font-family: var(--font-mono); font-size: 0.62rem; color: var(--ink-faint);
+    background: var(--surface); border: 1.5px solid var(--border); border-radius: 4px; padding: 2px 8px;
+}
+.nb-ribbon {
+    position: absolute; top: 0; right: 30px; width: 22px; height: 46px; z-index: 4;
+    background: var(--coral); border: 2px solid var(--ink); border-top: none;
+    border-radius: 0 0 4px 4px; box-shadow: 0 3px 0 rgba(43,42,36,.2);
+}
+.nb-ribbon::after {
+    content: ""; position: absolute; bottom: -11px; left: 50%; transform: translateX(-50%);
+    border: 5px solid transparent; border-top: 11px solid var(--coral);
+}
+.nb-studs { display: inline-flex; gap: 5px; }
+.nb-studs span {
+    width: 11px; height: 8px; border-radius: 3px; background: var(--border);
+    border: 1.5px solid var(--ink);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.5), inset 0 -1px 0 rgba(43,42,36,.2);
+}
+.nb-studs span.on { background: var(--coral); }
+.notebook-nav { padding: 10px 16px; border-top: 3px solid var(--ink); gap: 10px; }
+.notebook-nav button { border-radius: 4px 4px 3px 3px; box-shadow: 0 3px 0 rgba(43,42,36,.22); }
+.notebook-nav button:not(:disabled):active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(43,42,36,.22); }
+@media (prefers-reduced-motion: reduce) {
+    .notebook-page.active { animation: fadeIn .3s ease both; }
+}
+@media (max-width: 700px) {
+    .notebook-page { padding: 18px 18px 30px; }
+    .notebook-spine { font-size: 0.58rem; letter-spacing: 0.06em; }
+    .notebook-pages-container::before { right: -6px; width: 8px; }
+}
+
 /* ════════════════ PREDICTION CARDS — guess before reveal ════════════════ */
 .prediction-card {
     border: 2.5px solid var(--lavender); border-radius: var(--radius-lg);
@@ -1713,7 +1823,25 @@ const CORAL=getCss('--coral'), TEAL=getCss('--teal'), GOLD=getCss('--gold'), LAV
 const COLORS=[{c:CORAL,d:getCss('--coral-dark'),bg:getCss('--coral-bg')},{c:TEAL,d:getCss('--teal-dark'),bg:getCss('--teal-bg')},{c:GOLD,d:getCss('--gold-dark'),bg:getCss('--gold-bg')},{c:LAV,d:getCss('--lavender-dark'),bg:getCss('--lavender-bg')},{c:MINT,d:getCss('--mint-dark'),bg:getCss('--mint-bg')},{c:PEACH,d:getCss('--peach-dark'),bg:getCss('--peach-bg')},{c:SKY,d:getCss('--sky-dark'),bg:getCss('--sky-bg')},{c:ROSE,d:getCss('--rose-dark'),bg:getCss('--rose-bg')}];
 function colorFor(i){ return COLORS[((i%COLORS.length)+COLORS.length)%COLORS.length]; }
 function hexToRgba(hex,a){ hex=hex.replace('#',''); if(hex.length===3)hex=hex.split('').map(c=>c+c).join(''); const r=parseInt(hex.slice(0,2),16),g=parseInt(hex.slice(2,4),16),b=parseInt(hex.slice(4,6),16); return `rgba(${r},${g},${b},${a})`; }
-function dpiCanvas(canvas){ const rect=canvas.getBoundingClientRect(); const dpr=window.devicePixelRatio||1; const w=rect.width||canvas.width; const h=canvas.width?(canvas.height/canvas.width)*w:canvas.height; canvas.width=w*dpr; canvas.height=h*dpr; const ctx=canvas.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0); installBaseplate(ctx); return {ctx,w,h}; }
+function dpiCanvas(canvas){
+    const rect = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    let w = rect.width || canvas.width;
+    let h = rect.height || (canvas.width ? (canvas.height / canvas.width) * w : canvas.height);
+    /* R16 safety: clamp runaway sizes — course canvases never exceed ~1148 CSS px */
+    if (!isFinite(w) || !isFinite(h) || w <= 0 || h <= 0) { w = canvas.width / dpr || 300; h = canvas.height / dpr || 140; }
+    if (w > 2000) w = 2000;
+    if (h > 2000) h = 2000;
+    canvas.width = Math.round(w * dpr);
+    canvas.height = Math.round(h * dpr);
+    /* PIN the CSS size so the attribute can never feed back into the layout (kills the DPR>1 runaway) */
+    canvas.style.width = w + 'px';
+    canvas.style.height = h + 'px';
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    installBaseplate(ctx);
+    return { ctx, w, h };
+}
 /* R12 baseplate: every clear becomes "clear + #FFFEFA plate + studStep dots" (canon, from 13) */
 function installBaseplate(ctx){
     if (ctx.__plate) return;
@@ -2625,7 +2753,7 @@ $$('#res-toggle-pills .pill').forEach(p => p.addEventListener('click', () => {
             ctx.lineWidth = 1.5; ctx.strokeStyle = col.d; ctx.stroke();
         });
         t += 0.012;
-        requestAnimationFrame(draw);
+        if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) requestAnimationFrame(draw);
     }
     draw();
 })();
@@ -3455,6 +3583,72 @@ document.addEventListener('DOMContentLoaded', () => {
     drawDropoutLab();
     drawHighwayLab();
     initNotebook('res-notebook');
+
+/* ════════════ THE FOUNDRY MANUAL enhancer — turns every notebook into a LEGO instruction booklet ════════════
+   Additive + content-agnostic: same pages, same copy — new soul. Runs once per notebook. */
+function enhanceNotebooks() {
+    document.querySelectorAll('.notebook-spread').forEach(spread => {
+        if (spread.classList.contains('nb-enhanced')) return;
+        spread.classList.add('nb-enhanced');
+        const pages = spread.querySelectorAll('.notebook-page');
+        const total = pages.length;
+        if (!total) return;
+        const pc = spread.querySelector('.notebook-pages-container');
+        if (pc) {
+            const ribbon = document.createElement('div');
+            ribbon.className = 'nb-ribbon';
+            ribbon.setAttribute('aria-hidden', 'true');
+            pc.appendChild(ribbon);
+        }
+        pages.forEach((pg, i) => {
+            const num = i + 1;
+            /* step brick badge — the page's own heading, no new copy */
+            const h3 = pg.querySelector('h3');
+            if (h3) {
+                const badge = document.createElement('div');
+                badge.className = 'nb-step';
+                badge.innerHTML = '<span class="nb-brick">' + num + '</span>STEP ' + num + ' OF ' + total;
+                pg.insertBefore(badge, h3);
+            }
+            /* parts call-out strip — derived from THIS page's own emphasized terms */
+            const parts = [];
+            pg.querySelectorAll('strong, em').forEach(el => {
+                const t = el.textContent.replace(/[.,;:!?—–()-]+$/g, '').trim();
+                if (t && t.length > 2 && t.length < 48 && parts.indexOf(t) === -1) parts.push(t);
+            });
+            if (parts.length > 4) parts.length = 4;
+            if (parts.length) {
+                const strip = document.createElement('div');
+                strip.className = 'nb-parts';
+                strip.setAttribute('aria-label', 'Parts on this page');
+                strip.innerHTML = parts.map(p => '<span class="nb-part"><b>1×</b>' + p + '</span>').join('');
+                pg.appendChild(strip);
+            }
+            /* page number — printed like a brick chip */
+            const pn = document.createElement('span');
+            pn.className = 'nb-pageno';
+            pn.textContent = 'PAGE ' + num + ' · BRICK ' + num + '/' + total;
+            pg.appendChild(pn);
+        });
+        /* stud progress — fills as the manual is read */
+        const ind = spread.querySelector('.page-indicator');
+        if (ind) {
+            const studs = document.createElement('span');
+            studs.className = 'nb-studs';
+            studs.setAttribute('aria-hidden', 'true');
+            studs.innerHTML = Array.from({ length: total }, () => '<span></span>').join('');
+            ind.parentNode.insertBefore(studs, ind);
+            const fill = () => {
+                const m = ind.textContent.match(/Page\s+(\d+)\s+of\s+(\d+)/i) || ind.textContent.match(/(\d+)\s*\/\s*(\d+)/);
+                const cur = m ? parseInt(m[1], 10) : 1;
+                studs.querySelectorAll('span').forEach((s, k) => s.classList.toggle('on', k < cur));
+            };
+            fill();
+            try { new MutationObserver(fill).observe(ind, { childList: true, characterData: true, subtree: true }); } catch (e) {}
+        }
+    });
+}
+enhanceNotebooks();
     // Original inits
     drawActExplorer(); updateNeuronOut();
     netInit(); drawLandscape(); gdPath=[{...gdPoint}]; drawGD(); buildGraph('simple');
