@@ -320,6 +320,351 @@ code, .mono { font-family: var(--font-mono); }
 .lego-btn:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(43,42,36,.22)}
 .lego-btn::before{content:"";position:absolute;top:-5px;left:10%;width:80%;height:5px;border-radius:3px;background:rgba(255,255,255,.5);opacity:.85;box-shadow:0 1px 0 rgba(43,42,36,.25)}
 
+
+.notebook-spread {
+    position: relative;
+    background: linear-gradient(180deg, #F6F3E7, #EDEADD);
+    border: 3px solid var(--ink);
+    border-radius: 4px 14px 14px 4px;
+    box-shadow: 8px 8px 0 rgba(43,42,36,.16), inset 0 0 0 5px rgba(43,42,36,.06);
+}
+.notebook-spine {
+    position: relative;
+    display: flex; align-items: center; gap: 10px; padding: 12px 18px;
+    background: linear-gradient(180deg, #3A382F, var(--ink));
+    color: var(--paper); font-family: var(--font-mono);
+    font-size: 0.74rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+    border-bottom: 3px solid var(--ink);
+}
+.notebook-spine .spine-studs span { background: var(--gold); box-shadow: inset 0 1px 0 rgba(255,255,255,.45), inset 0 -1px 0 rgba(43,42,36,.35); }
+.notebook-pages-container {
+    position: relative; padding: 4px 14px 4px 4px;
+    background: #FFFEFA;
+}
+.notebook-pages-container::before { /* stacked page edges — a real bound book */
+    content: ""; position: absolute; top: 8px; right: -8px; bottom: 8px; width: 12px;
+    background: repeating-linear-gradient(90deg, #FFFEFA 0 3px, #D8D4C2 3px 4px);
+    border: 2px solid var(--ink); border-radius: 0 8px 8px 0; pointer-events: none;
+}
+.notebook-pages-container::after { /* spine shadow — the hinge */
+    content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 14px;
+    background: linear-gradient(90deg, rgba(43,42,36,.14), transparent); pointer-events: none;
+}
+.notebook-page {
+    position: relative; padding: 26px 34px 34px;
+    background: #FFFEFA;
+    background-image:
+        radial-gradient(circle at 20px 20px, rgba(43,42,36,.05) 1.6px, transparent 2px),
+        linear-gradient(to right, rgba(43,42,36,.035) 1px, transparent 1px);
+    background-size: 24px 24px, 28px 28px;
+    min-height: 210px; display: none;
+}
+.notebook-page.active {
+    display: block;
+    animation: nb-flip-in .55s cubic-bezier(.22,.9,.3,1.12) both;
+    transform-origin: left center;
+}
+@keyframes nb-flip-in {
+    0% { transform: perspective(900px) rotateY(34deg); opacity: 0; }
+    100% { transform: perspective(900px) rotateY(0deg); opacity: 1; }
+}
+.notebook-page h3 { position: relative; z-index: 1; }
+.nb-step {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--font-mono); font-size: 0.64rem; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint);
+    margin-bottom: 10px;
+}
+.nb-step .nb-brick {
+    position: relative; display: inline-flex; align-items: center; justify-content: center;
+    width: 30px; height: 22px; border-radius: 4px; background: var(--coral); color: #fff;
+    font-weight: 800; font-size: 0.8rem; letter-spacing: 0;
+    border: 2px solid var(--ink);
+    box-shadow: inset 0 2px 0 rgba(255,255,255,.35), inset 0 -3px 0 rgba(43,42,36,.2), 0 3px 0 rgba(43,42,36,.22);
+}
+.nb-step .nb-brick::after {
+    content: ""; position: absolute; top: -4px; left: 6px; width: 5px; height: 4px;
+    border-radius: 2px; background: rgba(255,255,255,.4);
+    box-shadow: 9px 0 0 rgba(255,255,255,.4);
+}
+.nb-parts {
+    display: flex; flex-wrap: wrap; gap: 6px; margin-top: 16px; padding-top: 12px;
+    border-top: 2px dashed var(--border);
+}
+.nb-part {
+    font-family: var(--font-mono); font-size: 0.64rem; font-weight: 600;
+    color: var(--ink-soft); background: var(--surface-alt);
+    border: 1.5px solid var(--border); border-radius: 5px; padding: 3px 8px;
+}
+.nb-part b { color: var(--coral); margin-right: 5px; font-weight: 800; }
+.nb-pageno {
+    position: absolute; bottom: 10px; right: 16px; z-index: 1;
+    font-family: var(--font-mono); font-size: 0.62rem; color: var(--ink-faint);
+    background: var(--surface); border: 1.5px solid var(--border); border-radius: 4px; padding: 2px 8px;
+}
+.nb-ribbon {
+    position: absolute; top: 0; right: 30px; width: 22px; height: 46px; z-index: 4;
+    background: var(--coral); border: 2px solid var(--ink); border-top: none;
+    border-radius: 0 0 4px 4px; box-shadow: 0 3px 0 rgba(43,42,36,.2);
+}
+.nb-ribbon::after {
+    content: ""; position: absolute; bottom: -11px; left: 50%; transform: translateX(-50%);
+    border: 5px solid transparent; border-top: 11px solid var(--coral);
+}
+.nb-studs { display: inline-flex; gap: 5px; }
+.nb-studs span {
+    width: 11px; height: 8px; border-radius: 3px; background: var(--border);
+    border: 1.5px solid var(--ink);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.5), inset 0 -1px 0 rgba(43,42,36,.2);
+}
+.nb-studs span.on { background: var(--coral); }
+.notebook-nav { padding: 10px 16px; border-top: 3px solid var(--ink); gap: 10px; }
+.notebook-nav button { border-radius: 4px 4px 3px 3px; box-shadow: 0 3px 0 rgba(43,42,36,.22); }
+.notebook-nav button:not(:disabled):active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(43,42,36,.22); }
+@media (prefers-reduced-motion: reduce) {
+    .notebook-page.active { animation: fadeIn .3s ease both; }
+}
+@media (max-width: 700px) {
+    .notebook-page { padding: 18px 18px 30px; }
+    .notebook-spine { font-size: 0.58rem; letter-spacing: 0.06em; }
+    .notebook-pages-container::before { right: -6px; width: 8px; }
+}
+
+/* ════════════ v2 — the LEGO manual grammar (from R&D: cover, parts inventory, step checkboxes, stud-slider progress, saddle-stitch) ════════════ */
+.notebook-spread { border-radius: 6px 18px 18px 6px; }
+.notebook-spine { padding: 10px 16px; }
+.nb-setno {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: var(--coral); color: #fff; font-weight: 800; font-size: 0.7rem;
+    letter-spacing: 0.08em; padding: 5px 10px; border: 2px solid var(--ink);
+    border-radius: 4px; box-shadow: inset 0 2px 0 rgba(255,255,255,.3), 0 3px 0 rgba(43,42,36,.3);
+}
+.nb-setno::after { content: ""; width: 5px; height: 4px; border-radius: 2px; background: rgba(255,255,255,.45); box-shadow: 8px 0 0 rgba(255,255,255,.45); }
+.nb-tags { margin-left: auto; display: inline-flex; gap: 6px; font-size: 0.58rem; font-weight: 700; letter-spacing: 0.06em; }
+.nb-tags span { border: 1.5px solid rgba(255,255,255,.5); border-radius: 3px; padding: 3px 7px; background: rgba(255,255,255,.08); }
+.nb-inventory {
+    display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 9px 18px;
+    background: linear-gradient(180deg, #FBF3DC, #F6EAC4);
+    border-bottom: 2px dashed var(--gold-dark);
+}
+.nb-inv-label {
+    font-family: var(--font-mono); font-size: 0.58rem; font-weight: 800; letter-spacing: 0.1em;
+    color: var(--gold-dark); text-transform: uppercase; margin-right: 4px;
+}
+.nb-inv {
+    font-family: var(--font-mono); font-size: 0.62rem; font-weight: 600;
+    background: #fff; border: 1.5px solid var(--gold-dark); border-radius: 4px;
+    padding: 2px 7px; color: var(--ink-soft);
+}
+.nb-inv b { color: var(--coral); margin-right: 4px; font-weight: 800; }
+.nb-step .nb-check {
+    width: 15px; height: 15px; border: 2px solid var(--ink); border-radius: 3px;
+    background: #fff; display: inline-flex; align-items: center; justify-content: center;
+    margin-left: 8px; transition: background .3s ease;
+}
+.nb-step .nb-check.done { background: var(--mint); }
+.nb-step .nb-check.done::after { content: "✓"; color: #fff; font-weight: 800; font-size: 0.62rem; }
+.nb-staples {
+    position: absolute; left: -7px; top: 50%; transform: translateY(-50%);
+    display: flex; flex-direction: column; gap: 30px; z-index: 6; pointer-events: none;
+}
+.nb-staples i {
+    width: 9px; height: 15px; background: linear-gradient(180deg, #DDD9C8, #B9B4A0);
+    border: 2px solid var(--ink); border-radius: 3px;
+    box-shadow: inset 0 1px 0 #fff, 0 2px 0 rgba(43,42,36,.25);
+}
+.nb-progress {
+    position: relative; height: 14px; margin: 12px 18px 4px;
+    background: linear-gradient(90deg, rgba(43,42,36,.4) var(--p, 0%), rgba(43,42,36,.10) var(--p, 0%));
+    border: 2px solid var(--ink); border-radius: 9px; overflow: visible;
+}
+.nb-progress .nb-pdot {
+    position: absolute; top: 50%; left: var(--p, 0%); transform: translate(-50%, -50%);
+    width: 20px; height: 13px; border-radius: 7px; background: var(--coral);
+    border: 2px solid var(--ink);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.45), inset 0 -2px 0 rgba(43,42,36,.25), 0 2px 0 rgba(43,42,36,.3);
+    transition: left .5s cubic-bezier(.22,.9,.3,1.12);
+}
+.nb-progress .nb-pdot::after {
+    content: ""; position: absolute; top: -4px; left: 5px; width: 4px; height: 3px;
+    border-radius: 2px; background: rgba(255,255,255,.55);
+    box-shadow: 6px 0 0 rgba(255,255,255,.55);
+}
+
+/* ════════════════ 
+
+/* ════════════ THE FOUNDRY MANUAL — LEGO instruction booklet (R15 redesign) ════════════ */
+.notebook-spread {
+    position: relative;
+    background: linear-gradient(180deg, #F6F3E7, #EDEADD);
+    border: 3px solid var(--ink);
+    border-radius: 4px 14px 14px 4px;
+    box-shadow: 8px 8px 0 rgba(43,42,36,.16), inset 0 0 0 5px rgba(43,42,36,.06);
+}
+.notebook-spine {
+    position: relative;
+    display: flex; align-items: center; gap: 10px; padding: 12px 18px;
+    background: linear-gradient(180deg, #3A382F, var(--ink));
+    color: var(--paper); font-family: var(--font-mono);
+    font-size: 0.74rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+    border-bottom: 3px solid var(--ink);
+}
+.notebook-spine .spine-studs span { background: var(--gold); box-shadow: inset 0 1px 0 rgba(255,255,255,.45), inset 0 -1px 0 rgba(43,42,36,.35); }
+.notebook-pages-container {
+    position: relative; padding: 4px 14px 4px 4px;
+    background: #FFFEFA;
+}
+.notebook-pages-container::before { /* stacked page edges — a real bound book */
+    content: ""; position: absolute; top: 8px; right: -8px; bottom: 8px; width: 12px;
+    background: repeating-linear-gradient(90deg, #FFFEFA 0 3px, #D8D4C2 3px 4px);
+    border: 2px solid var(--ink); border-radius: 0 8px 8px 0; pointer-events: none;
+}
+.notebook-pages-container::after { /* spine shadow — the hinge */
+    content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 14px;
+    background: linear-gradient(90deg, rgba(43,42,36,.14), transparent); pointer-events: none;
+}
+.notebook-page {
+    position: relative; padding: 26px 34px 34px;
+    background: #FFFEFA;
+    background-image:
+        radial-gradient(circle at 20px 20px, rgba(43,42,36,.05) 1.6px, transparent 2px),
+        linear-gradient(to right, rgba(43,42,36,.035) 1px, transparent 1px);
+    background-size: 24px 24px, 28px 28px;
+    min-height: 210px; display: none;
+}
+.notebook-page.active {
+    display: block;
+    animation: nb-flip-in .55s cubic-bezier(.22,.9,.3,1.12) both;
+    transform-origin: left center;
+}
+@keyframes nb-flip-in {
+    0% { transform: perspective(900px) rotateY(34deg); opacity: 0; }
+    100% { transform: perspective(900px) rotateY(0deg); opacity: 1; }
+}
+.notebook-page h3 { position: relative; z-index: 1; }
+.nb-step {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--font-mono); font-size: 0.64rem; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint);
+    margin-bottom: 10px;
+}
+.nb-step .nb-brick {
+    position: relative; display: inline-flex; align-items: center; justify-content: center;
+    width: 30px; height: 22px; border-radius: 4px; background: var(--coral); color: #fff;
+    font-weight: 800; font-size: 0.8rem; letter-spacing: 0;
+    border: 2px solid var(--ink);
+    box-shadow: inset 0 2px 0 rgba(255,255,255,.35), inset 0 -3px 0 rgba(43,42,36,.2), 0 3px 0 rgba(43,42,36,.22);
+}
+.nb-step .nb-brick::after {
+    content: ""; position: absolute; top: -4px; left: 6px; width: 5px; height: 4px;
+    border-radius: 2px; background: rgba(255,255,255,.4);
+    box-shadow: 9px 0 0 rgba(255,255,255,.4);
+}
+.nb-parts {
+    display: flex; flex-wrap: wrap; gap: 6px; margin-top: 16px; padding-top: 12px;
+    border-top: 2px dashed var(--border);
+}
+.nb-part {
+    font-family: var(--font-mono); font-size: 0.64rem; font-weight: 600;
+    color: var(--ink-soft); background: var(--surface-alt);
+    border: 1.5px solid var(--border); border-radius: 5px; padding: 3px 8px;
+}
+.nb-part b { color: var(--coral); margin-right: 5px; font-weight: 800; }
+.nb-pageno {
+    position: absolute; bottom: 10px; right: 16px; z-index: 1;
+    font-family: var(--font-mono); font-size: 0.62rem; color: var(--ink-faint);
+    background: var(--surface); border: 1.5px solid var(--border); border-radius: 4px; padding: 2px 8px;
+}
+.nb-ribbon {
+    position: absolute; top: 0; right: 30px; width: 22px; height: 46px; z-index: 4;
+    background: var(--coral); border: 2px solid var(--ink); border-top: none;
+    border-radius: 0 0 4px 4px; box-shadow: 0 3px 0 rgba(43,42,36,.2);
+}
+.nb-ribbon::after {
+    content: ""; position: absolute; bottom: -11px; left: 50%; transform: translateX(-50%);
+    border: 5px solid transparent; border-top: 11px solid var(--coral);
+}
+.nb-studs { display: inline-flex; gap: 5px; }
+.nb-studs span {
+    width: 11px; height: 8px; border-radius: 3px; background: var(--border);
+    border: 1.5px solid var(--ink);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.5), inset 0 -1px 0 rgba(43,42,36,.2);
+}
+.nb-studs span.on { background: var(--coral); }
+.notebook-nav { padding: 10px 16px; border-top: 3px solid var(--ink); gap: 10px; }
+.notebook-nav button { border-radius: 4px 4px 3px 3px; box-shadow: 0 3px 0 rgba(43,42,36,.22); }
+.notebook-nav button:not(:disabled):active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(43,42,36,.22); }
+@media (prefers-reduced-motion: reduce) {
+    .notebook-page.active { animation: fadeIn .3s ease both; }
+}
+@media (max-width: 700px) {
+    .notebook-page { padding: 18px 18px 30px; }
+    .notebook-spine { font-size: 0.58rem; letter-spacing: 0.06em; }
+    .notebook-pages-container::before { right: -6px; width: 8px; }
+}
+
+/* ════════════ v2 — the LEGO manual grammar (from R&D: cover, parts inventory, step checkboxes, stud-slider progress, saddle-stitch) ════════════ */
+.notebook-spread { border-radius: 6px 18px 18px 6px; }
+.notebook-spine { padding: 10px 16px; }
+.nb-setno {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: var(--coral); color: #fff; font-weight: 800; font-size: 0.7rem;
+    letter-spacing: 0.08em; padding: 5px 10px; border: 2px solid var(--ink);
+    border-radius: 4px; box-shadow: inset 0 2px 0 rgba(255,255,255,.3), 0 3px 0 rgba(43,42,36,.3);
+}
+.nb-setno::after { content: ""; width: 5px; height: 4px; border-radius: 2px; background: rgba(255,255,255,.45); box-shadow: 8px 0 0 rgba(255,255,255,.45); }
+.nb-tags { margin-left: auto; display: inline-flex; gap: 6px; font-size: 0.58rem; font-weight: 700; letter-spacing: 0.06em; }
+.nb-tags span { border: 1.5px solid rgba(255,255,255,.5); border-radius: 3px; padding: 3px 7px; background: rgba(255,255,255,.08); }
+.nb-inventory {
+    display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 9px 18px;
+    background: linear-gradient(180deg, #FBF3DC, #F6EAC4);
+    border-bottom: 2px dashed var(--gold-dark);
+}
+.nb-inv-label {
+    font-family: var(--font-mono); font-size: 0.58rem; font-weight: 800; letter-spacing: 0.1em;
+    color: var(--gold-dark); text-transform: uppercase; margin-right: 4px;
+}
+.nb-inv {
+    font-family: var(--font-mono); font-size: 0.62rem; font-weight: 600;
+    background: #fff; border: 1.5px solid var(--gold-dark); border-radius: 4px;
+    padding: 2px 7px; color: var(--ink-soft);
+}
+.nb-inv b { color: var(--coral); margin-right: 4px; font-weight: 800; }
+.nb-step .nb-check {
+    width: 15px; height: 15px; border: 2px solid var(--ink); border-radius: 3px;
+    background: #fff; display: inline-flex; align-items: center; justify-content: center;
+    margin-left: 8px; transition: background .3s ease;
+}
+.nb-step .nb-check.done { background: var(--mint); }
+.nb-step .nb-check.done::after { content: "✓"; color: #fff; font-weight: 800; font-size: 0.62rem; }
+.nb-staples {
+    position: absolute; left: -7px; top: 50%; transform: translateY(-50%);
+    display: flex; flex-direction: column; gap: 30px; z-index: 6; pointer-events: none;
+}
+.nb-staples i {
+    width: 9px; height: 15px; background: linear-gradient(180deg, #DDD9C8, #B9B4A0);
+    border: 2px solid var(--ink); border-radius: 3px;
+    box-shadow: inset 0 1px 0 #fff, 0 2px 0 rgba(43,42,36,.25);
+}
+.nb-progress {
+    position: relative; height: 14px; margin: 12px 18px 4px;
+    background: linear-gradient(90deg, rgba(43,42,36,.4) var(--p, 0%), rgba(43,42,36,.10) var(--p, 0%));
+    border: 2px solid var(--ink); border-radius: 9px; overflow: visible;
+}
+.nb-progress .nb-pdot {
+    position: absolute; top: 50%; left: var(--p, 0%); transform: translate(-50%, -50%);
+    width: 20px; height: 13px; border-radius: 7px; background: var(--coral);
+    border: 2px solid var(--ink);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.45), inset 0 -2px 0 rgba(43,42,36,.25), 0 2px 0 rgba(43,42,36,.3);
+    transition: left .5s cubic-bezier(.22,.9,.3,1.12);
+}
+.nb-progress .nb-pdot::after {
+    content: ""; position: absolute; top: -4px; left: 5px; width: 4px; height: 3px;
+    border-radius: 2px; background: rgba(255,255,255,.55);
+    box-shadow: 6px 0 0 rgba(255,255,255,.55);
+}
+
+/* ════════════════ 
 </style>
 </head>
 <body>
@@ -3202,6 +3547,113 @@ function kitChipBrick(ctx, text, x, y, accent, align){
     ctx.fillText(text, cx + 11, y + fs2 + 3);
 }
 
+
+
+/* ════════════ THE FOUNDRY MANUAL enhancer — turns every notebook into a LEGO instruction booklet ════════════
+   Additive + content-agnostic: same pages, same copy — new soul. Runs once per notebook. */
+function enhanceNotebooks() {
+    let bookNo = 0;
+    document.querySelectorAll('.notebook-spread').forEach(spread => {
+        if (spread.classList.contains('nb-enhanced')) return;
+        spread.classList.add('nb-enhanced');
+        const pages = spread.querySelectorAll('.notebook-page');
+        const total = pages.length;
+        if (!total) return;
+        bookNo++;
+        const pc = spread.querySelector('.notebook-pages-container');
+        /* ── cover band: set number plate + tags (the LEGO front-cover grammar) ── */
+        const spine = spread.querySelector('.notebook-spine');
+        if (spine) {
+            const plate = document.createElement('span');
+            plate.className = 'nb-setno';
+            plate.textContent = 'NO. ' + String(bookNo).padStart(3, '0');
+            spine.insertBefore(plate, spine.firstChild);
+            const tags = document.createElement('span');
+            tags.className = 'nb-tags';
+            tags.innerHTML = '<span>PARTS ' + total + '</span><span>' + total + ' STEPS</span>';
+            spine.appendChild(tags);
+        }
+        /* ── saddle-stitch staples on the hinge ── */
+        if (pc) {
+            const st = document.createElement('div');
+            st.className = 'nb-staples';
+            st.setAttribute('aria-hidden', 'true');
+            st.innerHTML = '<i></i><i></i>';
+            pc.insertBefore(st, pc.firstChild);
+            /* ── ribbon ── */
+            const ribbon = document.createElement('div');
+            ribbon.className = 'nb-ribbon';
+            ribbon.setAttribute('aria-hidden', 'true');
+            pc.appendChild(ribbon);
+        }
+        /* ── per-page chrome + full parts inventory ── */
+        const allParts = [];
+        pages.forEach((pg, i) => {
+            const num = i + 1;
+            const h3 = pg.querySelector('h3');
+            if (h3) {
+                const badge = document.createElement('div');
+                badge.className = 'nb-step';
+                badge.innerHTML = '<span class="nb-brick">' + num + '</span>STEP ' + num + ' OF ' + total + '<span class="nb-check" aria-hidden="true"></span>';
+                pg.insertBefore(badge, h3);
+            }
+            const parts = [];
+            pg.querySelectorAll('strong, em').forEach(el => {
+                const t = el.textContent.replace(/[.,;:!?—–()-]+$/g, '').trim();
+                if (t && t.length > 2 && t.length < 48 && parts.indexOf(t) === -1) parts.push(t);
+            });
+            if (parts.length > 4) parts.length = 4;
+            parts.forEach(p => { if (allParts.indexOf(p) === -1) allParts.push(p); });
+            if (parts.length) {
+                const strip = document.createElement('div');
+                strip.className = 'nb-parts';
+                strip.setAttribute('aria-label', 'New parts on this page');
+                strip.innerHTML = parts.map(p => '<span class="nb-part"><b>1×</b>' + p + '</span>').join('');
+                pg.appendChild(strip);
+            }
+            const pn = document.createElement('span');
+            pn.className = 'nb-pageno';
+            pn.textContent = 'PAGE ' + num + ' · BRICK ' + num + '/' + total;
+            pg.appendChild(pn);
+        });
+        /* ── PARTS INVENTORY strip (the 2006 LEGO inventory page, condensed) ── */
+        if (pc && allParts.length) {
+            const inv = document.createElement('div');
+            inv.className = 'nb-inventory';
+            inv.innerHTML = '<span class="nb-inv-label">Parts inventory</span>' +
+                allParts.slice(0, 10).map(p => '<span class="nb-inv"><b>1×</b>' + p + '</span>').join('') +
+                (allParts.length > 10 ? '<span class="nb-inv">+ ' + (allParts.length - 10) + ' more</span>' : '');
+            pc.insertBefore(inv, pc.firstChild.nextSibling);
+        }
+        /* ── stud-slider progress bar (the 2022 LEGO progress grammar) ── */
+        if (pc) {
+            const bar = document.createElement('div');
+            bar.className = 'nb-progress';
+            bar.setAttribute('aria-hidden', 'true');
+            bar.innerHTML = '<span class="nb-pdot"></span>';
+            pc.appendChild(bar);
+        }
+        /* ── indicator observer: drives checkboxes + the progress bar ── */
+        const ind = spread.querySelector('.page-indicator');
+        if (ind) {
+            const bar = pc ? pc.querySelector('.nb-progress') : null;
+            const checks = spread.querySelectorAll('.nb-check');
+            const update = () => {
+                const m = ind.textContent.match(/Page\s+(\d+)\s+of\s+(\d+)/i) || ind.textContent.match(/(\d+)\s*\/\s*(\d+)/);
+                const cur = m ? parseInt(m[1], 10) : 1;
+                const tot = m ? parseInt(m[2], 10) || total : total;
+                checks.forEach((c, k) => c.classList.toggle('done', k + 1 < cur));
+                if (bar) {
+                    const pct = tot > 1 ? Math.round(((cur - 1) / (tot - 1)) * 100) : 100;
+                    bar.style.setProperty('--p', pct + '%');
+                }
+            };
+            update();
+            try { new MutationObserver(update).observe(ind, { childList: true, characterData: true, subtree: true }); } catch (e) {}
+        }
+    });
+}
+enhanceNotebooks();
 </script>
 <p style="font-family:var(--font-mono);font-size:0.62rem;color:var(--ink-faint);text-align:center;margin:24px auto;">LEGO® is a trademark of the LEGO Group. This course is not affiliated with, endorsed by, or sponsored by the LEGO Group.</p>
 </body>
