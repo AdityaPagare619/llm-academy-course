@@ -735,6 +735,20 @@ code, .mono { font-family: var(--font-mono); }
                 <span class="page-year">1986</span>
                 <p>Rumelhart, Hinton, and Williams publish "Learning Representations by Back-propagating Errors" in <em>Nature</em>. They prove that <strong>multi-layer networks + backpropagation</strong> can learn XOR — and anything else. The solution to Minsky's critique was always just one hidden layer away. You'll build that proof yourself in Section 0.4.</p>
             </div>
+            <div class="notebook-page" data-page="4">
+                <h3>🚀 The 2026 Lens — the brick never changed</h3>
+                <span class="page-year">2026</span>
+                <p>Nearly seventy years after the Mark I, the perceptron's single unit is still the atom of every frontier model. A "neuron" in a 2026 system is the same machine you just met: a weighted sum, a threshold, a nonlinear squish. What changed is only the <strong>stacking</strong> — billions of bricks, layers deep, trained on trillions of tokens.</p>
+                <p>Today's frontier ideas start right here. <strong>Error-driven learning</strong> — the perceptron rule — is the grandfather of the gradient descent that trains everything in this course. The <strong>linear boundary</strong> is the first brick of every layer. And the 1969 lesson — <em>one layer is not enough</em> — is why every serious architecture since 1986 has been deep. Reasoning models (the o3/o4 family, approx.) spend test-time compute chaining small learned steps; mixture-of-experts systems route tokens to specialized sub-networks; in both cases, each expert and each step is, underneath, a stack of these same bricks.</p>
+                <div class="page-highlight">The 2×4 brick hasn't changed since 1958. The castle did. Same here: the unit is timeless — the architecture around it is what grew.</div>
+            </div>
+            <div class="notebook-page" data-page="5">
+                <h3>🔨 Your Move — the brick in your hand</h3>
+                <p>You now own the perceptron: what it computes, what it can and cannot separate, and why it matters seventy years later. Here's what you'll do with it.</p>
+                <p>Next up in this section, you'll build the <strong>AND gate by hand</strong> — the smallest honest training run in the course — and watch a perceptron learn a real boundary in the lab above. In Section 0.4 you'll stack these bricks into a hidden layer and break Minsky's XOR curse yourself: the proof that ended the winter was one layer away all along.</p>
+                <p>Keep the rule in your pocket: <em>error-driven adjustment</em>. Every optimizer in this course — from plain gradient descent to Adam — is the same loop, refined: look at the mistake, nudge the weights, repeat until the boundary sits where the data wants it.</p>
+                <div class="page-highlight">"The machine learns by adjusting weights based on whether it got the answer right or wrong." — you just became the person who can say exactly why that works.</div>
+            </div>
         </div>
         <div class="notebook-nav">
             <button id="nb-perc-prev" disabled>← Prev</button>
